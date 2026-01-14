@@ -1,0 +1,554 @@
+Doctor Store – Public Database Schema (Reference)
+===============================================
+
+تحذير مهم
+---------
+هذا الملف وثائقي (Reference) وليس نسخة رسمية من قاعدة البيانات.
+تمت كتابته يدويًا بالاعتماد على:
+- الكود في مشروع Flutter
+- ملفات الـ CSV التي صدّرتها سابقًا من Supabase
+- التعديلات الأخيرة (admins + RLS على profiles و reviews)
+
+يمكن لأي مطوّر استخدامه لفهم هيكل قاعدة البيانات والعلاقات والسياسات،
+ولكن لا يُنصح باستخدامه كـ "DDL" مباشر لإنشاء قاعدة جديدة بدون مراجعة.
+
+============================================================
+1) نظرة عامة على المخطط Public
+============================================================
+
+المخطط public في Supabase/ Postgres يحتوي على المجموعات الرئيسية التالية:
+
+- هوية المستخدمين والحسابات:
+  - profiles
+  - clients
+  - addresses
+
+- المتجر (المنتجات والطلبات والسلة):
+  - products
+  - orders
+  - order_items
+  - favorites
+  - user_carts
+  - wishlist
+
+- التقييمات والتعليقات:
+  - reviews
+
+- الكوبونات والعروض:
+  - coupons
+  - coupon_usage
+
+- المحتوى التسويقي وواجهة الهوم:
+  - banners
+  - categories
+  - home_sections
+
+- إعدادات عامة، صفحات ثابتة، SEO، فعاليات:
+  - app_settings
+  - seo_pages
+  - static_pages
+  - events
+
+- دعم فني:
+  - support_tickets
+
+- إدارة وأدمن:
+  - admins
+
+بالإضافة إلى مجموعة من الدوال (Functions) والتريجرات (Triggers) المرتبطة
+بالإحصائيات، الكوبونات، وتحديث تقييم المنتجات.
+
+============================================================
+2) جداول الهوية والحسابات
+============================================================
+
+2.1) جدول profiles
+-------------------
+
+الغرض:
+- يمثل الحساب "الفعلي" للمستخدم المرتبط بـ auth.users (User ID = uuid).
+- يُستخدم لربط الطلبات والتقييمات وغيرها بالمستخدم المسجّل.
+
+أعمدة رئيسية (تقريبية):
+- id              uuid  PRIMARY KEY  -- يساوي auth.users.id
+- full_name       text
+- email           text (اختياري، حسب تصميمك)
+- phone           text
+- avatar_url      text
+- created_at      timestamptz DEFAULT now()
+- updated_at      timestamptz DEFAULT now()
+
+علاقات:
+- غالبًا يوجد FOREIGN KEY من orders.user_id → profiles.id
+- يمكن أن تكون هناك علاقات أخرى مع reviews، support_tickets، events ... الخ
+
+RLS (سياسات الوصول) المقترحة والمستخدمة حاليًا:
+
+- تمكين RLS:
+  - ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+- سياسات المستخدم العادي (own row):
+  - "profiles_user_own_row" – SELECT: يسمح للمستخدم بقراءة صفه فقط
+    USING (auth.uid() = id)
+  - "profiles_user_update_own_row" – UPDATE: يسمح للمستخدم بتعديل صفه فقط
+    USING (auth.uid() = id)
+    WITH CHECK (auth.uid() = id)
+
+- سياسات الأدمن (تحكم كامل في العملاء):
+  - "profiles_admin_all" – ALL (select / insert / update / delete)
+    USING (EXISTS (SELECT 1 FROM public.admins a WHERE a.user_id = auth.uid()))
+    WITH CHECK (نفس الشرط)
+
+
+2.2) جدول clients
+------------------
+
+الغرض:
+- التقاط العملاء/الزوار الذين يتركون بيانات للتسويق أو تواصل لاحق
+  (مثل إشترك في النشرة البريدية، أو اترك إيميل للتواصل).
+- ليس بالضرورة مرتبطًا بالـ auth.users.
+
+أعمدة نموذجية (تقريبية):
+- id              bigint PRIMARY KEY (identity)
+- full_name       text
+- email           text
+- phone           text
+- created_at      timestamptz DEFAULT now()
+
+العلاقات:
+- مستقل عن profiles، لكن يمكن استخدام email/phone للمقارنة أو الدمج مستقبلاً.
+
+
+2.3) جدول addresses
+--------------------
+
+الغرض:
+- تخزين عناوين الشحن المرتبطة بالمستخدم (profile) أو بالزبون.
+
+أعمدة نموذجية (تقريبية):
+- id              bigint PRIMARY KEY (identity)
+- user_id         uuid REFERENCES public.profiles(id)
+- title           text        -- مثل: البيت، المكتب
+- city            text
+- country         text
+- street          text
+- notes           text
+- is_default      boolean DEFAULT false
+- created_at      timestamptz DEFAULT now()
+
+============================================================
+3) جداول المتجر (المنتجات والطلبات والسلة)
+============================================================
+
+3.1) جدول products
+-------------------
+
+الغرض:
+- تعريف المنتج المعروض في المتجر (اسم، سعر، صور، خصائص ...).
+
+أعمدة رئيسية (كما تُستخدم في الكود):
+- id                bigint PRIMARY KEY (identity)
+- title             text
+- description       text
+- price             numeric(10,2)
+- discount_price    numeric(10,2) NULL
+- sku               text UNIQUE (اختياري)
+- category          USER-DEFINED TYPE (قيمة نصية أو enum) – حاليًا لا يوجد FK مباشر
+- category_id       text NULL  -- يمكن ربطه بـ categories.id لو قررت ذلك
+- image_url         text       -- URL الأصلي لصورة المنتج من Supabase Storage
+- gallery           text[]     -- روابط صور إضافية (إن وُجدت)
+- stock             integer
+- is_active         boolean DEFAULT true
+- created_at        timestamptz DEFAULT now()
+- updated_at        timestamptz DEFAULT now()
+
+علاقات:
+- order_items.product_id → products.id
+- reviews.product_id     → products.id
+
+ملاحظات حول الصور:
+- في الكود، `ProductModel` يحتفظ بـ `_originalImageUrl` فقط،
+  وتُستخدم دوال مساعدة لإنتاج روابط WebP مُحسّنة (thumbnail, detail, fullScreen).
+
+
+3.2) جدول orders
+-----------------
+
+الغرض:
+- تخزين الطلبات (Order) لكل عميل.
+
+أعمدة نموذجية (مستخرجة من CSV والكود):
+- id              bigint PRIMARY KEY (identity)
+- user_id         uuid REFERENCES public.profiles(id)
+- status          text (pending / paid / shipped / cancelled / ...)
+- total_amount    numeric(10,2)
+- discount_amount numeric(10,2) DEFAULT 0
+- coupon_code     text NULL
+- created_at      timestamptz DEFAULT now()
+- updated_at      timestamptz DEFAULT now()
+
+علاقات:
+- order_items.order_id → orders.id
+- coupon_usage.order_id → orders.id
+
+تريجرات ودوال مرتبطة:
+- تريجر on_order_changed AFTER INSERT/UPDATE/DELETE ON orders
+  → يستدعي الدالة update_client_stats لتحديث إحصائيات العميل
+
+
+3.3) جدول order_items
+----------------------
+
+الغرض:
+- عناصر الطلب (المنتجات الموجودة داخل Order معين).
+
+أعمدة نموذجية:
+- id              bigint PRIMARY KEY (identity)
+- order_id        bigint REFERENCES public.orders(id)
+- product_id      bigint REFERENCES public.products(id)
+- quantity        integer
+- unit_price      numeric(10,2)
+- total_price     numeric(10,2)
+
+
+3.4) جدول favorites
+--------------------
+
+الغرض:
+- المنتجات التي قام المستخدم بتمييزها كمفضلة.
+
+أعمدة نموذجية:
+- id              bigint PRIMARY KEY (identity)
+- user_id         uuid REFERENCES public.profiles(id)
+- product_id      bigint REFERENCES public.products(id)
+- created_at      timestamptz DEFAULT now()
+
+
+3.5) جدول user_carts
+---------------------
+
+الغرض:
+- تمثيل حالة السلة (Cart) لكل مستخدم.
+
+أعمدة تقريبية:
+- id              bigint PRIMARY KEY (identity)
+- user_id         uuid REFERENCES public.profiles(id)
+- items           jsonb   -- تمثيل عناصر السلة (product_id, qty ...)
+- updated_at      timestamptz DEFAULT now()
+
+
+3.6) جدول wishlist
+-------------------
+
+الغرض:
+- قائمة رغبات / مشابه للفيفوريت، بحسب تصميمك.
+
+أعمدة تقريبية:
+- id              bigint PRIMARY KEY
+- user_id         uuid REFERENCES public.profiles(id)
+- product_id      bigint REFERENCES public.products(id)
+- created_at      timestamptz DEFAULT now()
+
+============================================================
+4) التقييمات والتعليقات
+============================================================
+
+4.1) جدول reviews
+------------------
+
+الغرض:
+- تخزين تقييمات وتعليقات العملاء على المنتجات.
+
+أعمدة رئيسية:
+- id              bigint PRIMARY KEY (identity)
+- product_id      bigint REFERENCES public.products(id)
+- rating          integer   -- من 1 إلى 5
+- comment         text
+- user_name       text NULL -- في حال زائر / أو اسم من clients
+- client_id       bigint NULL REFERENCES public.clients(id)   -- إن وُجد
+- profile_id      uuid   NULL REFERENCES public.profiles(id) -- إن وُجد
+- is_approved     boolean DEFAULT false
+- created_at      timestamptz DEFAULT now()
+
+تريجرات ودوال:
+- تريجر on_review_added AFTER INSERT/UPDATE/DELETE ON reviews
+  → يستدعي الدالة update_product_rating لتحديث متوسط تقييم المنتج وعدد التقييمات.
+
+RLS على reviews (النسخة المبسطة الحالية):
+
+- تمكين RLS:
+  - ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
+
+- سياسة العرض للجمهور:
+  - "reviews_public_approved_only" – SELECT: فقط التعليقات المعتمدة
+    USING (is_approved = true)
+
+- سياسة الأدمن:
+  - "reviews_admin_all" – ALL
+    USING (EXISTS (SELECT 1 FROM public.admins a WHERE a.user_id = auth.uid()))
+    WITH CHECK (نفس الشرط)
+
+(يمكن لاحقًا إضافة سياسة تسمح للمستخدم بتعديل/حذف تعليقاته الخاصة
+إذا تم الاتفاق على عمود معياري يربط التعليق بالمستخدم مثل profile_id.)
+
+============================================================
+5) الكوبونات والعروض
+============================================================
+
+5.1) جدول coupons
+------------------
+
+الغرض:
+- تعريف كوبونات الخصم المتاحة.
+
+أعمدة نموذجية:
+- id              bigint PRIMARY KEY (identity)
+- code            text UNIQUE
+- description     text
+- discount_type   text   -- مثلاً: percentage / fixed
+- discount_value  numeric(10,2)
+- max_uses        integer
+- used_count      integer DEFAULT 0
+- valid_from      timestamptz
+- valid_to        timestamptz
+- is_active       boolean DEFAULT true
+
+
+5.2) جدول coupon_usage
+-----------------------
+
+الغرض:
+- تتبع استخدام الكوبونات لكل طلب/مستخدم.
+
+أعمدة نموذجية:
+- id              bigint PRIMARY KEY (identity)
+- coupon_id       bigint REFERENCES public.coupons(id)
+- order_id        bigint REFERENCES public.orders(id)
+- user_id         uuid   REFERENCES public.profiles(id)
+- created_at      timestamptz DEFAULT now()
+
+
+5.3) دوال مرتبطة بالكوبونات
+----------------------------
+
+- verify_and_apply_coupon(order_id, coupon_code ...):
+  - تتحقق من صلاحية الكوبون، التواريخ، الحد الأقصى للاستخدام، إلخ،
+    وتقوم بحساب الخصم المناسب وتحديث الطلب.
+
+- increment_coupon_usage(coupon_id):
+  - زيادة عداد الاستخدام used_count في coupons.
+
+============================================================
+6) المحتوى التسويقي وواجهة الهوم
+============================================================
+
+6.1) جدول banners
+------------------
+
+الغرض:
+- تخزين البانرات الإعلانية في الواجهة.
+
+أعمدة نموذجية:
+- id              bigint PRIMARY KEY (identity)
+- title           text
+- image_url       text  -- صورة من Supabase Storage
+- link_url        text  -- رابط عند الضغط (منتج، صفحة، رابط خارجي)
+- position        integer
+- is_active       boolean DEFAULT true
+- created_at      timestamptz DEFAULT now()
+
+
+6.2) جدول categories
+---------------------
+
+الغرض:
+- تصنيف المنتجات (سرير، كرسي، تجهيزات ...).
+
+أعمدة نموذجية:
+- id              text PRIMARY KEY
+- name            text
+- description     text
+- icon_url        text NULL
+- created_at      timestamptz DEFAULT now()
+
+(حاليًا: ربط products.category بـ categories.id غير مفعّل بـ FK،
+يمكن لاحقًا إضافة عمود product.category_id وربطه بهذا الجدول.)
+
+
+6.3) جدول home_sections
+------------------------
+
+الغرض:
+- تعريف أقسام الصفحة الرئيسية (فلاش سيل، منتجات مميزة، ...).
+
+أعمدة تقريبية:
+- id              bigint PRIMARY KEY (identity)
+- title           text
+- type            text   -- مثل: flash_sale, recommended, new_arrivals ...
+- config          jsonb  -- إعدادات إضافية (فلترة، ترتيب، عدد عناصر)
+- is_active       boolean DEFAULT true
+
+============================================================
+7) إعدادات عامة، صفحات ثابتة، SEO، فعاليات
+============================================================
+
+7.1) جدول app_settings
+-----------------------
+
+الغرض:
+- إعدادات عامة للتطبيق (اسم المتجر، شعار، ألوان، بيانات التواصل ...).
+
+أعمدة تقريبية:
+- id              bigint PRIMARY KEY (identity) -- غالباً صف واحد فقط
+- store_name      text
+- logo_url        text
+- primary_color   text
+- contact_email   text
+- contact_phone   text
+- created_at      timestamptz DEFAULT now()
+- updated_at      timestamptz DEFAULT now()
+
+(يمكن فرض Singleton بمنع إدخال أكثر من صف واحد بسياسة أو قيود.)
+
+
+7.2) جدول seo_pages
+--------------------
+
+الغرض:
+- تخزين بيانات SEO لكل صفحة (meta title, description, og tags...).
+
+أعمدة تقريبية:
+- id              bigint PRIMARY KEY
+- slug            text UNIQUE  -- مثلاً: /about-us, /products/slug...
+- title           text
+- description     text
+- og_image_url    text
+
+
+7.3) جدول static_pages
+-----------------------
+
+الغرض:
+- صفحات ثابتة مثل: من نحن، سياسة الخصوصية، الشروط والأحكام...
+
+أعمدة تقريبية:
+- id              bigint PRIMARY KEY
+- slug            text UNIQUE
+- title           text
+- content         text  -- HTML / Markdown
+- is_published    boolean DEFAULT true
+
+
+7.4) جدول events
+-----------------
+
+الغرض:
+- تخزين فعاليات أو أنشطة مرتبطة بالمستخدم (مثل log للأحداث أو حملات...).
+
+أعمدة تقريبية:
+- id              bigint PRIMARY KEY
+- user_id         uuid   REFERENCES public.profiles(id)
+- type            text
+- payload         jsonb
+- created_at      timestamptz DEFAULT now()
+
+============================================================
+8) الدعم الفني
+============================================================
+
+8.1) جدول support_tickets
+--------------------------
+
+الغرض:
+- نظام بسيط للتذاكر والدعم الفني.
+
+أعمدة تقريبية:
+- id              bigint PRIMARY KEY
+- user_id         uuid NULL REFERENCES public.profiles(id)
+- email           text  -- في حال زائر
+- subject         text
+- message         text
+- status          text  -- open / in_progress / closed
+- created_at      timestamptz DEFAULT now()
+- updated_at      timestamptz DEFAULT now()
+
+============================================================
+9) جدول admins + سياسات الأدمن
+============================================================
+
+9.1) جدول admins
+-----------------
+
+الغرض:
+- تحديد الحسابات التي تعتبر "أدمن" ولها صلاحيات موسعة على الجداول الحساسة.
+
+التعريف المقترح (الذي استعملناه):
+
+- id (ضمنيًا غير موجود – نستخدم user_id كمفتاح أساسي)
+- user_id     uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE
+- created_at  timestamptz DEFAULT now()
+
+RLS:
+- تمكين RLS على admins (مع سياسة بسيطة للسماح لكل أدمن برؤية صفّه).
+
+استخدامه في سياسات بقية الجداول:
+- profiles_admin_all  – يمنح الأدمن صلاحيات كاملة على profiles.
+- reviews_admin_all   – يمنح الأدمن صلاحيات كاملة على reviews.
+- ويمكن استخدامه لاحقًا لتوسيع صلاحيات على جداول أخرى (orders, coupons ...).
+
+============================================================
+10) الدوال (Functions) والتريجرات (Triggers)
+============================================================
+
+أهم الدوال الموجودة:
+
+- get_dashboard_stats():
+  - دالة تجمع إحصائيات لوحة التحكم (عدد الطلبات، إجمالي المبيعات،
+    عدد العملاء، عدد المنتجات، إلخ) باستخدام SELECTات مجمّعة.
+
+- get_weekly_sales():
+  - دالة ترجع مبيعات أسبوعية (group by day/week) لاستخدامها في الرسوم البيانية.
+
+- verify_and_apply_coupon(order_id, coupon_code, ...):
+  - تتحقق من الكوبون وتطبّق الخصم على order وتُسجّل الاستخدام في coupon_usage.
+
+- increment_coupon_usage(coupon_id):
+  - زيادة عداد الاستخدام used_count في coupons.
+
+- update_client_stats(user_id):
+  - دالة تُنادى من تريجر on_order_changed لتحديث إحصائيات العميل (عدد الطلبات،
+    إجمالي الإنفاق، آخر طلب...).
+
+- update_product_rating(product_id):
+  - دالة تُنادى من تريجر on_review_added لتحديث متوسط تقييم المنتج وعدد التقييمات.
+
+- handle_new_user():
+  - تُستخدم مع تريجر على auth.users لإنشاء صف تلقائي في profiles عند تسجيل مستخدم جديد
+    باستخدام البيانات الموجودة في raw_user_meta_data (full_name, phone ...).
+
+التريجرات الرئيسية:
+- on_order_changed ON public.orders
+  - AFTER INSERT OR UPDATE OR DELETE
+  - CALL update_client_stats(...)
+
+- on_review_added ON public.reviews
+  - AFTER INSERT OR UPDATE OR DELETE
+  - CALL update_product_rating(...)
+
+============================================================
+11) ملاحظات ختامية
+============================================================
+
+- هذا الملف يعطي صورة كاملة تقريبية عن:
+  - الجداول الأساسية
+  - الأعمدة الرئيسية
+  - العلاقات بين الجداول
+  - سياسات RLS المهمة (profiles, reviews, admins)
+  - الدوال والتريجرات الجوهرية
+
+- لأخذ نسخة SQL دقيقة (DDL) بكل التفاصيل (indexes, defaults, constraints):
+  - يمكن مستقبلاً استخدام pg_dump أو توليد Script من واجهة Supabase
+    عندما تكون ظروف الشبكة مناسبة.
+
+- أي مطوّر جديد على المشروع ينبغي أن يقرأ هذا الملف قبل تعديل الكود
+  أو إضافة ميزات جديدة، حتى يفهم كيف تم تصميم قاعدة البيانات والمنطق المتعلق بها.

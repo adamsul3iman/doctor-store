@@ -1,0 +1,7 @@
+policyname,cmd,roles,qual,with_check
+coupons_public_select,SELECT,{public},(is_active = true),null
+coupons_admin_all,ALL,{public},"(EXISTS ( SELECT 1
+   FROM admins a
+  WHERE (a.user_id = auth.uid())))","(EXISTS ( SELECT 1
+   FROM admins a
+  WHERE (a.user_id = auth.uid())))"
