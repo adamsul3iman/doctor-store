@@ -178,15 +178,34 @@ class _ModernProductCardState extends ConsumerState<ModernProductCard>
                           ),
                           InkWell(
                             onTap: () {
-                              ref.read(cartProvider.notifier).addItem(widget.product);
-                              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("تمت الإضافة للسلة"),
-                                  duration: Duration(seconds: 1),
-                                  backgroundColor: Color(0xFF0A2647),
-                                ),
-                              );
+                              final product = widget.product;
+                              final hasColors =
+                                  (product.options['colors'] is List &&
+                                      (product.options['colors'] as List).isNotEmpty);
+                              final hasSizes =
+                                  (product.options['sizes'] is List &&
+                                      (product.options['sizes'] as List).isNotEmpty);
+
+                              if (hasColors || hasSizes) {
+                                // منتج يحتاج اختيار لون/مقاس → نرسل العميل لصفحة التفاصيل
+                                context.push(
+                                  buildProductDetailsPath(product),
+                                  extra: product,
+                                );
+                                return;
+                              }
+
+                              // منتج بدون خيارات → نسمح بالإضافة السريعة
+                              ref.read(cartProvider.notifier).addItem(product);
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(
+                                  const SnackBar(
+                                    content: Text("تمت الإضافة للسلة"),
+                                    duration: Duration(seconds: 1),
+                                    backgroundColor: Color(0xFF0A2647),
+                                  ),
+                                );
                             },
                             child: Container(
                               padding: const EdgeInsets.all(6),

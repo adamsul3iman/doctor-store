@@ -1152,15 +1152,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
 
         const SizedBox(height: 8),
 
-        // السطر الثاني: بطاقة السعر على يمين الشاشة
-        Align(
-          alignment: Alignment.centerRight,
-          child: _buildHeaderPriceBlock(),
-        ),
-
-        const SizedBox(height: 10),
-
-        // السطر الثالث: عنوان المنتج بعرض الصفحة بالكامل
+        // عنوان المنتج بعرض الصفحة بالكامل
         AutoSizeText(
           widget.product.title,
           maxLines: 3,
@@ -1176,66 +1168,72 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
 
         const SizedBox(height: 6),
 
-        // سطر رفيع للتقييم أسفل العنوان
-        if (widget.product.ratingCount > 0)
-          Row(
-            children: [
-              const Icon(Icons.star_rounded,
-                  color: Color(0xFFD4AF37), size: 18),
-              const SizedBox(width: 4),
+        // التقييم + عدد المشاهدات في سطر واحد بشكل مضغوط
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            if (widget.product.ratingCount > 0)
+              Row(
+                children: [
+                  const Icon(Icons.star_rounded,
+                      color: Color(0xFFD4AF37), size: 18),
+                  const SizedBox(width: 4),
+                  Text(
+                    widget.product.ratingAverage.toStringAsFixed(1),
+                    style: GoogleFonts.almarai(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: _primaryDark,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    "(${widget.product.ratingCount} تقييم)",
+                    style: GoogleFonts.almarai(
+                      fontSize: 11,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              )
+            else
               Text(
-                widget.product.ratingAverage.toStringAsFixed(1),
-                style: GoogleFonts.almarai(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: _primaryDark,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                "(${widget.product.ratingCount} تقييم)",
+                "منتج جديد – كن أول من يجرّبه",
                 style: GoogleFonts.almarai(
                   fontSize: 11,
                   color: Colors.grey.shade600,
-                ),
-              ),
-            ],
-          )
-        else
-          Text(
-            "منتج جديد – كن أول من يجرّبه",
-            style: GoogleFonts.almarai(
-              fontSize: 11,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-
-        const SizedBox(height: 4),
-
-        // عدد المشاهدات (يشمل الزوّار الضيوف)
-        viewsAsync.when(
-          data: (count) => Row(
-            children: [
-              const Icon(
-                Icons.remove_red_eye_outlined,
-                size: 16,
-                color: Colors.grey,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '$count مشاهدة',
-                style: GoogleFonts.almarai(
-                  fontSize: 11,
-                  color: Colors.grey.shade700,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-            ],
-          ),
-          loading: () => const SizedBox.shrink(),
-          error: (_, __) => const SizedBox.shrink(),
+            viewsAsync.when(
+              data: (count) => Row(
+                children: [
+                  const Icon(
+                    Icons.remove_red_eye_outlined,
+                    size: 16,
+                    color: Colors.grey,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$count مشاهدة',
+                    style: GoogleFonts.almarai(
+                      fontSize: 11,
+                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
+          ],
         ),
+
+        const SizedBox(height: 10),
+
+        // السعر بشكل مختصر واحترافي
+        _buildInlinePriceRow(),
 
         const SizedBox(height: 10),
 
@@ -1251,24 +1249,6 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
         InlineSimilarProductsStrip(
           categoryId: widget.product.category,
           currentProductId: widget.product.id,
-        ),
-        const SizedBox(height: 6),
-
-        // رابط صغير يفتح واجهة سلة هذا المنتج في BottomSheet بدون إزعاج واجهة الصفحة
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton.icon(
-            onPressed: _openProductLocalBasketSheet,
-            icon: const Icon(Icons.shopping_basket_outlined, size: 18),
-            label: Text(
-              'شراء أكثر من لون أو مقاس في نفس الطلب',
-              style: GoogleFonts.almarai(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: _primaryDark,
-              ),
-            ),
-          ),
         ),
         const SizedBox(height: 6),
 
@@ -1302,6 +1282,76 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
             ),
           ),
         ],
+      ],
+    );
+  }
+
+  Widget _buildInlinePriceRow() {
+    final isMattress = widget.product.category == 'mattresses';
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  "$_currentTotal",
+                  style: GoogleFonts.almarai(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color:
+                        _isActiveOffer ? Colors.green.shade700 : _primaryDark,
+                  ),
+                ),
+                const SizedBox(width: 3),
+                Text(
+                  "د.أ",
+                  style: GoogleFonts.almarai(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+              ],
+            ),
+            if (widget.product.oldPrice != null && !_isActiveOffer)
+              Text(
+                "${widget.product.oldPrice} د.أ",
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.lineThrough,
+                ),
+              ),
+          ],
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isMattress ? Icons.bed : Icons.verified_user,
+              size: 16,
+              color: Colors.green,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              isMattress
+                  ? "تجربة مريحة وضمان استبدال للعيوب"
+                  : "ضمان جودة واستبدال للعيوب المصنعية",
+              style: GoogleFonts.almarai(
+                fontSize: 10,
+                color: Colors.green.shade800,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -1997,16 +2047,18 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
             ),
             const Spacer(),
             Container(
+              height: 36,
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(999),
                 border: Border.all(color: Colors.grey.shade300),
               ),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.remove, color: Colors.grey),
-                    onPressed: () {
+                  _buildQtySmallButton(
+                    icon: Icons.remove,
+                    color: Colors.grey,
+                    onTap: () {
                       if (_quantity > 1) {
                         setState(() => _quantity--);
                         if (modalSetState != null) {
@@ -2020,15 +2072,16 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                     child: Text(
                       "$_quantity",
                       style: GoogleFonts.almarai(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.w800,
                         color: _primaryDark,
                       ),
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(Icons.add, color: _primaryDark),
-                    onPressed: () {
+                  _buildQtySmallButton(
+                    icon: Icons.add,
+                    color: _primaryDark,
+                    onTap: () {
                       setState(() {
                         if (stock == null || _quantity < stock) {
                           _quantity++;
@@ -2125,6 +2178,28 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
         ),
       );
     }
+  }
+
+  Widget _buildQtySmallButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: SizedBox(
+        width: 32,
+        height: 32,
+        child: Center(
+          child: Icon(
+            icon,
+            size: 18,
+            color: color,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildTrustSignals() {
