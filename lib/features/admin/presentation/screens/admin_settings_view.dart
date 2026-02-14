@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -66,6 +68,14 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
   final _supabase = Supabase.instance.client;
   bool _isLoading = false;
   bool _isHomeSectionsLoading = false;
+
+  // Track unsaved changes
+  bool _hasUnsavedChanges = false;
+  bool _isAutoSaving = false;
+  String? _lastSaveStatus;
+
+  // Debounce timer for auto-save
+  Timer? _autoSaveTimer;
   final Map<String, bool> _homeSectionsEnabled = {};
   final Map<String, String> _homeSectionsTitle = {};
   final Map<String, String> _homeSectionsSubtitle = {};
@@ -108,6 +118,7 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
     _ownerNameController.dispose();
     _ownerBioController.dispose();
     _freeShippingThresholdController.dispose();
+    _autoSaveTimer?.cancel();
     super.dispose();
   }
 
@@ -129,6 +140,9 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
       _freeShippingEnabled = (data['free_shipping_enabled'] as bool?) ?? true;
       _freeShippingThresholdController.text =
           (data['free_shipping_threshold'] as num?)?.toDouble().toString() ?? '';
+
+      // Add change listeners for auto-save
+      _setupAutoSaveListeners();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -138,6 +152,71 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
       // في كل الأحوال نحاول تحميل إعدادات أقسام الصفحة الرئيسية
       if (mounted) {
         await _loadHomeSections();
+      }
+    }
+  }
+
+  void _setupAutoSaveListeners() {
+    // Auto-save for simple text fields (with debounce)
+    void onFieldChanged() {
+      setState(() => _hasUnsavedChanges = true);
+      _debouncedAutoSave();
+    }
+
+    _whatsappController.addListener(onFieldChanged);
+    _facebookController.addListener(onFieldChanged);
+    _instagramController.addListener(onFieldChanged);
+    _tiktokController.addListener(onFieldChanged);
+    _ownerNameController.addListener(onFieldChanged);
+    _ownerBioController.addListener(onFieldChanged);
+    _freeShippingThresholdController.addListener(onFieldChanged);
+  }
+
+  void _debouncedAutoSave() {
+    _autoSaveTimer?.cancel();
+    _autoSaveTimer = Timer(const Duration(seconds: 2), () {
+      if (_hasUnsavedChanges && mounted) {
+        _autoSaveSettings();
+      }
+    });
+  }
+
+  Future<void> _autoSaveSettings() async {
+    if (_isAutoSaving) return;
+    setState(() => _isAutoSaving = true);
+
+    try {
+      final thresholdText = _freeShippingThresholdController.text.trim();
+      final threshold = double.tryParse(thresholdText);
+
+      await _supabase.from('app_settings').update({
+        'whatsapp_number': _whatsappController.text,
+        'facebook_url': _facebookController.text,
+        'instagram_url': _instagramController.text,
+        'tiktok_url': _tiktokController.text,
+        'owner_name': _ownerNameController.text,
+        'owner_bio': _ownerBioController.text,
+        'owner_image_url': _ownerImageUrl,
+        'free_shipping_enabled': _freeShippingEnabled,
+        if (threshold != null) 'free_shipping_threshold': threshold,
+      }).eq('id', 1);
+
+      if (mounted) {
+        setState(() {
+          _hasUnsavedChanges = false;
+          _isAutoSaving = false;
+          _lastSaveStatus = 'تم الحفظ تلقائياً';
+        });
+        // Clear status after 3 seconds
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted) {
+            setState(() => _lastSaveStatus = null);
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isAutoSaving = false);
       }
     }
   }
@@ -635,54 +714,179 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
     return DefaultTabController(
       length: 4,
       child: Scaffold(
-        body: Column(
+        backgroundColor: Colors.grey[50],
+        body: NestedScrollView(
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return [
+              SliverAppBar(
+                pinned: true,
+                floating: true,
+                snap: true,
+                elevation: 0,
+                scrolledUnderElevation: 2,
+                backgroundColor: Colors.white,
+                title: const Text(
+                  'إعدادات الموقع',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0A2647),
+                  ),
+                ),
+                centerTitle: true,
+                iconTheme: const IconThemeData(color: Color(0xFF0A2647)),
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(52),
+                  child: Material(
+                    color: Colors.white,
+                    elevation: 0,
+                    child: TabBar(
+                      isScrollable: true,
+                      indicatorColor: const Color(0xFF0A2647),
+                      labelColor: const Color(0xFF0A2647),
+                      unselectedLabelColor: Colors.grey[600],
+                      labelStyle: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                      ),
+                      tabs: const [
+                        Tab(
+                          icon: Icon(Icons.chat_outlined, size: 18),
+                          text: 'التواصل وصاحب المتجر',
+                        ),
+                        Tab(
+                          icon: Icon(Icons.description_outlined, size: 18),
+                          text: 'الصفحات الثابتة',
+                        ),
+                        Tab(
+                          icon: Icon(Icons.search, size: 18),
+                          text: 'SEO الموقع',
+                        ),
+                        Tab(
+                          icon: Icon(Icons.home_outlined, size: 18),
+                          text: 'الصفحة الرئيسية',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ];
+          },
+          body: TabBarView(
+            children: [
+              _buildContactAndOwnerTab(),
+              _buildStaticPagesTab(),
+              _buildSeoTab(),
+              _buildHomeTab(),
+            ],
+          ),
+        ),
+        bottomNavigationBar: _buildStickySaveBar(),
+      ),
+    );
+  }
+
+  // شريط الحفظ الثابت في الأسفل
+  Widget? _buildStickySaveBar() {
+    // Only show on first tab (Contact & Owner) where auto-save applies
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: SafeArea(
+        child: Row(
           children: [
-            // عنوان علوي بسيط
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+            // Status indicator
+            Expanded(
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
+                  if (_isAutoSaving)
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Color(0xFF0A2647),
+                      ),
+                    )
+                  else if (_hasUnsavedChanges)
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Colors.orange,
+                        shape: BoxShape.circle,
+                      ),
+                    )
+                  else if (_lastSaveStatus != null)
+                    const Icon(
+                      Icons.check_circle_outline,
+                      color: Colors.green,
+                      size: 18,
+                    ),
+                  const SizedBox(width: 8),
                   Text(
-                    'إعدادات الموقع',
+                    _isAutoSaving
+                        ? 'جاري الحفظ...'
+                        : _lastSaveStatus ??
+                            (_hasUnsavedChanges
+                                ? 'تغييرات غير محفوظة'
+                                : 'تم الحفظ'),
                     style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0A2647),
+                      fontSize: 13,
+                      color: _hasUnsavedChanges ? Colors.orange : Colors.grey[600],
+                      fontWeight: _hasUnsavedChanges ? FontWeight.w600 : FontWeight.normal,
                     ),
                   ),
                 ],
               ),
             ),
-            // شريط التبويبات
-            Material(
-              color: Colors.grey[100],
-              elevation: 1,
-              child: TabBar(
-                isScrollable: true,
-                indicatorColor: const Color(0xFF0A2647),
-                labelColor: const Color(0xFF0A2647),
-                unselectedLabelColor: Colors.grey[600],
-                tabs: const [
-                  Tab(icon: Icon(Icons.chat_outlined, size: 18), text: 'التواصل وصاحب المتجر'),
-                  Tab(icon: Icon(Icons.description_outlined, size: 18), text: 'الصفحات الثابتة'),
-                  Tab(icon: Icon(Icons.search, size: 18), text: 'SEO الموقع'),
-                  Tab(icon: Icon(Icons.home_outlined, size: 18), text: 'الصفحة الرئيسية'),
-                ],
+            // Manual save button (prominent when unsaved)
+            if (_hasUnsavedChanges)
+              ElevatedButton.icon(
+                onPressed: _isLoading ? null : _saveSettings,
+                icon: _isLoading
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.save, size: 18),
+                label: const Text('حفظ الآن'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0A2647),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              )
+            else
+              OutlinedButton.icon(
+                onPressed: _isLoading ? null : _saveSettings,
+                icon: const Icon(Icons.save, size: 18),
+                label: const Text('حفظ'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF0A2647),
+                  side: const BorderSide(color: Color(0xFF0A2647)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            // محتوى كل تبويب
-            Expanded(
-              child: TabBarView(
-                children: [
-                  _buildContactAndOwnerTab(),
-                  _buildStaticPagesTab(),
-                  _buildSeoTab(),
-                  _buildHomeTab(),
-                ],
-              ),
-            ),
           ],
         ),
       ),
@@ -746,7 +950,13 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   value: _freeShippingEnabled,
-                  onChanged: (val) => setState(() => _freeShippingEnabled = val),
+                  onChanged: (val) {
+                    setState(() {
+                      _freeShippingEnabled = val;
+                      _hasUnsavedChanges = true;
+                    });
+                    _debouncedAutoSave();
+                  },
                   title: const Text('تفعيل بانر الشحن المجاني في السلة'),
                   activeThumbColor: const Color(0xFF0A2647),
                 ),

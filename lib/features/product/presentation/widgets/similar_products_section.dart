@@ -54,6 +54,9 @@ class _SimilarProductsSectionState extends State<SimilarProductsSection> {
                 maxCount: 4,
               );
               final isCompact = crossAxisCount >= 3;
+              // حساب الارتفاع المناسب حسب عرض العنصر
+              final itemWidth = (constraints.maxWidth - ((crossAxisCount - 1) * 10)) / crossAxisCount;
+              final cardHeight = isCompact ? itemWidth + 85 : tileHeight;
 
               return GridView.builder(
                 shrinkWrap: true,
@@ -63,7 +66,7 @@ class _SimilarProductsSectionState extends State<SimilarProductsSection> {
                   crossAxisCount: crossAxisCount,
                   mainAxisSpacing: 10,
                   crossAxisSpacing: 10,
-                  mainAxisExtent: isCompact ? 255 : tileHeight,
+                  mainAxisExtent: cardHeight,
                 ),
                 itemCount: 4,
                 itemBuilder: (_, __) => const ProductCardSkeleton(),
@@ -83,6 +86,9 @@ class _SimilarProductsSectionState extends State<SimilarProductsSection> {
                   maxCount: 4,
                 );
                 final isCompact = crossAxisCount >= 3;
+                // حساب الارتفاع المناسب حسب عرض العنصر
+                final itemWidth = (constraints.maxWidth - ((crossAxisCount - 1) * 10)) / crossAxisCount;
+                final cardHeight = isCompact ? itemWidth + 85 : tileHeight;
 
                 return GridView.builder(
                   shrinkWrap: true,
@@ -92,7 +98,7 @@ class _SimilarProductsSectionState extends State<SimilarProductsSection> {
                     crossAxisCount: crossAxisCount,
                     mainAxisSpacing: 10,
                     crossAxisSpacing: 10,
-                    mainAxisExtent: isCompact ? 255 : tileHeight,
+                    mainAxisExtent: cardHeight,
                   ),
                   itemCount: products.length,
                   itemBuilder: (context, index) {

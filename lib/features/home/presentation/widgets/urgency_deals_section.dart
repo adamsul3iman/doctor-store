@@ -101,15 +101,19 @@ class _UrgencyDealsSectionState extends ConsumerState<UrgencyDealsSection> {
                     const Icon(
                       Icons.local_fire_department,
                       color: Colors.white,
-                      size: 28,
+                      size: 24,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'عروض محدودة - لا تفوتك الفرصة!',
-                      style: GoogleFonts.almarai(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        'عروض محدودة - لا تفوتك الفرصة!',
+                        style: GoogleFonts.almarai(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

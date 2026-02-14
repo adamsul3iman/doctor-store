@@ -161,7 +161,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        childAspectRatio: 1.5,
+        childAspectRatio: 0.85,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
       ),
@@ -169,13 +169,13 @@ class _AnalyticsViewState extends State<AnalyticsView> {
       itemBuilder: (context, index) {
         final stat = stats[index];
         return Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -183,28 +183,34 @@ class _AnalyticsViewState extends State<AnalyticsView> {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 stat['icon'] as IconData,
                 color: stat['color'] as Color,
-                size: 24,
+                size: 20,
               ),
-              const Spacer(),
-              Text(
-                stat['value'] as String,
-                style: GoogleFonts.almarai(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF0A2647),
+              const SizedBox(height: 6),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  stat['value'] as String,
+                  style: GoogleFonts.almarai(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF0A2647),
+                  ),
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 2),
               Text(
                 stat['title'] as String,
                 style: GoogleFonts.almarai(
-                  fontSize: 12,
+                  fontSize: 10,
                   color: Colors.grey[600],
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -221,7 +227,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -315,7 +321,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0A2647).withOpacity(0.1),
+                  color: const Color(0xFF0A2647).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -368,7 +374,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
               
               // Visits Bar
               Expanded(
-                child: Container(
+                child: SizedBox(
                   height: 30,
                   child: Stack(
                     children: [

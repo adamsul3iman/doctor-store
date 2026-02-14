@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:meta_seo/meta_seo.dart';
-import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
@@ -13,9 +13,11 @@ import 'app/app.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. إعداد الويب
+  // 1. إعداد الويب - Path URL Strategy لإزالة الـ # من الروابط
   if (kIsWeb) {
     MetaSEO().config();
+    // تفعيل Path URL Strategy لروابط نظيفة: drstore.me/product/name
+    SystemChannels.platform.invokeMethod<void>('SystemNavigator.setUrlStrategy', 'path');
   }
 
   // 2. تحميل ملف الإعدادات (مع تقليل الضوضاء في الإصدار النهائي)
@@ -49,10 +51,6 @@ Future<void> main() async {
   );
 
   timeago.setLocaleMessages('ar', timeago.ArMessages());
-
-  if (kIsWeb) {
-    usePathUrlStrategy();
-  }
 
   runApp(const ProviderScope(child: DoctorStoreApp()));
 }

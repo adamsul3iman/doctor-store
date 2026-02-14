@@ -1,3 +1,4 @@
+import 'dart:html' as html;
 import 'package:flutter/foundation.dart';
 import 'package:meta_seo/meta_seo.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
@@ -13,6 +14,12 @@ class SeoManager {
     }
   }
 
+  /// ضبط عنوان الصفحة (Tab Title) - يعمل فقط على الويب
+  static void setTitle(String title) {
+    if (!kIsWeb) return;
+    html.document.title = title;
+  }
+
   /// ضبط SEO لصفحة عامة (الهوم، من نحن، اتصل بنا، ...)
   static void setPageSeo({
     required String title,
@@ -20,6 +27,9 @@ class SeoManager {
     String? imageUrl,
   }) {
     if (!kIsWeb) return;
+
+    // تعيين عنوان الصفحة
+    setTitle(title);
 
     _meta.author(author: 'Doctor Store');
     _meta.description(description: description);
@@ -43,6 +53,9 @@ class SeoManager {
   // 3. دالة ضبط إعدادات المنتج
   static void setProductSeo(Product product) {
     if (!kIsWeb) return;
+
+    // تعيين عنوان الصفحة للمنتج
+    setTitle('${product.title} | متجر الدكتور');
 
     // وصف مختصر مخصص للسيو (يفضل من الحقل المخصص إن وجد)
     String desc;

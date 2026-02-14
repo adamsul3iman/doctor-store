@@ -19,6 +19,7 @@ import 'admin_categories_view.dart';
 import 'admin_delivery_zones_view.dart';
 import 'admin_sub_categories_view.dart';
 import 'shipping_costs_screen.dart'; // ✅ صفحة إدارة أسعار الشحن
+import 'admin_settings_view.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -50,6 +51,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     const AdminDeliveryZonesView(),
     const ShippingCostsScreen(), // ✅ صفحة إدارة أسعار الشحن
     const AnalyticsView(),
+    const AdminSettingsView(),
   ];
 
   // بيانات عناصر القائمة

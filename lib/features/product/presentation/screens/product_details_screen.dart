@@ -12,12 +12,12 @@ import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/features/cart/application/cart_manager.dart';
 import 'package:doctor_store/shared/utils/settings_provider.dart';
 import 'package:doctor_store/shared/utils/seo_manager.dart';
-import 'package:doctor_store/providers/products_provider.dart';
+import 'package:doctor_store/features/product/presentation/providers/products_provider.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
 import 'package:doctor_store/shared/utils/app_notifier.dart';
 import 'package:doctor_store/shared/utils/product_nav_helper.dart';
 import 'package:doctor_store/shared/utils/link_share_helper.dart';
-import 'package:doctor_store/shared/utils/analytics_service.dart';
+import 'package:doctor_store/shared/services/analytics_service.dart';
 import 'package:doctor_store/shared/widgets/custom_app_bar.dart';
 import 'package:doctor_store/shared/utils/categories_provider.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_search_delegate.dart';
@@ -132,21 +132,6 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     super.dispose();
   }
 
-  /// اسم القسم النهائي بعد دمج بيانات جدول الأقسام مع fallback من الموديل
-  // ignore: unused_element
-  String get _resolvedCategoryName {
-    final catsAsync = ref.watch(categoriesConfigProvider);
-    final cats = catsAsync.asData?.value;
-    if (cats != null) {
-      for (final c in cats) {
-        if (c.id == widget.product.category && c.name.trim().isNotEmpty) {
-          return c.name.trim();
-        }
-      }
-    }
-    return widget.product.categoryArabic;
-  }
-
   Future<bool> _ensureSelection() async {
     // لو لم يتم اختيار اللون أو المقاس نفتح Bottom Sheet موحد يعرضهما معاً
     final needsColor = _hasColors && _selectedColor == null;
@@ -187,305 +172,6 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
   void _showError(String message) {
     if (!mounted) return;
     AppNotifier.showError(context, message);
-  }
-
-  // ignore: unused_element
-  void _showColorSelectionDialog() {
-    final colors = List<String>.from(widget.product.options['colors']);
-    
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 400),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: _primaryDark.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.palette_outlined,
-                      color: _primaryDark,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "اختر اللون المناسب",
-                          style: GoogleFonts.almarai(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: _primaryDark,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "الرجاء اختيار لون المنتج للمتابعة",
-                          style: GoogleFonts.almarai(
-                            fontSize: 13,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const Divider(),
-              const SizedBox(height: 20),
-              
-              // Color Options
-              Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                alignment: WrapAlignment.center,
-                children: colors.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final String colorName = entry.value.toString();
-                  final color = _resolveColorSwatch(colorName, index);
-                  final bool isSelected = _selectedColor == colorName;
-                  
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        final willSelect = !isSelected;
-                        _selectedColor = willSelect ? colorName : null;
-                        if (willSelect) {
-                          _scrollToColorImage(colorName);
-                        }
-                        _updateSelectedVariant();
-                      });
-                      Navigator.of(ctx).pop();
-                    },
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: isSelected ? _primaryDark : Colors.grey.shade300,
-                              width: isSelected ? 2.5 : 1.5,
-                            ),
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                      color: _primaryDark.withValues(alpha: 0.25),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ]
-                                : [
-                                    BoxShadow(
-                                      color: color.withValues(alpha: 0.25),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ],
-                          ),
-                          child: Container(
-                            width: 52,
-                            height: 52,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: color,
-                            ),
-                            child: isSelected
-                                ? const Icon(
-                                    Icons.check,
-                                    size: 24,
-                                    color: Colors.white,
-                                  )
-                                : null,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        SizedBox(
-                          width: 80,
-                          child: Text(
-                            colorName,
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.almarai(
-                              fontSize: 12,
-                              color: isSelected ? _primaryDark : Colors.grey.shade700,
-                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
-              
-              const SizedBox(height: 24),
-              
-              // Close button
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-                child: Text(
-                  "إلغاء",
-                  style: GoogleFonts.almarai(
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ignore: unused_element
-  void _showSizeSelectionDialog() {
-    final sizes = List<String>.from(widget.product.options['sizes']);
-    
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 400),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: _primaryDark.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      Icons.straighten,
-                      color: _primaryDark,
-                      size: 28,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "اختر المقاس المناسب",
-                          style: GoogleFonts.almarai(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: _primaryDark,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "الرجاء اختيار مقاس المنتج للمتابعة",
-                          style: GoogleFonts.almarai(
-                            fontSize: 13,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              const Divider(),
-              const SizedBox(height: 20),
-              
-              // Size Options
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                alignment: WrapAlignment.center,
-                children: sizes.map((sizeName) {
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedSize = sizeName;
-                        _updateSelectedVariant();
-                      });
-                      Navigator.of(ctx).pop();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _primaryDark.withValues(alpha: 0.3),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: _primaryDark.withValues(alpha: 0.08),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        sizeName,
-                        style: GoogleFonts.almarai(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: _primaryDark,
-                        ),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-              
-              const SizedBox(height: 24),
-              
-              // Close button
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-                child: Text(
-                  "إلغاء",
-                  style: GoogleFonts.almarai(
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   /// نافذة وسط الشاشة لاختيار اللون والمقاس قبل الشراء أو الإضافة للسلة
@@ -2130,13 +1816,40 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
   Widget _buildTrustSignals() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 340;
+        final maxWidth = constraints.maxWidth;
 
+        // عناصر Trust Signals
         final items = [
           _buildTrustItem(FontAwesomeIcons.shieldHalved, "ضمان الجودة", "منتجات أصلية 100%"),
           _buildTrustItem(FontAwesomeIcons.truckFast, "شحن سريع", "توصيل آمن لباب بيتك"),
           _buildTrustItem(FontAwesomeIcons.headset, "دعم متواصل", "خدمة عملاء على مدار الساعة"),
         ];
+
+        Widget content;
+        if (maxWidth < 360) {
+          // شاشات ضيقة جداً - استخدام Wrap
+          content = Wrap(
+            spacing: 16,
+            runSpacing: 12,
+            alignment: WrapAlignment.spaceAround,
+            children: items,
+          );
+        } else if (maxWidth < 600) {
+          // شاشات متوسطة - استخدام Row مع Scroll
+          content = SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: items,
+            ),
+          );
+        } else {
+          // شاشات كبيرة - Row عادي
+          content = Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: items,
+          );
+        }
 
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 15),
@@ -2157,18 +1870,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              if (isNarrow)
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 12,
-                  alignment: WrapAlignment.spaceAround,
-                  children: items,
-                )
-              else
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: items,
-                ),
+              content,
             ],
           ),
         );

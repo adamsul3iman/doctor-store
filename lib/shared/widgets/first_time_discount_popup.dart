@@ -312,24 +312,4 @@ class _FirstTimeDiscountPopupState extends State<FirstTimeDiscountPopup>
       ),
     );
   }
-
-  /// دالة ثابتة لعرض الـ Pop-up إذا كان العميل جديد
-  // ignore: unused_element
-  static Future<void> showIfNeeded(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    final hasShown = prefs.getBool('first_time_popup_shown') ?? false;
-
-    if (!hasShown && context.mounted) {
-      // انتظر 10 ثوان قبل العرض
-      await Future.delayed(const Duration(seconds: 10));
-      
-      if (context.mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => const FirstTimeDiscountPopup(),
-        );
-      }
-    }
-  }
 }

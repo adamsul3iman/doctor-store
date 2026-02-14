@@ -85,7 +85,7 @@ class Coupon {
 // ================== البروفايدر ==================
 
 final cartProvider = StateNotifierProvider<CartNotifier, List<CartItem>>((ref) {
-  return CartNotifier(ref);
+  return CartNotifier();
 });
 
 final couponProvider = StateProvider<Coupon?>((ref) => null);
@@ -114,14 +114,10 @@ final cartTotalProvider = Provider<double>((ref) {
 });
 
 class CartNotifier extends StateNotifier<List<CartItem>> {
-  CartNotifier(this._ref) : super([]) {
+  CartNotifier() : super([]) {
     // عند بدء التشغيل نحمّل السلة مرة واحدة بدون دمج محلي/سحابي متكرر
     _loadCart();
   }
-
-  // نمرّر Ref هنا فقط لسهولة التوسع مستقبلاً (مثلاً للوصول إلى Providers أخرى)
-  // ignore: unused_field
-  final Ref _ref;
 
   SupabaseClient? _getClientOrNull() {
     try {

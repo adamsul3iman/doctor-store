@@ -38,7 +38,7 @@ class ResponsiveLayout {
 
     // ارتفاع ثابت تقريبي لمنطقة النص والأزرار داخل ProductCard.
     // الهدف: منع الـ overflow مع عدم وجود مساحة بيضاء زائدة.
-    final detailsHeight = isCompact ? 78.0 : 112.0;
+    final detailsHeight = isCompact ? 90.0 : 112.0;
 
     final extent = imageHeight + detailsHeight;
     return extent.clamp(190.0, 360.0);

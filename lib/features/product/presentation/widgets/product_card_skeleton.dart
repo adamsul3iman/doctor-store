@@ -59,10 +59,12 @@ class ProductCardSkeleton extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(height: 18, width: 56, color: baseColor),
+                        Flexible(
+                          child: Container(height: 18, width: 45, color: baseColor),
+                        ),
                         Container(
-                          height: 26,
-                          width: 26,
+                          height: 20,
+                          width: 20,
                           decoration: const BoxDecoration(
                             color: baseColor,
                             shape: BoxShape.circle,

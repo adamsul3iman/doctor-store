@@ -33,13 +33,6 @@ class ProductCard extends ConsumerWidget {
         ref.watch(categoryLabelByIdProvider.select((labels) => labels[product.category])) ??
             product.categoryArabic;
 
-    // نفس منطق الخصم المستخدم في قسم "وصل حديثاً"
-    int discount = 0;
-    if (product.oldPrice != null && product.oldPrice! > product.price) {
-      discount =
-          ((product.oldPrice! - product.price) / product.oldPrice! * 100).round();
-    }
-
     return RepaintBoundary(
       child: GestureDetector(
         onTap: () => context.push(
@@ -49,7 +42,7 @@ class ProductCard extends ConsumerWidget {
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.06),
@@ -60,7 +53,7 @@ class ProductCard extends ConsumerWidget {
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -81,35 +74,6 @@ class ProductCard extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      // شارة الخصم (أعلى اليسار)
-                      if (discount > 0)
-                        Positioned(
-                          top: 10,
-                          left: 10,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFD32F2F),
-                              borderRadius: BorderRadius.circular(8),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.2),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Text(
-                              '-$discount%',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
                       // زر المفضلة (أعلى اليمين)
                       Positioned(
                         top: 10,
@@ -134,9 +98,9 @@ class ProductCard extends ConsumerWidget {
 
                 // الجزء السفلي: تفاصيل مضغوطة بنفس ستايل "وصل حديثاً"
                 Expanded(
-                  flex: 2,
+                  flex: isCompact ? 3 : 2,
                   child: Padding(
-                    padding: EdgeInsets.all(isCompact ? 6.0 : 8.0),
+                    padding: EdgeInsets.all(isCompact ? 4.0 : 8.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.start,

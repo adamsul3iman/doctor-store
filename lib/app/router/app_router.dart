@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -27,8 +28,13 @@ import 'package:doctor_store/features/static/presentation/screens/contact_screen
 import 'package:doctor_store/app/widgets/admin_guard.dart';
 
 /// تعريف الراوتر الرئيسي للتطبيق في ملف مستقل لسهولة الصيانة والتوسع
+/// 
+/// يستخدم Path URL Strategy للويب لإزالة الـ # من الروابط
+/// مثال: drstore.me/product/product-name بدلاً من drstore.me/#/product/product-name
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
+  // استخدام Path URL Strategy للويب (إزالة # من الروابط)
+  routerNeglect: kIsWeb,
   errorBuilder: (context, state) => const Scaffold(
     body: Center(child: Text('صفحة غير موجودة')),
   ),
@@ -145,7 +151,30 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
-    // مسار سيو مختصر يعتمد على الـ slug: /p/my-product-slug
+    // مسار سيو مختصر يعتمد على الـ slug: /product/my-product-slug
+    GoRoute(
+      path: '/product/:slug',
+      pageBuilder: (context, state) {
+        final slug = state.pathParameters['slug'];
+        final extra = state.extra;
+        Product? productObj;
+        if (extra is Product) {
+          productObj = extra;
+        } else if (extra is Map<String, dynamic>) {
+          productObj = Product.fromJson(extra);
+        }
+
+        return _buildFadePage(
+          state,
+          ProductDetailsWrapper(
+            productObj: productObj,
+            productSlug: slug,
+            productId: state.uri.queryParameters['id'], // fallback اختياري
+          ),
+        );
+      },
+    ),
+    // مسار احتياطي بالصيغة القديمة للتوافق الرجعي: /p/my-product-slug
     GoRoute(
       path: '/p/:slug',
       pageBuilder: (context, state) {

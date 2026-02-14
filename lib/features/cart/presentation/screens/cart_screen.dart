@@ -57,8 +57,12 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     nameController = TextEditingController(text: userProfile.name);
     phoneController = TextEditingController(text: userProfile.phone);
     addressController = TextEditingController(text: userProfile.address);
+  }
 
-    // تتبع زيارة شاشة السلة
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // تتبع زيارة شاشة السلة بعد اكتمال بناء الـ widget
     final cartItems = ref.read(cartProvider);
     
     AnalyticsService.instance.trackSiteVisit(

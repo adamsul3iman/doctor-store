@@ -247,6 +247,8 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
     bool isSectionEnabled(String key) =>
         sectionsConfig == null ? true : (sectionsConfig[key]?.enabled ?? true);
 
+    final orderedSectionKeys = _resolveOrderedHomeSectionKeys(sectionsConfig);
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
 
@@ -399,10 +401,20 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
                   const SizedBox(height: 12),
                   _buildInlineSearchBar(context),
                   const SizedBox(height: 12),
+                ],
+              ),
+            ),
+          ),
 
-                  // يمكن اعتبار CinematicHeroSection كبانر سينمائي في الأعلى
-                  if (isSectionEnabled(HomeSectionKeys.hero))
-                    LayoutBuilder(
+          ...orderedSectionKeys.expand((key) {
+            if (!isSectionEnabled(key)) return const <Widget>[];
+
+            if (key == HomeSectionKeys.hero) {
+              return <Widget>[
+                SliverResponsiveCenterPadding(
+                  minSidePadding: 0,
+                  sliver: SliverToBoxAdapter(
+                    child: LayoutBuilder(
                       builder: (context, constraints) {
                         final isWide = constraints.maxWidth >= 900;
                         return SizedBox(
@@ -411,176 +423,146 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
                         );
                       },
                     ),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 12)),
+              ];
+            }
 
-                  const SizedBox(height: 12),
-                ],
-              ),
-            ),
-          ),
+            if (key == HomeSectionKeys.categories) {
+              return <Widget>[
+                SliverToBoxAdapter(
+                  child: _buildSectionHeader(
+                    context,
+                    title: 'تصفح سريع',
+                    actionText: 'عرض الكل',
+                    actionIcon: Icons.grid_view_rounded,
+                    onActionTap: () => context.push('/browse_all'),
+                  ),
+                ),
+                SliverResponsiveCenterPadding(
+                  minSidePadding: 0,
+                  sliver: _buildCategoriesGrid(ref),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              ];
+            }
 
-          // ================= 3) Quick Grid (Top 8 Categories) =================
-          SliverToBoxAdapter(
-            child: _buildSectionHeader(
-              context,
-              title: 'تصفح سريع',
-              actionText: 'عرض الكل',
-              actionIcon: Icons.grid_view_rounded,
-              onActionTap: () => context.push('/browse_all'),
-            ),
-          ),
-          SliverResponsiveCenterPadding(
-            minSidePadding: 0,
-            sliver: _buildCategoriesGrid(ref),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-          // ================= 4b) قسم العروض المحدودة - NEW! =================
-          SliverResponsiveCenterPadding(
-            minSidePadding: 0,
-            sliver: SliverToBoxAdapter(
-              child: latestProductsAsync.when(
-                data: (products) {
-                  final flashProducts =
-                      products.where((p) => p.isFlashDeal).toList();
-                  if (flashProducts.isEmpty) return const SizedBox.shrink();
-                  return UrgencyDealsSection(
-                    products: flashProducts,
-                    dealEndTime: DateTime.now().add(const Duration(hours: 6)),
-                  );
-                },
-                loading: () => const SizedBox.shrink(),
-                error: (e, s) => const SizedBox.shrink(),
-              ),
-            ),
-          ),
-
-          // ================= 4c) قسم النشاط الحي - NEW! =================
-          SliverResponsiveCenterPadding(
-            minSidePadding: 0,
-            sliver: SliverToBoxAdapter(
-              child: latestProductsAsync.when(
-                data: (products) {
-                  if (products.isEmpty) return const SizedBox.shrink();
-                  return LiveActivitySection(products: products);
-                },
-                loading: () => const SizedBox.shrink(),
-                error: (e, s) => const SizedBox.shrink(),
-              ),
-            ),
-          ),
-
-          // ================= 4d) قسم "خصيصاً لك" - NEW! =================
-          const SliverResponsiveCenterPadding(
-            minSidePadding: 0,
-            sliver: SliverToBoxAdapter(
-              child: PersonalizedSection(),
-            ),
-          ),
-
-          // ================= 5) وصل حديثاً (قائمة أفقية بسيطة) =================
-          SliverToBoxAdapter(
-            child: _buildSectionHeader(
-              context,
-              title: 'وصل حديثاً',
-              actionText: 'عرض الكل',
-              onActionTap: () => context.push('/all_products?sort=new'),
-            ),
-          ),
-          SliverResponsiveCenterPadding(
-            minSidePadding: 0,
-            sliver: SliverToBoxAdapter(
-              child: latestProductsAsync.when(
-                data: (products) {
-                  if (products.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-
-                  // تسجيل حدث Analytics مرة واحدة عند تحميل المنتجات الجديدة
-                  if (!_homeLatestLogged) {
-                    _homeLatestLogged = true;
-                    final durationMs =
-                        DateTime.now().millisecondsSinceEpoch - _homeStartMs;
-                    AnalyticsService.instance.trackEvent(
-                      'home_latest_loaded',
-                      props: {
-                        'duration_ms': durationMs,
-                        'count': products.length,
-                      },
-                    );
-                  }
-
-                  final latest = products.take(12).toList();
-
-                  return SizedBox(
-                    height: 280,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: latest.length,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      separatorBuilder: (_, __) =>
-                          const SizedBox(width: 16),
-                      addAutomaticKeepAlives: false,
-                      addRepaintBoundaries: false,
-                      cacheExtent: 100,
-                      itemBuilder: (context, index) {
-                        final product = latest[index];
-                        return SizedBox(
-                          width: 180,
-                          child: ProductCard(
-                            product: product,
-                            isCompact: true,
-                          ),
+            if (key == HomeSectionKeys.flashSale) {
+              return <Widget>[
+                SliverResponsiveCenterPadding(
+                  minSidePadding: 0,
+                  sliver: SliverToBoxAdapter(
+                    child: latestProductsAsync.when(
+                      data: (products) {
+                        final flashProducts =
+                            products.where((p) => p.isFlashDeal).toList();
+                        if (flashProducts.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        return UrgencyDealsSection(
+                          products: flashProducts,
+                          dealEndTime:
+                              DateTime.now().add(const Duration(hours: 6)),
                         );
                       },
-                    ),
-                  );
-                },
-                loading: () => SizedBox(
-                  height: 240,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: 4,
-                    separatorBuilder: (_, __) => const SizedBox(width: 16),
-                    itemBuilder: (_, __) => const SizedBox(
-                      width: 180,
-                      child: ProductCardSkeleton(),
+                      loading: () => const SizedBox.shrink(),
+                      error: (e, s) => const SizedBox.shrink(),
                     ),
                   ),
                 ),
-                error: (e, s) => const SizedBox.shrink(),
-              ),
-            ),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              ];
+            }
 
-          // ================= 6) الأقسام التسويقية الرئيسية (كما في الهوم الأصلية) =================
-          SliverResponsiveCenterPadding(
-            minSidePadding: 0,
-            sliver: SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  // قسم الفرشات الطبية (يعتمد على أحدث المنتجات)
-                  latestProductsAsync.when(
-                    data: (products) => MattressSection(products: products),
-                    loading: () => const SizedBox.shrink(),
-                    error: (e, s) => const SizedBox.shrink(),
+            if (key == HomeSectionKeys.latest) {
+              return <Widget>[
+                SliverToBoxAdapter(
+                  child: _buildSectionHeader(
+                    context,
+                    title: 'وصل حديثاً',
+                    actionText: 'عرض الكل',
+                    onActionTap: () => context.push('/all_products?sort=new'),
                   ),
+                ),
+                SliverResponsiveCenterPadding(
+                  minSidePadding: 0,
+                  sliver: SliverToBoxAdapter(
+                    child: latestProductsAsync.when(
+                      data: (products) {
+                        if (products.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
 
-                  const SizedBox(height: 24),
+                        if (!_homeLatestLogged) {
+                          _homeLatestLogged = true;
+                          final durationMs =
+                              DateTime.now().millisecondsSinceEpoch -
+                                  _homeStartMs;
+                          AnalyticsService.instance.trackEvent(
+                            'home_latest_loaded',
+                            props: {
+                              'duration_ms': durationMs,
+                              'count': products.length,
+                            },
+                          );
+                        }
 
-                  // شريط المخدات (وسائد) كسحب سريع للعروض
-                  latestProductsAsync.when(
-                    data: (products) => PillowCarousel(products: products),
-                    loading: () => const SizedBox.shrink(),
-                    error: (e, s) => const SizedBox.shrink(),
+                        final latest = products.take(12).toList();
+                        return SizedBox(
+                          height: 280,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: latest.length,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(width: 16),
+                            addAutomaticKeepAlives: false,
+                            addRepaintBoundaries: false,
+                            cacheExtent: 100,
+                            itemBuilder: (context, index) {
+                              final product = latest[index];
+                              return SizedBox(
+                                width: 180,
+                                child: ProductCard(
+                                  product: product,
+                                  isCompact: true,
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                      loading: () => SizedBox(
+                        height: 240,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: 4,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(width: 16),
+                          itemBuilder: (_, __) => const SizedBox(
+                            width: 180,
+                            child: ProductCardSkeleton(),
+                          ),
+                        ),
+                      ),
+                      error: (e, s) => const SizedBox.shrink(),
+                    ),
                   ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              ];
+            }
 
-                  const SizedBox(height: 24),
-
-                  // قسم طاولات السفرة
-                  if (isSectionEnabled(HomeSectionKeys.dining))
-                    diningProductsAsync.when(
+            if (key == HomeSectionKeys.dining) {
+              return <Widget>[
+                SliverResponsiveCenterPadding(
+                  minSidePadding: 0,
+                  sliver: SliverToBoxAdapter(
+                    child: diningProductsAsync.when(
                       data: (products) => DiningTableSection(
                         products: products,
                         title: _resolveSectionTitle(
@@ -597,53 +579,145 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
                       loading: () => const SizedBox.shrink(),
                       error: (e, s) => const SizedBox.shrink(),
                     ),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              ];
+            }
+
+            if (key == HomeSectionKeys.middleBanner) {
+              return const <Widget>[
+                SliverToBoxAdapter(child: SizedBox(height: 24)),
+                SliverResponsiveCenterPadding(
+                  minSidePadding: 0,
+                  sliver: SliverToBoxAdapter(child: HomeBanner(position: 'middle')),
+                ),
+              ];
+            }
+
+            if (key == HomeSectionKeys.owner) {
+              return const <Widget>[
+                SliverResponsiveCenterPadding(
+                  minSidePadding: 0,
+                  sliver: SliverToBoxAdapter(child: OwnerSection()),
+                ),
+              ];
+            }
+
+            if (key == HomeSectionKeys.baby) {
+              return <Widget>[
+                SliverResponsiveCenterPadding(
+                  minSidePadding: 0,
+                  sliver: SliverToBoxAdapter(
+                    child: _buildFeaturedSection(
+                      context,
+                      title: _resolveSectionTitle(
+                        sectionsConfig,
+                        HomeSectionKeys.baby,
+                        'عالم الطفل السعيد 👶',
+                      ),
+                      subtitle: _resolveSectionSubtitle(
+                        sectionsConfig,
+                        HomeSectionKeys.baby,
+                        'كل ما يحتاجه طفلك لنوم هادئ وآمن.',
+                      ),
+                      category: 'baby_supplies',
+                      bgColor: const Color(0xFFFFF0F5),
+                    ),
+                  ),
+                ),
+              ];
+            }
+
+            return const <Widget>[];
+          }),
+
+          // أقسام ثابتة حالياً خارج نظام الإدارة
+          SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: SliverToBoxAdapter(
+              child: latestProductsAsync.when(
+                data: (products) {
+                  if (products.isEmpty) return const SizedBox.shrink();
+                  return LiveActivitySection(products: products);
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (e, s) => const SizedBox.shrink(),
+              ),
+            ),
+          ),
+          const SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: SliverToBoxAdapter(child: PersonalizedSection()),
+          ),
+
+          SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  latestProductsAsync.when(
+                    data: (products) => MattressSection(products: products),
+                    loading: () => const SizedBox.shrink(),
+                    error: (e, s) => const SizedBox.shrink(),
+                  ),
+                  const SizedBox(height: 24),
+                  latestProductsAsync.when(
+                    data: (products) => PillowCarousel(products: products),
+                    loading: () => const SizedBox.shrink(),
+                    error: (e, s) => const SizedBox.shrink(),
+                  ),
                 ],
               ),
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-          // ================= 8) الأقسام السفلية + الفوتر =================
           SliverResponsiveCenterPadding(
             minSidePadding: 0,
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                const SizedBox(height: 24),
-
-                // بانر منتصف الصفحة إن كان مفعّلاً من لوحة التحكم
-                if (isSectionEnabled(HomeSectionKeys.middleBanner))
-                  const HomeBanner(position: 'middle'),
-
-                if (isSectionEnabled(HomeSectionKeys.owner))
-                  const OwnerSection(),
-
-                if (isSectionEnabled(HomeSectionKeys.baby))
-                  _buildFeaturedSection(
-                    context,
-                    title: _resolveSectionTitle(
-                      sectionsConfig,
-                      HomeSectionKeys.baby,
-                      "عالم الطفل السعيد 👶",
-                    ),
-                    subtitle: _resolveSectionSubtitle(
-                      sectionsConfig,
-                      HomeSectionKeys.baby,
-                      "كل ما يحتاجه طفلك لنوم هادئ وآمن.",
-                    ),
-                    category: "baby_supplies",
-                    bgColor: const Color(0xFFFFF0F5),
-                  ),
-
-                const AppFooter(),
-                // مساحة كافية للـ FAB + safe area
-                const SizedBox(height: 100),
-              ]),
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                children: const [
+                  SizedBox(height: 24),
+                  AppFooter(),
+                  SizedBox(height: 100),
+                ],
+              ),
             ),
           ),
         ],
       ),
     ),
   );
+  }
+
+  List<String> _resolveOrderedHomeSectionKeys(
+    Map<String, HomeSectionConfig>? config,
+  ) {
+    const defaultOrder = <String>[
+      HomeSectionKeys.hero,
+      HomeSectionKeys.categories,
+      HomeSectionKeys.flashSale,
+      HomeSectionKeys.latest,
+      HomeSectionKeys.middleBanner,
+      HomeSectionKeys.dining,
+      HomeSectionKeys.owner,
+      HomeSectionKeys.baby,
+    ];
+
+    if (config == null || config.isEmpty) return defaultOrder;
+
+    final configuredKeys = config.keys.toSet();
+    final keys = <String>[...configuredKeys];
+    keys.sort((a, b) {
+      final sa = config[a]?.sortOrder ?? 0;
+      final sb = config[b]?.sortOrder ?? 0;
+      return sa.compareTo(sb);
+    });
+
+    for (final k in defaultOrder) {
+      if (!keys.contains(k)) keys.add(k);
+    }
+    return keys;
   }
 
   void _precacheHomeImages(List<Product> products) {
@@ -858,27 +932,33 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 4,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0A2647),
-                  borderRadius: BorderRadius.circular(2),
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0A2647),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                title,
-                style: GoogleFonts.almarai(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: const Color(0xFF0A2647),
-                  letterSpacing: -0.3,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: GoogleFonts.almarai(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF0A2647),
+                      letterSpacing: -0.3,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           if (actionText != null && onActionTap != null)
             TextButton.icon(
@@ -895,6 +975,8 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF0A2647),
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8),

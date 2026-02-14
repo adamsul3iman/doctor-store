@@ -67,7 +67,7 @@ class _LiveUsersWidgetState extends State<LiveUsersWidget> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF4CAF50).withOpacity(0.3),
+            color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -89,7 +89,7 @@ class _LiveUsersWidgetState extends State<LiveUsersWidget> {
                   borderRadius: BorderRadius.circular(6),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 0.5),
                       blurRadius: 8,
                       spreadRadius: 2,
                     ),
@@ -102,7 +102,7 @@ class _LiveUsersWidgetState extends State<LiveUsersWidget> {
                 style: GoogleFonts.almarai(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                 ),
               ),
               const Spacer(),
@@ -112,7 +112,7 @@ class _LiveUsersWidgetState extends State<LiveUsersWidget> {
                   onTap: _fetchOnlineUsers,
                   child: Icon(
                     Icons.refresh,
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     size: 18,
                   ),
                 ),
@@ -148,7 +148,7 @@ class _LiveUsersWidgetState extends State<LiveUsersWidget> {
                         'زائر',
                         style: GoogleFonts.almarai(
                           fontSize: 14,
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                         ),
                       ),
                     ),
@@ -159,7 +159,7 @@ class _LiveUsersWidgetState extends State<LiveUsersWidget> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -168,14 +168,14 @@ class _LiveUsersWidgetState extends State<LiveUsersWidget> {
                 Icon(
                   Icons.access_time,
                   size: 14,
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                 ),
                 const SizedBox(width: 6),
                 Text(
                   'آخر 5 دقائق',
                   style: GoogleFonts.almarai(
                     fontSize: 12,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -237,10 +237,10 @@ class _LiveUsersBadgeState extends State<LiveUsersBadge> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: const Color(0xFF4CAF50).withOpacity(0.1),
+          color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: const Color(0xFF4CAF50).withOpacity(0.3),
+            color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
             width: 1,
           ),
         ),
