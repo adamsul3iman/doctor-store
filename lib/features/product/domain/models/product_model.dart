@@ -215,6 +215,220 @@ class Product {
     return 1.0;
   }
 
+  /// هل المنتج يحتوي خيارات ألوان (ضمن options['colors']).
+  bool get hasColorOptions {
+    final colors = options['colors'];
+    return colors is List && colors.isNotEmpty;
+  }
+
+  /// هل المنتج يحتوي خيارات مقاسات، بما فيها وضع الفرشات (mattress auto pricing).
+  bool get hasSizeOptions {
+    final sizes = options['sizes'];
+    final hasStandard = sizes is List && sizes.isNotEmpty;
+    return hasStandard || isMattressAuto;
+  }
+
+  /// ✅ هل هذا المنتج فرشة بنظام تسعير تلقائي حسب المقاس؟
+  ///
+  /// نعتبره Mattress Auto إذا:
+  /// - القسم 'mattresses'
+  /// - ويوجد options['mattress'] أو product_type == 'mattress'
+  bool get isMattressAuto {
+    if (category != 'mattresses') return false;
+    final type = options['product_type'];
+    if (type is String && type == 'mattress') return true;
+    final raw = options['mattress'];
+    return raw is Map;
+  }
+
+  Map<String, dynamic>? get mattressConfig {
+    final raw = options['mattress'];
+    if (raw is Map<String, dynamic>) return raw;
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    return null;
+  }
+
+  int? get mattressWidthMinCm {
+    final v = mattressConfig?['width_min'];
+    return v is num ? v.toInt() : null;
+  }
+
+  int? get mattressWidthMaxCm {
+    final v = mattressConfig?['width_max'];
+    return v is num ? v.toInt() : null;
+  }
+
+  int? get mattressWidthStepCm {
+    final v = mattressConfig?['width_step'];
+    return v is num ? v.toInt() : null;
+  }
+
+  List<int> get mattressLengthsCm {
+    final raw = mattressConfig?['lengths'];
+    if (raw is! List) return const [];
+
+    final values = <int>{};
+    for (final e in raw) {
+      final n = e is num ? e.toInt() : int.tryParse(e.toString());
+      if (n != null && n > 0) values.add(n);
+    }
+    final list = values.toList()..sort();
+    return list;
+  }
+
+  /// يولّد قائمة العروض المتاحة (بالسنتيمتر).
+  ///
+  /// الأولوية:
+  /// 1) mattress.widths = قائمة مخصصة
+  /// 2) width_min/width_max/width_step = توليد ضمن مدى
+  List<int> get mattressWidthsCm {
+    final rawCustom = mattressConfig?['widths'];
+    if (rawCustom is List) {
+      final values = <int>{};
+      for (final e in rawCustom) {
+        final n = e is num ? e.toInt() : int.tryParse(e.toString());
+        if (n != null && n > 0) values.add(n);
+      }
+      final list = values.toList()..sort();
+      if (list.isNotEmpty) return list;
+    }
+
+    final min = mattressWidthMinCm;
+    final max = mattressWidthMaxCm;
+    final step = mattressWidthStepCm;
+
+    if (min == null || max == null || step == null) return const [];
+    if (min <= 0 || max < min || step <= 0) return const [];
+
+    // حماية من أي بيانات خاطئة قد تنتج عدد كبير جداً.
+    final expectedCount = ((max - min) ~/ step) + 1;
+    if (expectedCount <= 0 || expectedCount > 500) return const [];
+
+    final list = <int>[];
+    for (int w = min; w <= max; w += step) {
+      list.add(w);
+    }
+    return list;
+  }
+
+  /// وضع تسعير الفرشات:
+  /// - per_sqm: حسب المساحة
+  /// - by_width: يدوي حسب العرض فقط
+  String get mattressPricingMode {
+    final pricing = mattressConfig?['pricing'];
+    if (pricing is Map) {
+      final p = Map<String, dynamic>.from(pricing);
+      final mode = p['mode'];
+      if (mode is String && mode.isNotEmpty) return mode;
+    }
+    return 'per_sqm';
+  }
+
+  Map<int, double> get mattressWidthPrices {
+    final pricing = mattressConfig?['pricing'];
+    if (pricing is Map) {
+      final p = Map<String, dynamic>.from(pricing);
+      final raw = p['width_prices'];
+      if (raw is Map) {
+        final map = <int, double>{};
+        for (final e in Map<String, dynamic>.from(raw).entries) {
+          final w = int.tryParse(e.key);
+          final price = e.value is num
+              ? (e.value as num).toDouble()
+              : double.tryParse(e.value.toString());
+          if (w != null && price != null) {
+            map[w] = price;
+          }
+        }
+        return map;
+      }
+    }
+    return const {};
+  }
+
+  double get mattressBaseFee {
+    final pricing = mattressConfig?['pricing'];
+    if (pricing is Map) {
+      final p = Map<String, dynamic>.from(pricing);
+      final v = p['base_fee'];
+      if (v is num) return v.toDouble();
+      return double.tryParse(v.toString()) ?? 0;
+    }
+    return 0;
+  }
+
+  double get mattressPricePerSqm {
+    final pricing = mattressConfig?['pricing'];
+    if (pricing is Map) {
+      final p = Map<String, dynamic>.from(pricing);
+      final v = p['price_per_sqm'];
+      if (v is num) return v.toDouble();
+      return double.tryParse(v.toString()) ?? 0;
+    }
+    return 0;
+  }
+
+  /// يحسب سعر الفرشة حسب وضع التسعير.
+  /// - per_sqm: base_fee + (area_m2 * price_per_sqm)
+  /// - by_width: سعر حسب العرض فقط (تجاهل الطول)
+  double? computeMattressUnitPrice({required int widthCm, int? lengthCm}) {
+    if (!isMattressAuto) return null;
+    if (widthCm <= 0) return null;
+
+    if (mattressPricingMode == 'by_width') {
+      final map = mattressWidthPrices;
+      final p = map[widthCm];
+      return p;
+    }
+
+    final l = lengthCm;
+    if (l == null || l <= 0) return null;
+
+    final area = (widthCm / 100.0) * (l / 100.0);
+    final price = mattressBaseFee + (area * mattressPricePerSqm);
+    return price;
+  }
+
+  /// أقل سعر ممكن (Unit Price) للفرشات:
+  /// - نحسبه من معادلة التسعير إن توفرت بيانات المقاسات
+  /// - ونقارن مع أقل سعر متغيرات (إن وجدت)
+  double? get mattressMinUnitPrice {
+    if (!isMattressAuto) return null;
+
+    double? minPrice;
+
+    // 1) من التسعير اليدوي حسب العرض
+    if (mattressPricingMode == 'by_width') {
+      final map = mattressWidthPrices;
+      if (map.isNotEmpty) {
+        minPrice = map.values.reduce((a, b) => a < b ? a : b);
+      }
+    } else {
+      // 2) من المعادلة (per_sqm)
+      final widths = mattressWidthsCm;
+      final lengths = mattressLengthsCm;
+      if (widths.isNotEmpty && lengths.isNotEmpty) {
+        for (final w in widths) {
+          for (final l in lengths) {
+            final p = computeMattressUnitPrice(widthCm: w, lengthCm: l);
+            if (p == null) continue;
+            if (minPrice == null || p < minPrice) minPrice = p;
+          }
+        }
+      }
+    }
+
+    // 3) من المتغيرات (قد تحتوي استثناءات أسعار)
+    if (variants.isNotEmpty) {
+      for (final v in variants) {
+        if (v.price <= 0) continue;
+        if (minPrice == null || v.price < minPrice) minPrice = v.price;
+      }
+    }
+
+    return minPrice;
+  }
+
   /// إيجاد المتغير المطابق لاختيارات العميل (لون + مقاس + وحدة).
   ProductVariant? findMatchingVariant({
     String? color,
@@ -292,6 +506,11 @@ class Product {
       safeOptions = Map<String, dynamic>.from(rawOptions);
     } else {
       safeOptions = <String, dynamic>{};
+    }
+    
+    // ✅ إضافة shipping_size من الحقل المباشر إلم options لسهولة الوصول
+    if (json['shipping_size'] != null) {
+      safeOptions['shipping_size'] = json['shipping_size'];
     }
 
     return Product(
@@ -375,6 +594,8 @@ class ProductVariant {
   final String? size;
   /// تسمية الوحدة ("حبة"، "متر"، ...)
   final String? unit;
+  final String? imageUrl;
+  final Map<String, String> attributes;
   /// سعر الوحدة لهذا المتغير
   final double price;
   /// مخزون هذا المتغير (اختياري)
@@ -386,6 +607,8 @@ class ProductVariant {
     this.color,
     this.size,
     this.unit,
+    this.imageUrl,
+    this.attributes = const <String, String>{},
     required this.price,
     this.stock,
   });
@@ -396,6 +619,17 @@ class ProductVariant {
     final color = json['color']?.toString();
     final unit = json['unit']?.toString();
     final rawId = json['id']?.toString();
+
+    Map<String, String> attrs = const <String, String>{};
+    final rawAttrs = json['attributes'];
+    if (rawAttrs is Map<String, dynamic>) {
+      attrs = rawAttrs.map((k, v) => MapEntry(k.toString(), v?.toString() ?? ''))
+        ..removeWhere((k, v) => k.trim().isEmpty || v.trim().isEmpty);
+    } else if (rawAttrs is Map) {
+      attrs = Map<String, dynamic>.from(rawAttrs)
+          .map((k, v) => MapEntry(k.toString(), v?.toString() ?? ''))
+        ..removeWhere((k, v) => k.trim().isEmpty || v.trim().isEmpty);
+    }
 
     // إذا لم يكن هناك id محفوظ، نكوّن واحداً بسيطاً من الأبعاد المتاحة.
     final generatedId = rawId == null || rawId.isEmpty
@@ -408,6 +642,8 @@ class ProductVariant {
       color: color,
       size: size,
       unit: unit,
+      imageUrl: json['image_url']?.toString(),
+      attributes: attrs,
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       stock: json['stock'] is num ? (json['stock'] as num).toInt() : null,
     );
@@ -420,6 +656,8 @@ class ProductVariant {
       if (color != null && color!.isNotEmpty) 'color': color,
       if (size != null && size!.isNotEmpty) 'size': size,
       if (unit != null && unit!.isNotEmpty) 'unit': unit,
+      if (imageUrl != null && imageUrl!.isNotEmpty) 'image_url': imageUrl,
+      if (attributes.isNotEmpty) 'attributes': attributes,
       'price': price,
       if (stock != null) 'stock': stock,
     };

@@ -44,3 +44,15 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Android signing / secrets (DO NOT COMMIT)
+/android/key.properties
+/android/app/key.properties
+/android/app/*.jks
+/android/app/*.keystore
+*.jks
+*.keystore
+
+# Database dumps / backups (DO NOT COMMIT)
+*.dump
+*.backup

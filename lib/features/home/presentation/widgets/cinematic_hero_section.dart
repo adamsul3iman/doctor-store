@@ -1,31 +1,38 @@
 import 'dart:async';
+import 'dart:math' as math;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:go_router/go_router.dart'; // ✅ ضروري للتنقل
+import 'package:go_router/go_router.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:doctor_store/shared/models/banner_model.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
+import 'package:doctor_store/shared/widgets/app_network_image.dart';
+import 'package:doctor_store/shared/repositories/banner_repository.dart';
 
 // مزود لجلب البانرات المفعلة
 final activeBannersProvider = FutureProvider<List<AppBanner>>((ref) async {
-  SupabaseClient? supabase;
-  try {
-    supabase = Supabase.instance.client;
-  } catch (_) {
-    // في بيئات الاختبار أو قبل تهيئة Supabase نرجع قائمة فارغة
-    return <AppBanner>[];
-  }
+  return BannerRepository().fetchActiveBanners();
+});
 
-  final data = await supabase
-      .from('banners')
-      .select()
-      .eq('is_active', true)
-      .order('sort_order', ascending: true);
-
-  return data.map((e) => AppBanner.fromJson(e)).toList();
+// مزود لـ Preload صور البانرات
+final bannerImagesPreloaderProvider = FutureProvider.family<void, List<AppBanner>>((ref, banners) async {
+  if (banners.isEmpty) return;
+  
+  // Preload image URLs into cache manager in parallel
+  final cacheManager = DefaultCacheManager();
+  final List<Future<dynamic>> preloadFutures = banners
+      .where((b) => b.imageUrl.isNotEmpty)
+      .map((b) => cacheManager.getSingleFile(b.imageUrl))
+      .toList();
+  
+  // Use error-aware waiting - failures don't block successful loads
+  await Future.wait(
+    preloadFutures.map((f) => f.catchError((_) {})).toList(),
+    eagerError: false,
+  );
 });
 
 class CinematicHeroSection extends ConsumerStatefulWidget {
@@ -35,58 +42,50 @@ class CinematicHeroSection extends ConsumerStatefulWidget {
   ConsumerState<CinematicHeroSection> createState() => _CinematicHeroSectionState();
 }
 
-class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection> {
+class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
+    with TickerProviderStateMixin {
   int _currentPage = 0;
   late PageController _pageController;
   Timer? _timer;
+  late AnimationController _floatingController;
+  late AnimationController _glowController;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: 0);
+    _floatingController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startAutoPlay();
     });
   }
 
   void _startAutoPlay() {
-    // لا نبدأ التشغيل التلقائي إلا إذا كان هناك أكثر من بانر لتقليل العمل غير الضروري
-    final state = ref.read(activeBannersProvider);
-    final banners = state.value;
-    if (banners == null || banners.length < 2) return;
-
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (!_pageController.hasClients) return;
-
-      final currentState = ref.read(activeBannersProvider);
-      final currentBanners = currentState.value;
-      if (currentBanners == null || currentBanners.isEmpty) return;
-
-      // استخدام modulo للتنقل السلس بين الصفحات بدون قفزات مفاجئة
-      _currentPage = (_currentPage + 1) % currentBanners.length;
-      _pageController.animateToPage(
-        _currentPage,
-        duration: const Duration(milliseconds: 700),
-        curve: Curves.easeInOutCubic,
-      );
-    });
+    // تعطيل التشغيل التلقائي على جميع المنصات للأداء الأفضل
+    return;
   }
 
   @override
   void dispose() {
     _timer?.cancel();
     _pageController.dispose();
+    _floatingController.dispose();
+    _glowController.dispose();
     super.dispose();
   }
 
-  // ✅ دالة للتنقل الذكي
   void _handleNavigation(String? target) {
     if (target != null && target.isNotEmpty) {
-      // إذا كان الرابط موجوداً في البانر، اذهب إليه
       context.push(target);
     } else {
-      // وإلا، اذهب لصفحة كل المنتجات كإجراء افتراضي
       context.push('/all_products');
     }
   }
@@ -94,21 +93,20 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection> {
   @override
   Widget build(BuildContext context) {
     final bannersAsync = ref.watch(activeBannersProvider);
+    
+    // Preload banner images when data is loaded
+    bannersAsync.whenData((banners) {
+      if (banners.isNotEmpty) {
+        ref.read(bannerImagesPreloaderProvider(banners));
+      }
+    });
 
     return SizedBox(
-      height: 300, // ✅ زيادة طفيفة للارتفاع ليكون أكثر سينمائية
+      height: 320,
       child: bannersAsync.when(
         data: (banners) {
           if (banners.isEmpty) {
             return _buildFallbackHero(context);
-          }
-          
-          if (_currentPage >= banners.length) {
-             WidgetsBinding.instance.addPostFrameCallback((_) {
-               if (_pageController.hasClients) {
-                 _pageController.jumpToPage(0);
-               }
-             });
           }
 
           return Stack(
@@ -122,28 +120,37 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection> {
                 },
                 itemBuilder: (context, index) {
                   final banner = banners[index % banners.length];
-                  return _buildCinematicPage(context, banner, index % banners.length == _currentPage);
+                  return _buildModernHeroPage(context, banner, index % banners.length == _currentPage);
                 },
               ),
               
-              // المؤشرات (Dots)
+              // مؤشرات احترافية
               Positioned(
-                bottom: 20, 
-                left: 0, 
+                bottom: 24,
+                left: 0,
                 right: 0,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(banners.length, (index) {
+                    final isActive = index == _currentPage;
                     return AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      width: index == _currentPage ? 25 : 8, // تمدد المؤشر النشط
-                      height: 6,
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeOutCubic,
+                      width: isActive ? 32 : 8,
+                      height: 8,
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(4),
-                        color: index == _currentPage 
-                            ? const Color(0xFFD4AF37) // لون ذهبي للتميز
-                            : Colors.white.withValues(alpha: 0.5),
+                        color: isActive 
+                            ? const Color(0xFFD4AF37)
+                            : Colors.white.withValues(alpha: 0.4),
+                        boxShadow: isActive ? [
+                          BoxShadow(
+                            color: const Color(0xFFD4AF37).withValues(alpha: 0.5),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                          ),
+                        ] : null,
                       ),
                     );
                   }),
@@ -153,7 +160,8 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection> {
           );
         },
         loading: () => Shimmer.fromColors(
-          baseColor: Colors.grey[300]!, highlightColor: Colors.grey[100]!,
+          baseColor: Colors.grey[300]!,
+          highlightColor: Colors.grey[100]!,
           child: Container(color: Colors.white),
         ),
         error: (e, s) => const Center(child: Text("خطأ في تحميل البانرات")),
@@ -161,119 +169,230 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection> {
     );
   }
 
-  Widget _buildCinematicPage(BuildContext context, AppBanner banner, bool isActive) {
+  Widget _buildModernHeroPage(BuildContext context, AppBanner banner, bool isActive) {
+    final disableEffects = kIsWeb || MediaQuery.of(context).disableAnimations;
+
     return GestureDetector(
-      onTap: () => _handleNavigation(banner.linkTarget), // ✅ جعل الصورة كاملة قابلة للضغط
+      onTap: () => _handleNavigation(banner.linkTarget),
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // 1. الصورة مع تأثير الزووم (Ken Burns Effect)
+          // الخلفية مع تأثير التكبير البطيء
           AnimatedScale(
-            scale: isActive ? 1.1 : 1.0,
-            duration: const Duration(seconds: 6),
-            curve: Curves.linear,
-            child: CachedNetworkImage(
-              imageUrl: buildOptimizedImageUrl(
-                banner.imageUrl,
-                variant: ImageVariant.heroBanner,
-              ),
+            scale: disableEffects ? 1.0 : (isActive ? 1.08 : 1.0),
+            duration: disableEffects ? Duration.zero : const Duration(seconds: 8),
+            curve: Curves.easeOutQuad,
+            child: AppNetworkImage(
+              url: banner.imageUrl,
+              variant: ImageVariant.heroBanner,
               fit: BoxFit.cover,
-              memCacheHeight: 800,
-              placeholder: (context, url) => Container(color: Colors.grey[200]),
-              errorWidget: (context, url, error) => const Icon(Icons.broken_image, color: Colors.grey),
+              placeholder: Container(color: Colors.grey[200]),
+              errorWidget: const Icon(Icons.broken_image, color: Colors.grey),
             ),
           ),
           
-          // 2. تدرج لوني داكن للقراءة (Gradient Overlay)
+          // تدرج متدرج غير متماثل
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.black.withValues(alpha: 0.8), // أسود داكن في الأسفل
+                  const Color(0xFF0A2647).withValues(alpha: 0.9),
+                  const Color(0xFF0A2647).withValues(alpha: 0.4),
                   Colors.transparent,
-                  Colors.black.withValues(alpha: 0.3)  // تظليل خفيف في الأعلى
+                  const Color(0xFF0A2647).withValues(alpha: 0.2),
                 ],
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-                stops: const [0.0, 0.6, 1.0],
+                begin: Alignment.bottomLeft,
+                end: Alignment.topRight,
+                stops: const [0.0, 0.3, 0.6, 1.0],
               ),
             ),
           ),
 
-          // 3. النصوص والأزرار
+          // شكل منحني زخرفي
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 120,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFFF8F9FA).withValues(alpha: 0.3),
+                    Colors.transparent,
+                  ],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                ),
+              ),
+            ),
+          ),
+
+          // المحتوى الرئيسي - كارت زجاجي
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 30.0),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.end, // المحتوى في الأسفل
+              mainAxisAlignment: MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // العنوان
-                AnimatedOpacity(
-                  duration: const Duration(milliseconds: 800),
-                  opacity: isActive ? 1.0 : 0.0,
-                  child: Transform.translate(
-                     offset: isActive ? Offset.zero : const Offset(0, 20),
-                     child: Text(
-                      banner.title,
-                      style: GoogleFonts.almarai(
-                        fontSize: 26, 
-                        fontWeight: FontWeight.w900, 
-                        color: banner.textColor,
-                        height: 1.2,
-                        shadows: [
-                          Shadow(offset: const Offset(0, 2), blurRadius: 4, color: Colors.black.withValues(alpha: 0.5))
-                        ]
+                // شارة عائمة
+                AnimatedBuilder(
+                  animation: _floatingController,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(0, math.sin(_floatingController.value * math.pi) * 4),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFFD4AF37),
+                              const Color(0xFFB8960C),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFD4AF37).withValues(alpha: 0.4),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.local_offer_rounded, color: Colors.white, size: 14),
+                            const SizedBox(width: 6),
+                            Text(
+                              'عرض خاص',
+                              style: GoogleFonts.almarai(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 12),
+
+                // كارت زجاجي للنصوص
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.15),
+                          Colors.white.withValues(alpha: 0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // العنوان
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 600),
+                          opacity: isActive ? 1.0 : 0.0,
+                          child: Text(
+                            banner.title,
+                            style: GoogleFonts.almarai(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                              height: 1.2,
+                              shadows: [
+                                Shadow(
+                                  offset: const Offset(0, 4),
+                                  blurRadius: 12,
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 8),
+                        
+                        // الوصف
+                        AnimatedOpacity(
+                          duration: const Duration(milliseconds: 800),
+                          opacity: isActive ? 1.0 : 0.0,
+                          child: Text(
+                            banner.subtitle,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.almarai(
+                              fontSize: 14,
+                              color: Colors.white.withValues(alpha: 0.9),
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 12),
+                        
+                        // زر احترافي متوهج
+                        AnimatedBuilder(
+                          animation: _glowController,
+                          builder: (context, child) {
+                            return Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFD4AF37).withValues(
+                                      alpha: 0.3 + (_glowController.value * 0.3),
+                                    ),
+                                    blurRadius: 15 + (_glowController.value * 10),
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              child: ElevatedButton.icon(
+                                onPressed: () => _handleNavigation(banner.linkTarget),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: const Color(0xFF0A2647),
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                ),
+                                icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                                label: Text(
+                                  banner.buttonText.isNotEmpty ? banner.buttonText : 'اكتشف المزيد',
+                                  style: GoogleFonts.almarai(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 ),
                 
-                const SizedBox(height: 8),
-                
-                // الوصف الفرعي
-                AnimatedOpacity(
-                  duration: const Duration(milliseconds: 1000),
-                  opacity: isActive ? 1.0 : 0.0,
-                   child: Transform.translate(
-                     offset: isActive ? Offset.zero : const Offset(0, 20),
-                     child: Text(
-                      banner.subtitle,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.almarai(
-                        fontSize: 15, 
-                        color: banner.textColor.withValues(alpha: 0.9),
-                        height: 1.5,
-                      ),
-                    ),
-                   ),
-                ),
-                
-                const SizedBox(height: 20),
-                
-                // الزر
-                AnimatedOpacity(
-                  duration: const Duration(milliseconds: 1200),
-                  opacity: isActive ? 1.0 : 0.0,
-                  child: SizedBox(
-                    height: 45,
-                    child: ElevatedButton(
-                      onPressed: () => _handleNavigation(banner.linkTarget), // ✅ تفعيل الزر
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white, // زر أبيض نظيف
-                        foregroundColor: const Color(0xFF0A2647),
-                        padding: const EdgeInsets.symmetric(horizontal: 25),
-                        elevation: 5,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                      ),
-                      child: Text(
-                        banner.buttonText.isNotEmpty ? banner.buttonText : "تسوق الآن",
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20), // مسافة للمؤشرات
+                const SizedBox(height: 16),
               ],
             ),
           ),
@@ -282,30 +401,45 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection> {
     );
   }
 
-  // الحالة الافتراضية (عند عدم وجود بانرات)
   Widget _buildFallbackHero(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF0A2647),
-        image: DecorationImage(
-          image: AssetImage('assets/images/logo.png'),
-          opacity: 0.05, // شعار خفيف جداً في الخلفية
-          fit: BoxFit.contain,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF0A2647),
+            const Color(0xFF144272),
+            const Color(0xFF0A2647),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
       child: Stack(
         children: [
-          // تأثير إضاءة (Spotlight)
+          // دوائر زخرفية متحركة
           Positioned(
-            top: -100, right: -100,
-            child: Container(
-              width: 300, height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [const Color(0xFFD4AF37).withValues(alpha: 0.4), Colors.transparent],
-                ),
-              ),
+            top: -50,
+            right: -50,
+            child: AnimatedBuilder(
+              animation: _floatingController,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: 1.0 + (_floatingController.value * 0.1),
+                  child: Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          const Color(0xFFD4AF37).withValues(alpha: 0.3),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           
@@ -315,36 +449,53 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                   Image.asset('assets/images/logo.png', height: 70),
-                   const SizedBox(height: 20),
-                   Text(
-                     "مرحباً بك في عالم الراحة",
-                     textAlign: TextAlign.center,
-                     style: GoogleFonts.almarai(
-                       fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white
-                     ),
-                   ),
-                   const SizedBox(height: 10),
-                   Text(
-                     "الجودة التي يستحقها منزلك.. بين يديك.",
-                     textAlign: TextAlign.center,
-                     style: GoogleFonts.almarai(
-                       fontSize: 15, color: Colors.white70
-                     ),
-                   ),
-                   const SizedBox(height: 30),
-                   ElevatedButton.icon(
-                     // ✅ تم إصلاح الزر هنا ليوجه لصفحة المنتجات
-                     onPressed: () => context.push('/all_products'),
-                     style: ElevatedButton.styleFrom(
-                       backgroundColor: Colors.white,
-                       foregroundColor: const Color(0xFF0A2647),
-                       padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                     ),
-                     icon: const Icon(Icons.explore, size: 20),
-                     label: const Text("تصفح المجموعات", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-                   ),
+                  Image.asset('assets/images/logo.png', height: 60),
+                  const SizedBox(height: 24),
+                  Text(
+                    'أفضل مستلزمات المنزل',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.almarai(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          offset: const Offset(0, 4),
+                          blurRadius: 12,
+                          color: Colors.black.withValues(alpha: 0.3),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'جودة عالية، أسعار مميزة، توصيل سريع',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.almarai(
+                      fontSize: 14,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  ElevatedButton.icon(
+                    onPressed: () => context.push('/all_products'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD4AF37),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    icon: const Icon(Icons.explore, size: 20),
+                    label: Text(
+                      'تصفح المنتجات',
+                      style: GoogleFonts.almarai(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

@@ -112,6 +112,14 @@ class UserProfileNotifier extends StateNotifier<UserProfile> {
     final user = client.auth.currentUser;
     if (user != null) {
       try {
+        final meta = user.userMetadata;
+        final metaFirst = meta?['first_name']?.toString().trim() ?? '';
+        final metaLast = meta?['last_name']?.toString().trim() ?? '';
+        final metaFull = meta?['full_name']?.toString().trim() ?? '';
+        final metaName = metaFull.isNotEmpty
+            ? metaFull
+            : [metaFirst, metaLast].where((e) => e.isNotEmpty).join(' ');
+
         final data = await client
             .from('profiles')
             .select()
@@ -125,7 +133,9 @@ class UserProfileNotifier extends StateNotifier<UserProfile> {
           final updatedProfile = state.copyWith(
             id: user.id,
             email: user.email ?? state.email,
-            name: map['full_name']?.toString() ?? state.name,
+            name: (map['full_name']?.toString().trim().isNotEmpty ?? false)
+                ? map['full_name']!.toString().trim()
+                : (metaName.isNotEmpty ? metaName : state.name),
             phone: map['phone']?.toString() ?? state.phone,
             address: map['address']?.toString() ?? state.address,
             avatarUrl: map['avatar_url']?.toString() ?? state.avatarUrl,
@@ -136,6 +146,15 @@ class UserProfileNotifier extends StateNotifier<UserProfile> {
 
           state = updatedProfile;
           _saveToPrefs(updatedProfile); // تحديث الكاش
+        } else {
+          final updatedProfile = state.copyWith(
+            id: user.id,
+            email: user.email ?? state.email,
+            name: metaName.isNotEmpty ? metaName : state.name,
+          );
+
+          state = updatedProfile;
+          _saveToPrefs(updatedProfile);
         }
       } catch (e) {
         debugPrint("Sync Error: $e");

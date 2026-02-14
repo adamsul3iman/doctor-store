@@ -31,7 +31,13 @@ class AppSubCategory {
 /// مزود لجلب الفئات الفرعية النشطة لفئة رئيسية معيّنة من جدول `sub_categories`.
 final subCategoriesByParentProvider =
     FutureProvider.family<List<AppSubCategory>, String>((ref, parentId) async {
-  final supabase = Supabase.instance.client;
+  SupabaseClient? supabase;
+  try {
+    supabase = Supabase.instance.client;
+  } catch (_) {
+    return [];
+  }
+
   try {
     final data = await supabase
         .from('sub_categories')

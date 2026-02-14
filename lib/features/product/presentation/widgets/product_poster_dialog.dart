@@ -4,10 +4,11 @@ import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/shared/utils/product_nav_helper.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
+import 'package:doctor_store/shared/widgets/app_network_image.dart';
+import 'package:doctor_store/shared/widgets/constrained_dialog.dart';
 
 class ProductPosterDialog extends StatefulWidget {
   final Product product;
@@ -85,159 +86,177 @@ class _ProductPosterDialogState extends State<ProductPosterDialog> {
 
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.all(20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // ================== منطقة التصميم القابل للتصوير ==================
-          Screenshot(
-            controller: _screenshotController,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha:0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 1. رأس البطاقة (صورة المنتج)
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-                    child: CachedNetworkImage(
-                      imageUrl: buildOptimizedImageUrl(
-                        widget.product.imageUrl,
-                        variant: ImageVariant.heroBanner,
-                      ),
-                      height: 250,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      memCacheHeight: 600,
-                      placeholder: (context, url) => Container(
-                        height: 250,
-                        color: Colors.grey[200],
-                        child: const Center(child: Icon(Icons.image, color: Colors.grey)),
-                      ),
-                      errorWidget: (context, url, error) => Container(
-                        height: 250,
-                        color: Colors.grey[200],
-                        child: const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
-                      ),
+      child: ConstrainedDialog(
+        maxWidth: 550,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ================== منطقة التصميم القابل للتصوير ==================
+            Screenshot(
+              controller: _screenshotController,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
                     ),
-                  ),
-                  
-                  // 2. تفاصيل المنتج
-                  Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "متجر الدكتور 🩺",
-                                style: GoogleFonts.almarai(
-                                  fontSize: 12, color: Colors.grey
-                                ),
-                              ),
-                              const SizedBox(height: 5),
-                              Text(
-                                widget.product.title,
-                                style: GoogleFonts.almarai(
-                                  fontSize: 16, fontWeight: FontWeight.bold
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 10),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF0A2647),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  "${widget.product.price} د.أ",
-                                  style: const TextStyle(
-                                    color: Colors.white, fontWeight: FontWeight.bold
-                                  ),
-                                ),
-                              ),
-                            ],
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 1. رأس البطاقة (صورة المنتج)
+                    ClipRRect(
+                      borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(20)),
+                      child: SizedBox(
+                        height: 250,
+                        width: double.infinity,
+                        child: AppNetworkImage(
+                          url: widget.product.imageUrl,
+                          variant: ImageVariant.heroBanner,
+                          fit: BoxFit.cover,
+                          placeholder: Container(
+                            height: 250,
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: Icon(Icons.image, color: Colors.grey),
+                            ),
+                          ),
+                          errorWidget: Container(
+                            height: 250,
+                            color: Colors.grey[200],
+                            child: const Center(
+                              child: Icon(Icons.broken_image,
+                                  color: Colors.grey),
+                            ),
                           ),
                         ),
-                        
-                        // 3. كود QR
-                        Column(
-                          children: [
-                            QrImageView(
-                              data: productUrl,
-                              version: QrVersions.auto,
-                              size: 70.0,
-                              eyeStyle: const QrEyeStyle(color: Color(0xFF0A2647)),
-                              dataModuleStyle: const QrDataModuleStyle(color: Color(0xFF0A2647)),
-                              backgroundColor: Colors.white,
-                            ),
-                            const SizedBox(height: 4),
-                            const Text("امسح للطلب", style: TextStyle(fontSize: 9)),
-                          ],
-                        )
-                      ],
+                      ),
                     ),
-                  ),
-                  
-                  // 4. تذييل جمالي
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFD4AF37), // اللون الذهبي
-                      borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-                    ),
-                    child: const Text(
-                      "راحتك.. تخصصنا ✨",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // ================================================================
 
-          const SizedBox(height: 20),
-          
-          // زر المشاركة
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _isSharing ? null : _shareImage,
-              icon: _isSharing 
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Icon(Icons.share),
-              label: Text(_isSharing ? "جاري التصميم..." : "مشاركة البطاقة كصورة"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0A2647),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    // 2. تفاصيل المنتج
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "متجر الدكتور 🩺",
+                                  style: GoogleFonts.almarai(
+                                      fontSize: 12, color: Colors.grey),
+                                ),
+                                const SizedBox(height: 5),
+                                Text(
+                                  widget.product.title,
+                                  style: GoogleFonts.almarai(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 10),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF0A2647),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    "${widget.product.price.toStringAsFixed(0)} د.أ",
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // 3. كود QR
+                          Column(
+                            children: [
+                              QrImageView(
+                                data: productUrl,
+                                version: QrVersions.auto,
+                                size: 70.0,
+                                eyeStyle: const QrEyeStyle(
+                                    color: Color(0xFF0A2647)),
+                                dataModuleStyle: const QrDataModuleStyle(
+                                    color: Color(0xFF0A2647)),
+                                backgroundColor: Colors.white,
+                              ),
+                              const SizedBox(height: 4),
+                              const Text("امسح للطلب",
+                                  style: TextStyle(fontSize: 9)),
+                            ],
+                          )
+                        ],
+                      ),
+                    ),
+
+                    // 4. تذييل جمالي
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(10),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFD4AF37), // اللون الذهبي
+                        borderRadius:
+                            BorderRadius.vertical(bottom: Radius.circular(20)),
+                      ),
+                      child: const Text(
+                        "راحتك.. تخصصنا ✨",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("إلغاء", style: TextStyle(color: Colors.white)),
-          )
-        ],
+            // ================================================================
+
+            const SizedBox(height: 20),
+
+            // زر المشاركة
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isSharing ? null : _shareImage,
+                icon: _isSharing
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2),
+                      )
+                    : const Icon(Icons.share),
+                label: Text(_isSharing ? "جاري التصميم..." : "مشاركة البطاقة كصورة"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0A2647),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("إلغاء", style: TextStyle(color: Colors.white)),
+            )
+          ],
+        ),
       ),
     );
   }

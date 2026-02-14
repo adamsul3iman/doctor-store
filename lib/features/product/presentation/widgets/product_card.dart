@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
-import 'package:doctor_store/shared/utils/image_url_helper.dart';
+import 'package:doctor_store/features/wishlist/application/wishlist_manager.dart';
 import 'package:doctor_store/shared/utils/product_nav_helper.dart';
 import 'package:doctor_store/shared/widgets/image_shimmer_placeholder.dart';
+import 'package:doctor_store/shared/widgets/app_network_image.dart';
+import 'package:doctor_store/shared/utils/image_url_helper.dart';
 import 'package:doctor_store/shared/utils/categories_provider.dart';
 
-class ProductCard extends ConsumerStatefulWidget {
+class ProductCard extends ConsumerWidget {
   final Product product;
   final bool isCompact;
   final String? heroTag; // حالياً للاستخدام المستقبلي إذا احتجنا Hero مخصص
@@ -22,31 +24,14 @@ class ProductCard extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ProductCard> createState() => _ProductCardState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final product = this.product;
+    final isCompact = this.isCompact;
 
-class _ProductCardState extends ConsumerState<ProductCard>
-    with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
-
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    final product = widget.product;
-
-    // محاولة جلب اسم القسم ديناميكياً من جدول الأقسام (categories)
-    final categoriesAsync = ref.watch(categoriesConfigProvider);
-    String categoryLabel = product.categoryArabic;
-    final categories = categoriesAsync.asData?.value;
-    if (categories != null) {
-      for (final c in categories) {
-        if (c.id == product.category && c.name.trim().isNotEmpty) {
-          categoryLabel = c.name.trim();
-          break;
-        }
-      }
-    }
+    // اسم القسم (محسوب بخريطة جاهزة لتقليل العمل داخل كل كرت)
+    final categoryLabel =
+        ref.watch(categoryLabelByIdProvider.select((labels) => labels[product.category])) ??
+            product.categoryArabic;
 
     // نفس منطق الخصم المستخدم في قسم "وصل حديثاً"
     int discount = 0;
@@ -61,61 +46,88 @@ class _ProductCardState extends ConsumerState<ProductCard>
           buildProductDetailsPath(product),
           extra: product,
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Material(
+        child: Container(
+          decoration: BoxDecoration(
             color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+                spreadRadius: -2,
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // الجزء العلوي: صورة بنسبة ثابتة داخل الكرت
-                Expanded(
-                  flex: 3,
+                AspectRatio(
+                  aspectRatio: isCompact ? 1 : 4 / 3,
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: CachedNetworkImage(
-                          imageUrl: buildOptimizedImageUrl(
-                            product.originalImageUrl,
-                            variant: ImageVariant.productCard,
-                          ),
+                        child: AppNetworkImage(
+                          url: product.originalImageUrl,
+                          variant: ImageVariant.productCard,
                           fit: BoxFit.cover,
-                          filterQuality: FilterQuality.low,
-                          // ارتفاع أقل في الكاش لتقليل استهلاك الذاكرة على الويب
-                          memCacheHeight: 320,
-                          fadeInDuration:
-                              const Duration(milliseconds: 180),
-                          fadeOutDuration: Duration.zero,
-                          placeholder: (context, url) =>
-                              const ShimmerImagePlaceholder(),
-                          errorWidget: (context, url, error) =>
-                              const Icon(
+                          placeholder: const ShimmerImagePlaceholder(),
+                          errorWidget: const Icon(
                             Icons.image_not_supported_outlined,
                             color: Colors.grey,
                           ),
                         ),
                       ),
+                      // شارة الخصم (أعلى اليسار)
                       if (discount > 0)
                         Positioned(
-                          top: 8,
-                          left: 8,
+                          top: 10,
+                          left: 10,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 3),
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: const Color(0xFFD32F2F),
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: Text(
                               '-$discount%',
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 10,
+                                fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
                         ),
+                      // زر المفضلة (أعلى اليمين)
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                          child: _WishlistButton(product: product),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -124,32 +136,36 @@ class _ProductCardState extends ConsumerState<ProductCard>
                 Expanded(
                   flex: 2,
                   child: Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: EdgeInsets.all(isCompact ? 6.0 : 8.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Text(
                           categoryLabel,
                           style: TextStyle(
-                            fontSize: 10,
+                            fontSize: isCompact ? 9 : 10,
                             color: Colors.grey[500],
                           ),
-                        ),
-                        AutoSizeText(
-                          product.title,
-                          style: const TextStyle(
-                            fontFamily: 'Almarai',
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            height: 1.2,
-                          ),
-                          maxLines: 2,
-                          minFontSize: 12,
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
+                        const SizedBox(height: 4),
+                        AutoSizeText(
+                          product.title,
+                          style: TextStyle(
+                            fontFamily: 'Almarai',
+                            fontWeight: FontWeight.bold,
+                            fontSize: isCompact ? 11 : 12,
+                            height: 1.2,
+                          ),
+                          maxLines: 1,
+                          minFontSize: isCompact ? 9 : 10,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: isCompact ? 4 : 6),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Column(
@@ -158,7 +174,7 @@ class _ProductCardState extends ConsumerState<ProductCard>
                               children: [
                                 if (product.oldPrice != null)
                                   Text(
-                                    '${product.oldPrice} د.أ',
+                                    '${product.oldPrice!.toStringAsFixed(0)} د.أ',
                                     style: const TextStyle(
                                       decoration:
                                           TextDecoration.lineThrough,
@@ -167,15 +183,35 @@ class _ProductCardState extends ConsumerState<ProductCard>
                                     ),
                                   ),
                                 Text(
-                                  '${product.price} د.أ',
-                                  style: const TextStyle(
+                                  '${product.price.toStringAsFixed(0)} د.أ',
+                                  style: TextStyle(
                                     fontWeight: FontWeight.w900,
-                                    fontSize: 14,
-                                    color: Color(0xFF0A2647),
+                                    fontSize: isCompact ? 13 : 14,
+                                    color: const Color(0xFF0A2647),
                                   ),
                                 ),
                               ],
                             ),
+                            // أيقونة التقييم إن وجدت
+                            if (product.ratingAverage > 0)
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.star,
+                                    size: 12,
+                                    color: Color(0xFFFFA726),
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    product.ratingAverage.toStringAsFixed(1),
+                                    style: TextStyle(
+                                      fontSize: isCompact ? 10 : 11,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF0A2647),
+                                    ),
+                                  ),
+                                ],
+                              ),
                           ],
                         ),
                       ],
@@ -191,7 +227,53 @@ class _ProductCardState extends ConsumerState<ProductCard>
   }
 }
 
-class LatestProductCard extends StatefulWidget {
+class _WishlistButton extends ConsumerWidget {
+  final Product product;
+
+  const _WishlistButton({required this.product});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isInWishlist = ref.watch(isInWishlistProvider(product.id));
+    final wishlistNotifier = ref.read(wishlistProvider.notifier);
+
+    return GestureDetector(
+      onTap: () {
+        wishlistNotifier.toggleWishlist(product);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isInWishlist ? 'تم إزالة المنتج من المفضلة' : 'تم إضافة المنتج للمفضلة',
+              style: const TextStyle(fontFamily: 'Almarai'),
+            ),
+            backgroundColor: const Color(0xFF0A2647),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.9),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 4,
+            ),
+          ],
+        ),
+        child: Icon(
+          isInWishlist ? Icons.favorite : Icons.favorite_border,
+          size: 16,
+          color: isInWishlist ? Colors.red : Colors.grey[600],
+        ),
+      ),
+    );
+  }
+}
+
+class LatestProductCard extends ConsumerWidget {
   final Product product;
   final VoidCallback onTap;
   final VoidCallback onAddToCart;
@@ -204,18 +286,8 @@ class LatestProductCard extends StatefulWidget {
   });
 
   @override
-  State<LatestProductCard> createState() => _LatestProductCardState();
-}
-
-class _LatestProductCardState extends State<LatestProductCard>
-    with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
-
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-    final product = widget.product;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final product = this.product;
 
     final int discount =
         (product.oldPrice != null && product.oldPrice! > product.price)
@@ -225,7 +297,7 @@ class _LatestProductCardState extends State<LatestProductCard>
 
     return RepaintBoundary(
       child: GestureDetector(
-        onTap: widget.onTap,
+        onTap: onTap,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: Material(
@@ -239,17 +311,12 @@ class _LatestProductCardState extends State<LatestProductCard>
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: CachedNetworkImage(
-                          imageUrl: buildOptimizedImageUrl(
-                            product.originalImageUrl,
-                            variant: ImageVariant.productCard,
-                          ),
+                        child: AppNetworkImage(
+                          url: product.originalImageUrl,
+                          variant: ImageVariant.productCard,
                           fit: BoxFit.cover,
-                          filterQuality: FilterQuality.low,
-                          memCacheHeight: 300,
-                          placeholder: (c, u) =>
-                              const ShimmerImagePlaceholder(),
-                          errorWidget: (c, u, e) => const Icon(
+                          placeholder: const ShimmerImagePlaceholder(),
+                          errorWidget: const Icon(
                             Icons.image_not_supported_outlined,
                           ),
                         ),
@@ -288,21 +355,14 @@ class _LatestProductCardState extends State<LatestProductCard>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Consumer(
-                          builder: (context, ref, _) {
-                            // محاولة جلب اسم القسم ديناميكياً من جدول الأقسام (categories)
-                            String categoryLabel = product.categoryArabic;
-                            final catsAsync = ref.watch(categoriesConfigProvider);
-                            final cats = catsAsync.asData?.value;
-                            if (cats != null) {
-                              for (final c in cats) {
-                                if (c.id == product.category &&
-                                    c.name.trim().isNotEmpty) {
-                                  categoryLabel = c.name.trim();
-                                  break;
-                                }
-                              }
-                            }
+                        Builder(
+                          builder: (context) {
+                            final categoryLabel = ref.watch(
+                                  categoryLabelByIdProvider.select(
+                                    (labels) => labels[product.category],
+                                  ),
+                                ) ??
+                                product.categoryArabic;
 
                             return Text(
                               categoryLabel,
@@ -335,7 +395,7 @@ class _LatestProductCardState extends State<LatestProductCard>
                               children: [
                                 if (product.oldPrice != null)
                                   Text(
-                                    '${product.oldPrice} د.أ',
+                                    '${product.oldPrice!.toStringAsFixed(0)} د.أ',
                                     style: const TextStyle(
                                       decoration:
                                           TextDecoration.lineThrough,
@@ -344,7 +404,7 @@ class _LatestProductCardState extends State<LatestProductCard>
                                     ),
                                   ),
                                 Text(
-                                  '${product.price} د.أ',
+                                  '${product.price.toStringAsFixed(0)} د.أ',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w900,
                                     fontSize: 14,

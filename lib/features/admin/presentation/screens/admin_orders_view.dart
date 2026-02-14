@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:intl/Intl.dart' as intl;
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:intl/intl.dart' as intl;
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
+import 'package:doctor_store/shared/widgets/app_network_image.dart';
+import 'package:doctor_store/features/admin/data/order_repository.dart';
+
 class AdminOrdersView extends StatefulWidget {
   const AdminOrdersView({super.key});
 
@@ -11,7 +12,7 @@ class AdminOrdersView extends StatefulWidget {
 }
 
 class _AdminOrdersViewState extends State<AdminOrdersView> {
-  final _client = Supabase.instance.client;
+  final OrderRepository _repo = OrderRepository();
   final Set<String> _selectedOrderIds = {};
   String _searchQuery = '';
 
@@ -22,10 +23,7 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
   String _statusFilter = 'all'; // all, new, completed, cancelled
   String _dateFilter = 'all'; // all, today, 7d, 30d
 
-  Stream<List<Map<String, dynamic>>> get _ordersStream => _client
-      .from('orders')
-      .stream(primaryKey: ['id'])
-      .order('created_at', ascending: false);
+  Stream<List<Map<String, dynamic>>> get _ordersStream => _repo.watchOrders();
 
   void _toggleSelect(String id, bool selected) {
     setState(() {
@@ -82,9 +80,8 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
     if (confirm != true) return;
 
     try {
-      // للحفاظ على التوافق مع API، نحذف بشكل متتابع
       for (final id in _selectedOrderIds) {
-        await _client.from('orders').delete().eq('id', id);
+        await _repo.deleteOrder(id);
       }
       if (!mounted) return;
       setState(() {
@@ -108,20 +105,25 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _ordersStream,
         builder: (context, snapshot) {
-          // لا نعرض الخطأ للمستخدم، فقط نطبعه في الكونسول
+          // لا نعرض الخطأ للمستخدم. نكتفي بالـ log (اختياري) لتتبع مشاكل Realtime.
           if (snapshot.hasError) {
             debugPrint('Orders stream error: ${snapshot.error}');
           }
 
-          // نحدد البيانات الفعّالة التي سنبني عليها الواجهة
+          // استراتيجية صامتة: إذا كان هناك error لكن توجد بيانات (cached/previous)،
+          // نتجاهل الخطأ ونعرض البيانات.
           List<Map<String, dynamic>>? effectiveOrders;
 
-          if (snapshot.hasData && !snapshot.hasError) {
+          if (snapshot.hasData) {
             effectiveOrders = snapshot.data;
             _lastOrdersData = snapshot.data;
           } else if (_lastOrdersData != null) {
-            // في حال وجود خطأ مؤقت أو انقطاع، نستمر بعرض آخر بيانات ناجحة
             effectiveOrders = _lastOrdersData;
+          }
+
+          // إذا حصل خطأ ولا توجد بيانات إطلاقاً، نعرض تحميل بدل نص الاستثناء.
+          if (snapshot.hasError && effectiveOrders == null) {
+            return const Center(child: Text('جاري التحميل...'));
           }
 
           // في أول تحميل، لو لا توجد بيانات بعد، نعرض مؤشر الانتظار
@@ -320,6 +322,7 @@ class _OrderCardState extends State<_OrderCard> {
   bool _expanded = false;
   List<Map<String, dynamic>> _items = [];
   bool _loadingItems = false;
+  final OrderRepository _repo = OrderRepository();
 
   // جلب تفاصيل المنتجات فقط عند فتح الكارد (لتحسين الأداء)
   Future<void> _fetchItems() async {
@@ -327,20 +330,13 @@ class _OrderCardState extends State<_OrderCard> {
     setState(() => _loadingItems = true);
     
     try {
-      final data = await Supabase.instance.client
-          .from('order_items')
-          .select()
-          .eq('order_id', widget.order['id']) as List;
+      final data = await _repo.getOrderItems(widget.order['id']);
 
       if (!mounted) return;
 
       final List<Map<String, dynamic>> items = [];
       for (final item in data) {
-        if (item is Map<String, dynamic>) {
-          items.add(item);
-        } else {
-          items.add(Map<String, dynamic>.from(item as Map));
-        }
+        items.add(Map<String, dynamic>.from(item as Map));
       }
 
       setState(() {
@@ -355,10 +351,7 @@ class _OrderCardState extends State<_OrderCard> {
 
   Future<void> _updateStatus(String status) async {
     try {
-      await Supabase.instance.client
-          .from('orders')
-          .update({'status': status})
-          .eq('id', widget.order['id']);
+      await _repo.updateOrderStatus(widget.order['id'], status);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -457,17 +450,16 @@ class _OrderCardState extends State<_OrderCard> {
               ..._items.map((item) => ListTile(
                 leading: ClipRRect(
                   borderRadius: BorderRadius.circular(6),
-                  child: CachedNetworkImage(
-                    imageUrl: buildOptimizedImageUrl(
-                      (item['image_url'] ?? '').toString(),
-                      variant: ImageVariant.thumbnail,
-                    ),
+                  child: SizedBox(
                     width: 40,
                     height: 40,
-                    fit: BoxFit.cover,
-                    memCacheHeight: 120,
-                    placeholder: (context, url) => Container(color: Colors.grey[200]),
-                    errorWidget: (context, url, error) => const Icon(Icons.image),
+                    child: AppNetworkImage(
+                      url: (item['image_url'] ?? '').toString(),
+                      variant: ImageVariant.thumbnail,
+                      fit: BoxFit.cover,
+                      placeholder: Container(color: Colors.grey[200]),
+                      errorWidget: const Icon(Icons.image),
+                    ),
                   ),
                 ),
                 title: Text((item['product_title'] ?? '').toString()),
@@ -476,7 +468,7 @@ class _OrderCardState extends State<_OrderCard> {
                   "${(item['selected_size'] ?? '').toString()} "
                   "${(item['selected_color'] ?? '').toString()}",
                 ),
-                trailing: Text("${(item['price'] as num?)?.toDouble() ?? 0.0} د.أ"),
+                trailing: Text("${((item['price'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(0)} د.أ"),
               )),
 
             // أزرار التحكم

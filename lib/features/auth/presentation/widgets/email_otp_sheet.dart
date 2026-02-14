@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:doctor_store/features/auth/application/user_data_manager.dart';
 import 'package:doctor_store/shared/utils/wishlist_manager.dart';
 import 'package:doctor_store/features/cart/application/cart_manager.dart';
-import 'package:doctor_store/shared/utils/analytics_service.dart';
+import 'package:doctor_store/shared/services/analytics_service.dart';
 import 'package:doctor_store/shared/utils/app_notifier.dart';
 
 /// شاشة / نافذة إدخال كود التحقق المرسل إلى البريد الإلكتروني.

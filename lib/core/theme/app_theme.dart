@@ -97,6 +97,16 @@ class AppTheme {
         ),
       ),
 
+      scrollbarTheme: ScrollbarThemeData(
+        thumbVisibility: const WidgetStatePropertyAll(true),
+        trackVisibility: const WidgetStatePropertyAll(false),
+        thickness: const WidgetStatePropertyAll(8),
+        radius: const Radius.circular(8),
+        thumbColor: WidgetStatePropertyAll(
+          Colors.grey.withValues(alpha: 0.5),
+        ),
+      ),
+
       // Chip / Tag (مثل التاجات الصغيرة في البروفايل والمنتجات)
       chipTheme: ChipThemeData(
         backgroundColor: Colors.grey[100]!,

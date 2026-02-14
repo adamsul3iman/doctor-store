@@ -16,6 +16,99 @@ class SupabaseService {
     }
   }
 
+  Future<List<Product>> getFeaturedProducts({
+    required String excludeId,
+    int limit = 6,
+  }) async {
+    final client = _getClientOrNull();
+    if (client == null) {
+      return <Product>[];
+    }
+
+    try {
+      final response = await client
+          .from('products')
+          .select()
+          .eq('is_featured', true)
+          .eq('is_active', true)
+          .neq('id', excludeId)
+          .order('created_at', ascending: false)
+          .limit(limit);
+
+      return (response as List).map((e) => Product.fromJson(e)).toList();
+    } catch (_) {
+      return <Product>[];
+    }
+  }
+
+  Future<List<Product>> getLatestActiveProducts({
+    required String excludeId,
+    int limit = 6,
+  }) async {
+    final client = _getClientOrNull();
+    if (client == null) {
+      return <Product>[];
+    }
+
+    try {
+      final response = await client
+          .from('products')
+          .select()
+          .eq('is_active', true)
+          .neq('id', excludeId)
+          .order('created_at', ascending: false)
+          .limit(limit);
+
+      return (response as List).map((e) => Product.fromJson(e)).toList();
+    } catch (_) {
+      return <Product>[];
+    }
+  }
+
+  Future<List<Product>> getDiningProducts({int limit = 20}) async {
+    final client = _getClientOrNull();
+    if (client == null) {
+      return <Product>[];
+    }
+
+    try {
+      final response = await client
+          .from('products')
+          .select()
+          .eq('is_active', true)
+          .order('created_at', ascending: false)
+          .limit(limit);
+
+      final products = (response as List).map((e) => Product.fromJson(e)).toList();
+      return products
+          .where((p) => ['dining_table', 'furniture'].contains(p.category))
+          .toList();
+    } catch (_) {
+      return <Product>[];
+    }
+  }
+
+  Future<List<Product>> getFlashDealProducts({int limit = 20}) async {
+    final client = _getClientOrNull();
+    if (client == null) {
+      return <Product>[];
+    }
+
+    try {
+      final response = await client
+          .from('products')
+          .select()
+          .eq('is_flash_deal', true)
+          .eq('is_active', true)
+          .order('created_at', ascending: false)
+          .limit(limit);
+
+      return (response as List).map((e) => Product.fromJson(e)).toList();
+    } catch (_) {
+      return <Product>[];
+    }
+  }
+
   // 1. بث مباشر لأحدث المنتجات (تحديث فوري)
   Stream<List<Product>> getLatestProductsStream() {
     final client = _getClientOrNull();
@@ -94,6 +187,56 @@ class SupabaseService {
       return (response as List).map((e) => Product.fromJson(e)).toList();
     } catch (_) {
       // في حال انقطاع النت أو أي استثناء آخر نرجع قائمة فاضية
+      return <Product>[];
+    }
+  }
+
+  // دالة لجلب منتجات مشابهة من نفس القسم
+  Future<List<Product>> getSimilarProducts({
+    required String categoryId,
+    required String excludeId,
+    int limit = 6,
+  }) async {
+    final client = _getClientOrNull();
+    if (client == null) {
+      return <Product>[];
+    }
+
+    try {
+      final response = await client
+            .from('products')
+            .select()
+            .eq('category', categoryId)
+            .eq('is_active', true)
+            .neq('id', excludeId)
+            .order('created_at', ascending: false)
+            .limit(limit);
+      return (response as List).map((e) => Product.fromJson(e)).toList();
+    } catch (_) {
+      return <Product>[];
+    }
+  }
+
+  Future<List<Product>> getProductsByCategory({
+    required String categoryId,
+    int limit = 200,
+  }) async {
+    final client = _getClientOrNull();
+    if (client == null) {
+      return <Product>[];
+    }
+
+    try {
+      final response = await client
+          .from('products')
+          .select()
+          .eq('is_active', true)
+          .eq('category', categoryId)
+          .order('created_at', ascending: false)
+          .limit(limit);
+
+      return (response as List).map((e) => Product.fromJson(e)).toList();
+    } catch (_) {
       return <Product>[];
     }
   }

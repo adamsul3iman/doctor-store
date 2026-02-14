@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:doctor_store/shared/utils/app_notifier.dart';
+import 'package:doctor_store/shared/utils/categories_provider.dart';
 
 class AdminCategoriesView extends StatefulWidget {
   const AdminCategoriesView({super.key});
@@ -70,6 +71,7 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
         'sort_order': 1,
         'is_active': true,
         'color_value': 0xFF0A2647,
+        'icon_name': 'bed',
       },
       {
         'id': 'mattresses',
@@ -78,6 +80,7 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
         'sort_order': 2,
         'is_active': true,
         'color_value': 0xFF1B4F72,
+        'icon_name': 'mattress',
       },
       {
         'id': 'pillows',
@@ -86,6 +89,7 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
         'sort_order': 3,
         'is_active': true,
         'color_value': 0xFF7D6608,
+        'icon_name': 'pillow',
       },
       {
         'id': 'furniture',
@@ -94,6 +98,7 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
         'sort_order': 4,
         'is_active': true,
         'color_value': 0xFF784212,
+        'icon_name': 'couch',
       },
       {
         'id': 'dining_table',
@@ -102,6 +107,7 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
         'sort_order': 5,
         'is_active': true,
         'color_value': 0xFF6C3483,
+        'icon_name': 'table',
       },
       {
         'id': 'carpets',
@@ -110,6 +116,7 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
         'sort_order': 6,
         'is_active': true,
         'color_value': 0xFF145A32,
+        'icon_name': 'carpet',
       },
       {
         'id': 'baby_supplies',
@@ -118,6 +125,7 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
         'sort_order': 7,
         'is_active': true,
         'color_value': 0xFF2471A3,
+        'icon_name': 'baby',
       },
       {
         'id': 'home_decor',
@@ -126,6 +134,7 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
         'sort_order': 8,
         'is_active': true,
         'color_value': 0xFF922B21,
+        'icon_name': 'leaf',
       },
     ];
 
@@ -246,6 +255,7 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
     final subtitleController =
         TextEditingController(text: existing?['subtitle'] ?? '');
     int sortOrder = (existing?['sort_order'] as int?) ?? 0;
+    String selectedIconName = (existing?['icon_name'] as String?) ?? 'box';
 
     Color color;
     final rawColor = existing?['color_value'];
@@ -315,6 +325,33 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 12),
+                      // اختيار الأيقونة
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('أيقونة القسم'),
+                        trailing: DropdownButton<String>(
+                          value: selectedIconName,
+                          items: availableCategoryIcons.entries.map((entry) {
+                            return DropdownMenuItem(
+                              value: entry.key,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(entry.value, size: 18),
+                                  const SizedBox(width: 8),
+                                  Text(entry.key),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            if (value != null) {
+                              setState(() => selectedIconName = value);
+                            }
+                          },
+                        ),
                       ),
                       const SizedBox(height: 12),
                       ListTile(
@@ -401,6 +438,7 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
                               'subtitle': subtitleController.text.trim(),
                               'sort_order': sortOrder,
                               'color_value': color.toARGB32(),
+                              'icon_name': selectedIconName,
                             };
                             await _supabase
                                 .from('categories')

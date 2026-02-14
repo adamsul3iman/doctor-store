@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +7,7 @@ import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
 import 'package:doctor_store/shared/utils/product_nav_helper.dart';
 import 'package:doctor_store/shared/widgets/image_shimmer_placeholder.dart';
+import 'package:doctor_store/shared/widgets/app_network_image.dart';
 
 /// شريط سحب سريع لعروض الوسائد (المخدات).
 /// يعتمد على قائمة المنتجات القادمة من الصفحة الرئيسية بدون أي جلب بيانات إضافي.
@@ -141,7 +141,7 @@ class _PillowCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${product.price} د.أ',
+                          '${product.price.toStringAsFixed(0)} د.أ',
                           style: const TextStyle(
                             fontWeight: FontWeight.w900,
                             fontSize: 13,
@@ -183,16 +183,12 @@ class _PillowCard extends StatelessWidget {
       );
     }
 
-    return CachedNetworkImage(
-      imageUrl: buildOptimizedImageUrl(
-        originalUrl,
-        variant: ImageVariant.productCard,
-      ),
-      // نستخدم cover لملء مساحة الصورة بالكامل مع قص بسيط متحكم فيه
+    return AppNetworkImage(
+      url: originalUrl,
+      variant: ImageVariant.productCard,
       fit: BoxFit.cover,
-      memCacheHeight: 280,
-      placeholder: (context, url) => const ShimmerImagePlaceholder(),
-      errorWidget: (context, url, error) => const Icon(
+      placeholder: const ShimmerImagePlaceholder(),
+      errorWidget: const Icon(
         Icons.image_not_supported_outlined,
         color: Colors.grey,
       ),

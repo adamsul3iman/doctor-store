@@ -8,11 +8,13 @@ import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_card.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_card_skeleton.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_search_bottom_sheet.dart';
-import 'package:doctor_store/providers/products_provider.dart';
+import 'package:doctor_store/features/product/presentation/providers/products_provider.dart';
+import 'package:doctor_store/shared/utils/responsive_layout.dart';
 import 'package:doctor_store/shared/utils/app_constants.dart';
 import 'package:doctor_store/shared/utils/categories_provider.dart';
 import 'package:doctor_store/shared/widgets/app_footer.dart';
 import 'package:doctor_store/shared/widgets/custom_app_bar.dart';
+import 'package:doctor_store/shared/widgets/responsive_center_wrapper.dart';
 
 class AllProductsScreen extends ConsumerStatefulWidget {
   final String? initialSort; // new, best, offers, or null
@@ -160,15 +162,24 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
         cacheExtent: 800.0,
         slivers: [
           // 1. عرض ذكي لكل الفئات كسكاشن أفقية (ستايل Netflix)
-          allProductsAsync.when(
-            data: (products) => _buildAllProductsSliver(products),
-            loading: () => _buildLoadingSliver(),
-            error: (err, stack) => _buildErrorSliver(err),
+          SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: allProductsAsync.when(
+              data: (products) => _buildAllProductsSliver(products),
+              loading: () => _buildLoadingSliver(),
+              error: (err, stack) => _buildErrorSliver(err),
+            ),
           ),
 
           // مساحة في الأسفل + Footer موحّد
-          const SliverToBoxAdapter(child: SizedBox(height: 30)),
-          const SliverToBoxAdapter(child: AppFooter()),
+          const SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: SliverToBoxAdapter(child: SizedBox(height: 30)),
+          ),
+          const SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: SliverToBoxAdapter(child: AppFooter()),
+          ),
         ],
       ),
     );
@@ -612,17 +623,29 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
   Widget _buildLoadingSliver() {
     return SliverPadding(
       padding: const EdgeInsets.all(16),
-      sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.64,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-        ),
-        delegate: SliverChildBuilderDelegate(
-          (context, index) => const ProductCardSkeleton(),
-          childCount: 6,
-        ),
+      sliver: SliverLayoutBuilder(
+        builder: (context, constraints) {
+          final crossAxisCount = ResponsiveLayout.gridCountForWidth(
+            constraints.crossAxisExtent,
+            desiredItemWidth: 120,
+            minCount: 3,
+            maxCount: 5,
+          );
+          final isCompact = crossAxisCount >= 3;
+
+          return SliverGrid(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              mainAxisExtent: isCompact ? 270 : 330,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) => const ProductCardSkeleton(),
+              childCount: 6,
+            ),
+          );
+        },
       ),
     );
   }

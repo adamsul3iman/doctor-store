@@ -10,8 +10,9 @@ import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_card.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_card_skeleton.dart';
 import 'package:doctor_store/features/cart/application/cart_manager.dart';
-import 'package:doctor_store/shared/utils/analytics_service.dart';
+import 'package:doctor_store/shared/services/analytics_service.dart';
 import 'package:doctor_store/shared/widgets/quick_nav_bar.dart';
+import 'package:doctor_store/shared/utils/responsive_layout.dart';
 
 class WishlistScreen extends ConsumerStatefulWidget {
   const WishlistScreen({super.key});
@@ -153,7 +154,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                         final messenger = ScaffoldMessenger.of(context);
                         await AnalyticsService.instance.trackEvent('wishlist_open_move_all_hint');
                         messenger.showSnackBar(
-                          const SnackBar(content: Text('انزل لأسفل لنقل كل المفضلة إلى السلة ✨'), duration: Duration(seconds: 2)),
+                          const SnackBar(content: Text('انزل لأسفل لنقل كل المفضلة إلى السلة'), duration: Duration(seconds: 2)),
                         );
                       },
                       child: const Text(
@@ -178,17 +179,36 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return SliverPadding(
                         padding: const EdgeInsets.all(16),
-                        sliver: SliverGrid(
-                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 260,
-                            childAspectRatio: 0.64,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                          ),
-                          delegate: SliverChildBuilderDelegate(
-                            (_, __) => const ProductCardSkeleton(),
-                            childCount: favIds.length,
-                          ),
+                        sliver: SliverLayoutBuilder(
+                          builder: (context, constraints) {
+                            final crossAxisCount = ResponsiveLayout.gridCountForWidth(
+                              constraints.crossAxisExtent,
+                              desiredItemWidth: 120,
+                              minCount: 3,
+                              maxCount: 5,
+                            );
+                            final isCompact = crossAxisCount >= 3;
+                            const spacing = 12.0;
+                            final mainAxisExtent = ResponsiveLayout.productCardMainAxisExtent(
+                              constraints.crossAxisExtent,
+                              crossAxisCount: crossAxisCount,
+                              crossAxisSpacing: spacing,
+                              isCompact: isCompact,
+                            );
+
+                            return SliverGrid(
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: crossAxisCount,
+                                mainAxisExtent: mainAxisExtent,
+                                crossAxisSpacing: spacing,
+                                mainAxisSpacing: spacing,
+                              ),
+                              delegate: SliverChildBuilderDelegate(
+                                (_, __) => const ProductCardSkeleton(),
+                                childCount: favIds.length,
+                              ),
+                            );
+                          },
                         ),
                       );
                     }
@@ -210,18 +230,38 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
 
                     return SliverPadding(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                      sliver: SliverGrid(
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 260,
-                          childAspectRatio: 0.64,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            return Stack(
-                              children: [
-                                ProductCard(product: products[index]),
+                      sliver: SliverLayoutBuilder(
+                        builder: (context, constraints) {
+                          final crossAxisCount = ResponsiveLayout.gridCountForWidth(
+                            constraints.crossAxisExtent,
+                            desiredItemWidth: 120,
+                            minCount: 3,
+                            maxCount: 5,
+                          );
+                          final isCompact = crossAxisCount >= 3;
+                          const spacing = 12.0;
+                          final mainAxisExtent = ResponsiveLayout.productCardMainAxisExtent(
+                            constraints.crossAxisExtent,
+                            crossAxisCount: crossAxisCount,
+                            crossAxisSpacing: spacing,
+                            isCompact: isCompact,
+                          );
+
+                          return SliverGrid(
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: crossAxisCount,
+                              mainAxisExtent: mainAxisExtent,
+                              crossAxisSpacing: spacing,
+                              mainAxisSpacing: spacing,
+                            ),
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                return Stack(
+                                  children: [
+                                    ProductCard(
+                                      product: products[index],
+                                      isCompact: isCompact,
+                                    ),
                                 // زر إضافة سريع للسلة في الأسفل
                                 Positioned(
                                   bottom: 8,
@@ -280,11 +320,13 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                                     ),
                                   ),
                                 ),
-                              ],
-                            );
-                          },
-                          childCount: products.length,
-                        ),
+                                  ],
+                                );
+                              },
+                              childCount: products.length,
+                            ),
+                          );
+                        },
                       ),
                     );
                   },

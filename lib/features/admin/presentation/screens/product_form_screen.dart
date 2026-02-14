@@ -5,11 +5,24 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/shared/utils/categories_provider.dart';
 import 'package:doctor_store/shared/utils/image_compressor.dart';
+import 'package:doctor_store/shared/utils/image_url_helper.dart';
 import 'package:doctor_store/shared/widgets/image_shimmer_placeholder.dart';
+import 'package:doctor_store/shared/widgets/app_network_image.dart';
+import 'package:doctor_store/features/auth/application/user_data_manager.dart';
+import 'package:doctor_store/features/admin/data/admin_product_repository.dart';
+
+enum _ProductFormPanel {
+  basic,
+  pricing,
+  inventory,
+  media,
+  mattress,
+  options,
+  variants,
+}
 
 class ProductFormScreen extends ConsumerStatefulWidget {
   final Object? extra;
@@ -28,14 +41,22 @@ class ProductFormScreen extends ConsumerStatefulWidget {
 class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
+  final AdminProductRepository _adminProductRepo = AdminProductRepository();
+
   final _titleController = TextEditingController();
   final _slugController = TextEditingController();
   final _descController = TextEditingController();
   final _priceController = TextEditingController();
   final _oldPriceController = TextEditingController();
 
+  final _baseStockController = TextEditingController();
+
+  String _inventoryPolicy = 'track_qty';
+  bool _statusBasedInStock = true;
+
   String _selectedCategory = 'bedding';
   String? _selectedSubCategoryId;
+  String _shippingSize = 'small'; // ✅ حجم الشحن
   bool _isFeatured = false;
   bool _isFlashDeal = false; // ✅
   bool _isLoading = false;
@@ -47,6 +68,40 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   bool _isOfferMode = false;
   bool _useAdvancedVariants =
       false; // لتفعيل إدارة المتغيرات (لون + مقاس + وحدة + سعر)
+
+  // ✅ وضع الفرشات (تسعير تلقائي حسب المقاس)
+  bool _isMattressMode = false;
+
+  final TextEditingController _mattressWidthMinCtrl =
+      TextEditingController(text: '90');
+  final TextEditingController _mattressWidthMaxCtrl =
+      TextEditingController(text: '200');
+  final TextEditingController _mattressWidthStepCtrl =
+      TextEditingController(text: '10');
+
+  // عرض الفرشة (cm) كقائمة مخصصة (اختياري).
+  // إذا تم تعبئتها سيتم تجاهل min/max/step في توليد المقاسات.
+  final TextEditingController _mattressWidthsCtrl = TextEditingController();
+
+  // طول الفرشة (cm) - غالباً 190/195/200 (يمكن إدخالها مفصولة بفواصل)
+  final TextEditingController _mattressLengthsCtrl =
+      TextEditingController(text: '190,195,200');
+
+  // ====== تسعير الفرشات ======
+  // الوضع الافتراضي: per_sqm (حسب متر مربع).
+  // الوضع الجديد: by_width (سعر يدوي حسب العرض فقط)
+  String _mattressPricingMode = 'per_sqm'; // per_sqm | by_width
+
+  // تسعير احترافي حسب المساحة (م²): السعر = base_fee + (area_m2 * price_per_sqm)
+  final TextEditingController _mattressBaseFeeCtrl =
+      TextEditingController(text: '0');
+  final TextEditingController _mattressPricePerSqmCtrl =
+      TextEditingController(text: '0');
+
+  // تسعير يدوي حسب العرض (cm)
+  final TextEditingController _mattressDefaultWidthPriceCtrl =
+      TextEditingController();
+  final List<_MattressWidthPriceRow> _mattressWidthPriceRows = [];
 
   // خريطة بسيطة لتحويل الحروف العربية إلى أحرف لاتينية للـ slug
   static const Map<String, String> _arabicToLatin = {
@@ -91,6 +146,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   List<String> _sizes = [];
   final TextEditingController _sizeInputCtrl = TextEditingController();
 
+  final List<_DynamicOptionRow> _dynamicOptions = [];
+
   // إعدادات تسعير بالوحدة/المتر
   final TextEditingController _unitLabelCtrl =
       TextEditingController(text: 'حبة');
@@ -100,8 +157,37 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   // المتغيرات المتقدمة في واجهة الأدمن
   final List<_VariantRow> _variantRows = [];
 
+  final Set<_ProductFormPanel> _expandedPanels = <_ProductFormPanel>{
+    _ProductFormPanel.basic,
+    _ProductFormPanel.pricing,
+    _ProductFormPanel.inventory,
+  };
+
+  void _togglePanel(_ProductFormPanel id) {
+    setState(() {
+      if (_expandedPanels.contains(id)) {
+        _expandedPanels.remove(id);
+      } else {
+        _expandedPanels.add(id);
+      }
+    });
+  }
+
+  List<_ProductFormPanel> _currentPanelIds() {
+    return <_ProductFormPanel>[
+      _ProductFormPanel.basic,
+      _ProductFormPanel.pricing,
+      _ProductFormPanel.inventory,
+      _ProductFormPanel.media,
+      if (_selectedCategory == 'mattresses') _ProductFormPanel.mattress,
+      _ProductFormPanel.options,
+      _ProductFormPanel.variants,
+    ];
+  }
+
   _ImageWrapper? _mainImage;
   List<_ImageWrapper> _galleryImages = [];
+  bool _isPickingGalleryImages = false;
 
   /// القيم المسموح بها لحقل القسم في المنتجات.
   ///
@@ -151,12 +237,34 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     _descController.dispose();
     _priceController.dispose();
     _oldPriceController.dispose();
+    _baseStockController.dispose();
     _sizeInputCtrl.dispose();
     _unitLabelCtrl.dispose();
     _unitMinCtrl.dispose();
     _unitStepCtrl.dispose();
+
+    _mattressWidthMinCtrl.dispose();
+    _mattressWidthMaxCtrl.dispose();
+    _mattressWidthStepCtrl.dispose();
+    _mattressWidthsCtrl.dispose();
+    _mattressLengthsCtrl.dispose();
+    _mattressBaseFeeCtrl.dispose();
+    _mattressPricePerSqmCtrl.dispose();
+    _mattressDefaultWidthPriceCtrl.dispose();
+    for (final r in _mattressWidthPriceRows) {
+      r.dispose();
+    }
+
     for (final v in _variantRows) {
       v.dispose();
+    }
+
+    for (final o in _dynamicOptions) {
+      o.dispose();
+    }
+
+    for (final img in _galleryImages) {
+      img.dispose();
     }
     super.dispose();
   }
@@ -173,8 +281,16 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       _loadProductData();
     } else if (widget.extra is Map) {
       final map = widget.extra as Map;
+
       if (map['isOfferMode'] == true) {
         _isOfferMode = true;
+      }
+
+      // ✅ preset خاص بالفرشات
+      if (map['preset'] == 'mattress') {
+        _isOfferMode = false;
+        _selectedCategory = 'mattresses';
+        _isMattressMode = true;
       }
     }
   }
@@ -189,6 +305,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     if (p.oldPrice != null) _oldPriceController.text = p.oldPrice.toString();
     _selectedCategory = p.category;
     _selectedSubCategoryId = p.subCategoryId;
+    _shippingSize = p.options['shipping_size'] ?? 'small'; // ✅ تحميل حجم الشحن
     _isFeatured = p.isFeatured;
     _isFlashDeal = p.isFlashDeal;
 
@@ -205,6 +322,33 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       _sizes = List<String>.from(p.options['sizes']);
     }
 
+    final invPolicy = p.options['inventory_policy'];
+    if (invPolicy is String && invPolicy.isNotEmpty) {
+      _inventoryPolicy = invPolicy;
+    }
+    final inStock = p.options['in_stock'];
+    if (inStock is bool) {
+      _statusBasedInStock = inStock;
+    }
+    final baseStock = p.options['stock'];
+    if (baseStock is num) {
+      _baseStockController.text = baseStock.toInt().toString();
+    }
+
+    final rawDynOptions = p.options['product_options'];
+    if (rawDynOptions is List) {
+      _dynamicOptions.clear();
+      for (final item in rawDynOptions) {
+        if (item is Map<String, dynamic>) {
+          _dynamicOptions.add(_DynamicOptionRow.fromJson(item));
+        } else if (item is Map) {
+          _dynamicOptions.add(
+            _DynamicOptionRow.fromJson(Map<String, dynamic>.from(item)),
+          );
+        }
+      }
+    }
+
     // تحميل إعدادات التسعير بالوحدة/المتر إن وُجدت
     final unitLabel = p.options['pricing_unit'];
     if (unitLabel is String && unitLabel.isNotEmpty) {
@@ -217,6 +361,72 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     final unitStep = p.options['unit_step'];
     if (unitStep is num) {
       _unitStepCtrl.text = unitStep.toString();
+    }
+
+    // ✅ تحميل إعدادات الفرشات (إن وُجدت)
+    final mattress = p.options['mattress'];
+    if (p.category == 'mattresses' || p.options['product_type'] == 'mattress') {
+      _isMattressMode = true;
+      if (mattress is Map) {
+        final m = Map<String, dynamic>.from(mattress);
+        final wMin = m['width_min'];
+        final wMax = m['width_max'];
+        final wStep = m['width_step'];
+        if (wMin is num) _mattressWidthMinCtrl.text = wMin.toInt().toString();
+        if (wMax is num) _mattressWidthMaxCtrl.text = wMax.toInt().toString();
+        if (wStep is num) _mattressWidthStepCtrl.text = wStep.toInt().toString();
+
+        final widths = m['widths'];
+        if (widths is List && widths.isNotEmpty) {
+          _mattressWidthsCtrl.text = widths.map((e) => e.toString()).join(',');
+        }
+
+        final lengths = m['lengths'];
+        if (lengths is List && lengths.isNotEmpty) {
+          _mattressLengthsCtrl.text = lengths.map((e) => e.toString()).join(',');
+        }
+
+        final pricing = m['pricing'];
+        if (pricing is Map) {
+          final pMap = Map<String, dynamic>.from(pricing);
+
+          final mode = pMap['mode'];
+          if (mode is String && mode.isNotEmpty) {
+            _mattressPricingMode = mode;
+          }
+
+          final baseFee = pMap['base_fee'];
+          final perSqm = pMap['price_per_sqm'];
+          if (baseFee is num) {
+            _mattressBaseFeeCtrl.text = baseFee.toDouble().toString();
+          }
+          if (perSqm is num) {
+            _mattressPricePerSqmCtrl.text = perSqm.toDouble().toString();
+          }
+
+          // ✅ تسعير يدوي حسب العرض
+          final widthPrices = pMap['width_prices'];
+          if (widthPrices is Map) {
+            _mattressWidthPriceRows.clear();
+            final entries = Map<String, dynamic>.from(widthPrices).entries.toList();
+            // ترتيب حسب العرض
+            entries.sort((a, b) {
+              final wa = int.tryParse(a.key) ?? 0;
+              final wb = int.tryParse(b.key) ?? 0;
+              return wa.compareTo(wb);
+            });
+            for (final e in entries) {
+              final w = int.tryParse(e.key);
+              final price = e.value is num ? (e.value as num).toDouble() : double.tryParse(e.value.toString());
+              if (w != null && price != null) {
+                _mattressWidthPriceRows.add(
+                  _MattressWidthPriceRow(widthCm: w, price: price),
+                );
+              }
+            }
+          }
+        }
+      }
     }
 
     // تحميل المتغيرات المتقدمة إن وُجدت
@@ -447,6 +657,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         final List<XFile> images = await picker.pickMultiImage();
         if (images.isEmpty) return;
 
+        if (mounted) {
+          setState(() => _isPickingGalleryImages = true);
+        }
+
         final List<_ImageWrapper> newImages = [];
         for (final image in images) {
           final originalBytes = await image.readAsBytes();
@@ -463,11 +677,17 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           ));
         }
 
-        setState(() {
-          _galleryImages.addAll(newImages);
-        });
+        if (mounted) {
+          setState(() {
+            _galleryImages.addAll(newImages);
+            _isPickingGalleryImages = false;
+          });
+        }
       }
     } catch (e) {
+      if (mounted) {
+        setState(() => _isPickingGalleryImages = false);
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -475,6 +695,45 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         ),
       );
     }
+  }
+
+  void _reorderGalleryImages(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) newIndex -= 1;
+      final item = _galleryImages.removeAt(oldIndex);
+      _galleryImages.insert(newIndex, item);
+    });
+  }
+
+  void _setGalleryImageAsFirst(int index) {
+    if (index <= 0 || index >= _galleryImages.length) return;
+    setState(() {
+      final item = _galleryImages.removeAt(index);
+      _galleryImages.insert(0, item);
+    });
+  }
+
+  String _autoColorName(Color c) {
+    final hsl = HSLColor.fromColor(c);
+    final h = hsl.hue;
+    final s = hsl.saturation;
+    final l = hsl.lightness;
+
+    if (s < 0.10) {
+      if (l >= 0.85) return 'أبيض';
+      if (l <= 0.20) return 'أسود';
+      return 'رمادي';
+    }
+
+    if (h < 15 || h >= 345) return 'أحمر';
+    if (h < 40) return 'برتقالي';
+    if (h < 65) return 'أصفر';
+    if (h < 150) return 'أخضر';
+    if (h < 200) return 'سماوي';
+    if (h < 255) return 'أزرق';
+    if (h < 290) return 'بنفسجي';
+    if (h < 345) return 'وردي';
+    return 'لون';
   }
 
   Future<void> _showColorPicker(int index) async {
@@ -499,10 +758,24 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       },
       actionButtons: const ColorPickerActionButtons(dialogActionButtons: true),
     );
-    setState(() => _galleryImages[index].colorValue = newColor);
+    setState(() {
+      final img = _galleryImages[index];
+      img.colorValue = newColor;
+
+      final suggested = _autoColorName(newColor);
+      img.colorName = suggested;
+      img.colorNameCtrl.text = suggested;
+      img.colorNameManuallyEdited = false;
+    });
   }
 
   Future<void> _saveProduct() async {
+    // ✅ محاولة تعبئة السعر الأساسي تلقائياً لمنتجات الفرشات
+    // لأن التسعير الفعلي قد يأتي من إعدادات الفرشات (حسب العرض).
+    if (_isMattressMode && _selectedCategory == 'mattresses') {
+      _tryAutoFillMattressBasePrice();
+    }
+
     if (!_formKey.currentState!.validate()) return;
     if (_mainImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -525,18 +798,41 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       }
     }
 
-    setState(() => _isLoading = true);
+    // ✅ حماية: الرفع/التعديل يجب أن يكون بعد تسجيل الدخول وبصلاحية أدمن
     final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+    final profile = ref.read(userProfileProvider);
+
+    if (user == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('يرجى تسجيل الدخول أولاً')),
+        );
+        context.go('/login');
+      }
+      return;
+    }
+
+    if (!profile.isAdmin) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ليس لديك صلاحية لرفع/تعديل المنتجات')),
+        );
+      }
+      return;
+    }
+
+    setState(() => _isLoading = true);
 
     try {
       String mainImageUrl = _mainImage!.serverUrl ?? '';
       if (_mainImage!.localBytes != null) {
         final path =
             'products/main_${DateTime.now().millisecondsSinceEpoch}.${_mainImage!.fileExtension}';
-        await supabase.storage
-            .from('products')
-            .uploadBinary(path, _mainImage!.localBytes!);
-        mainImageUrl = supabase.storage.from('products').getPublicUrl(path);
+        mainImageUrl = await _adminProductRepo.uploadProductImage(
+          path: path,
+          bytes: _mainImage!.localBytes!,
+        );
       }
 
       List<Map<String, dynamic>> galleryData = [];
@@ -547,10 +843,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         if (img.localBytes != null) {
           final path =
               'products/gallery_${DateTime.now().millisecondsSinceEpoch}_${_galleryImages.indexOf(img)}.${img.fileExtension}';
-          await supabase.storage
-              .from('products')
-              .uploadBinary(path, img.localBytes!);
-          url = supabase.storage.from('products').getPublicUrl(path);
+          url = await _adminProductRepo.uploadProductImage(
+            path: path,
+            bytes: img.localBytes!,
+          );
         }
 
         galleryData.add({
@@ -615,6 +911,17 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         final Set<String> keys = {};
         for (final row in _variantRows) {
           if (row.isCompletelyEmpty) continue;
+
+          String? variantImageUrl = row.variantImage?.serverUrl;
+          if (row.variantImage?.localBytes != null) {
+            final path =
+                'products/variant_${DateTime.now().millisecondsSinceEpoch}_${row.id}.${row.variantImage!.fileExtension}';
+            variantImageUrl = await _adminProductRepo.uploadProductImage(
+              path: path,
+              bytes: row.variantImage!.localBytes!,
+            );
+          }
+
           final price = double.tryParse(row.priceCtrl.text.trim());
           if (price == null) {
             if (mounted) {
@@ -647,16 +954,98 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               'size': row.sizeCtrl.text.trim(),
             if (row.unitCtrl.text.trim().isNotEmpty)
               'unit': row.unitCtrl.text.trim(),
+            if (variantImageUrl != null && variantImageUrl.trim().isNotEmpty)
+              'image_url': variantImageUrl.trim(),
+            if (row.attributes.isNotEmpty) 'attributes': row.attributes,
             'price': price,
-            if (row.stockCtrl.text.trim().isNotEmpty)
+            if (_inventoryPolicy == 'track_qty' &&
+                row.stockCtrl.text.trim().isNotEmpty)
               'stock': int.tryParse(row.stockCtrl.text.trim()) ?? 0,
           });
         }
       }
 
+      // ================== إعدادات الفرشات (اختياري) ==================
+      Map<String, dynamic>? mattressOptions;
+      if (_isMattressMode) {
+        final customWidths = _parseCsvInts(_mattressWidthsCtrl.text);
+        final wMin = int.tryParse(_mattressWidthMinCtrl.text.trim());
+        final wMax = int.tryParse(_mattressWidthMaxCtrl.text.trim());
+        final wStep = int.tryParse(_mattressWidthStepCtrl.text.trim());
+        final lengths = _parseCsvInts(_mattressLengthsCtrl.text);
+
+        final baseFee = double.tryParse(_mattressBaseFeeCtrl.text.trim()) ?? 0;
+        final perSqm = double.tryParse(_mattressPricePerSqmCtrl.text.trim()) ?? 0;
+
+        // تسعير يدوي حسب العرض
+        final widthPrices = _buildMattressWidthPrices();
+
+        if (customWidths.isEmpty) {
+          if (wMin == null ||
+              wMax == null ||
+              wStep == null ||
+              wStep <= 0 ||
+              wMin <= 0 ||
+              wMax < wMin) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content:
+                        Text('يرجى إدخال مدى عرض صحيح للفرشة (min/max/step).')),
+              );
+            }
+            setState(() => _isLoading = false);
+            return;
+          }
+        }
+
+        if (lengths.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text('يرجى إدخال أطوال الفرشات (مثال: 190,195,200).')),
+            );
+          }
+          setState(() => _isLoading = false);
+          return;
+        }
+
+        if (_mattressPricingMode == 'by_width' && widthPrices.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text('يرجى إدخال أسعار الفرشة حسب العرض (يدوي).')),
+            );
+          }
+          setState(() => _isLoading = false);
+          return;
+        }
+
+        final pricingPayload = <String, dynamic>{
+          'mode': _mattressPricingMode,
+          if (_mattressPricingMode == 'per_sqm') ...{
+            'base_fee': baseFee,
+            'price_per_sqm': perSqm,
+          } else ...{
+            'width_prices': widthPrices,
+          }
+        };
+
+        mattressOptions = {
+          'width_min': wMin,
+          'width_max': wMax,
+          'width_step': wStep,
+          if (customWidths.isNotEmpty) 'widths': customWidths,
+          'lengths': lengths,
+          'pricing': pricingPayload,
+        };
+      }
+
       // تحديد نوع المنتج لحفظه في options
       String productType = 'standard';
-      if (_isOfferMode) {
+      if (_isMattressMode) {
+        productType = 'mattress';
+      } else if (_isOfferMode) {
         productType = 'bundle';
       } else if (_useAdvancedVariants && variantsPayload.isNotEmpty) {
         productType = 'variable_with_variants';
@@ -675,21 +1064,28 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             : null,
         'category': _selectedCategory,
         'sub_category_id': _selectedSubCategoryId,
+        'shipping_size': _shippingSize, // ✅ حفظ حجم الشحن
         'image_url': mainImageUrl,
         'is_featured': _isFeatured,
         'is_flash_deal': _isFlashDeal,
         'gallery': galleryData,
         'options': {
-          'sizes': _sizes,
+          'sizes': _isMattressMode ? <String>[] : _sizes,
           'colors': colorsList,
           'is_offer': _isOfferMode,
           'price_tiers': _isOfferMode ? tiersData : null,
           'product_type': productType,
+          if (mattressOptions != null) 'mattress': mattressOptions,
           'pricing_unit': _unitLabelCtrl.text.trim().isNotEmpty
               ? _unitLabelCtrl.text.trim()
               : 'حبة',
           'unit_min': double.tryParse(_unitMinCtrl.text.trim()) ?? 1,
           'unit_step': double.tryParse(_unitStepCtrl.text.trim()) ?? 1,
+          'inventory_policy': _inventoryPolicy,
+          if (_inventoryPolicy == 'track_qty')
+            'stock': int.tryParse(_baseStockController.text.trim()) ?? 0,
+          if (_inventoryPolicy == 'status_based') 'in_stock': _statusBasedInStock,
+          'product_options': _dynamicOptions.map((e) => e.toJson()).toList(),
         },
       };
 
@@ -698,18 +1094,14 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         productData['variants'] = variantsPayload;
       }
 
-      if (productToEdit != null) {
-        await supabase
-            .from('products')
-            .update(productData)
-            .eq('id', productToEdit!.id);
-      } else {
-        await supabase.from('products').insert(productData);
-      }
+      await _adminProductRepo.upsertProduct(
+        productData: productData,
+        productId: productToEdit?.id,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("تم حفظ المنتج بنجاح! ✅")));
+            const SnackBar(content: Text("تم حفظ المنتج بنجاح")));
         context.pop();
       }
     } catch (e) {
@@ -750,6 +1142,12 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        leading: IconButton(
+          tooltip: 'رجوع',
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: const Icon(Icons.arrow_back_ios_new),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
         title: Text(productToEdit == null ? "إضافة منتج جديد" : "تعديل المنتج"),
         backgroundColor: const Color(0xFF0A2647),
         foregroundColor: Colors.white,
@@ -789,24 +1187,376 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
 
               const SizedBox(height: 16),
 
-              _buildBasicInfoCard(remoteCategories),
-              const SizedBox(height: 16),
-
-              // عرض بطاقة السعر أو العروض بناءً على الاختيار
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: _isOfferMode ? _buildOffersCard() : _buildPricingCard(),
+              ExpansionPanelList(
+                key: ValueKey<String>('$_selectedCategory-${_isMattressMode ? 'mattressOn' : 'mattressOff'}'),
+                elevation: 0,
+                expandedHeaderPadding: const EdgeInsets.symmetric(vertical: 6),
+                expansionCallback: (panelIndex, isExpanded) {
+                  final panelIds = _currentPanelIds();
+                  if (panelIndex < 0 || panelIndex >= panelIds.length) return;
+                  final id = panelIds[panelIndex];
+                  _togglePanel(id);
+                },
+                children: [
+                  ExpansionPanel(
+                    canTapOnHeader: true,
+                    isExpanded: _expandedPanels.contains(_ProductFormPanel.basic),
+                    headerBuilder: (context, isExpanded) {
+                      return InkWell(
+                        onTap: () => _togglePanel(_ProductFormPanel.basic),
+                        child: const ListTile(
+                          leading: Icon(Icons.info_outline,
+                              color: Color(0xFF0A2647)),
+                          title: Text('المعلومات الأساسية'),
+                        ),
+                      );
+                    },
+                    body: _buildBasicInfoCard(remoteCategories),
+                  ),
+                  ExpansionPanel(
+                    canTapOnHeader: true,
+                    isExpanded: _expandedPanels.contains(_ProductFormPanel.pricing),
+                    headerBuilder: (context, isExpanded) {
+                      return InkWell(
+                        onTap: () => _togglePanel(_ProductFormPanel.pricing),
+                        child: const ListTile(
+                          leading: Icon(Icons.price_change_outlined,
+                              color: Color(0xFF0A2647)),
+                          title: Text('التسعير'),
+                        ),
+                      );
+                    },
+                    body: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      child: _isOfferMode ? _buildOffersCard() : _buildPricingCard(),
+                    ),
+                  ),
+                  ExpansionPanel(
+                    canTapOnHeader: true,
+                    isExpanded: _expandedPanels.contains(_ProductFormPanel.inventory),
+                    headerBuilder: (context, isExpanded) {
+                      return InkWell(
+                        onTap: () => _togglePanel(_ProductFormPanel.inventory),
+                        child: const ListTile(
+                          leading: Icon(Icons.inventory_2_outlined,
+                              color: Color(0xFF0A2647)),
+                          title: Text('المخزون'),
+                        ),
+                      );
+                    },
+                    body: _buildInventoryCard(),
+                  ),
+                  ExpansionPanel(
+                    canTapOnHeader: true,
+                    isExpanded: _expandedPanels.contains(_ProductFormPanel.media),
+                    headerBuilder: (context, isExpanded) {
+                      return InkWell(
+                        onTap: () => _togglePanel(_ProductFormPanel.media),
+                        child: const ListTile(
+                          leading: Icon(Icons.photo_library_outlined,
+                              color: Color(0xFF0A2647)),
+                          title: Text('الوسائط'),
+                        ),
+                      );
+                    },
+                    body: _buildMediaCard(),
+                  ),
+                  if (_selectedCategory == 'mattresses')
+                    ExpansionPanel(
+                      canTapOnHeader: true,
+                      isExpanded: _expandedPanels.contains(_ProductFormPanel.mattress),
+                      headerBuilder: (context, isExpanded) {
+                        return InkWell(
+                          onTap: () => _togglePanel(_ProductFormPanel.mattress),
+                          child: const ListTile(
+                            leading: Icon(Icons.bed_outlined,
+                                color: Color(0xFF0A2647)),
+                            title: Text('إعدادات الفرش'),
+                          ),
+                        );
+                      },
+                      body: _buildMattressModeCard(),
+                    ),
+                  ExpansionPanel(
+                    canTapOnHeader: true,
+                    isExpanded: _expandedPanels.contains(_ProductFormPanel.options),
+                    headerBuilder: (context, isExpanded) {
+                      return InkWell(
+                        onTap: () => _togglePanel(_ProductFormPanel.options),
+                        child: const ListTile(
+                          leading:
+                              Icon(Icons.tune, color: Color(0xFF0A2647)),
+                          title: Text('الخيارات (السمات)'),
+                        ),
+                      );
+                    },
+                    body: _buildOptionsCard(),
+                  ),
+                  ExpansionPanel(
+                    canTapOnHeader: true,
+                    isExpanded: _expandedPanels.contains(_ProductFormPanel.variants),
+                    headerBuilder: (context, isExpanded) {
+                      return InkWell(
+                        onTap: () => _togglePanel(_ProductFormPanel.variants),
+                        child: const ListTile(
+                          leading: Icon(Icons.grid_view_outlined,
+                              color: Color(0xFF0A2647)),
+                          title: Text('المتغيرات'),
+                        ),
+                      );
+                    },
+                    body: _buildVariantsCard(),
+                  ),
+                ],
               ),
 
-              const SizedBox(height: 16),
-              _buildMediaCard(),
-              const SizedBox(height: 16),
-              _buildOptionsCard(),
-              const SizedBox(height: 16),
-              _buildVariantsCard(),
               const SizedBox(height: 30),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openVariantImagePicker(_VariantRow row) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'صورة المتغير',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 12),
+                ListTile(
+                  leading: const Icon(Icons.photo_camera_back_outlined),
+                  title: const Text('اختيار من الجهاز'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final picker = ImagePicker();
+                    final image = await picker.pickImage(source: ImageSource.gallery);
+                    if (image == null) return;
+                    final originalBytes = await image.readAsBytes();
+                    final originalExt = image.name.split('.').last;
+                    final compressed = await AppImageCompressor.compress(
+                      originalBytes,
+                      originalExtension: originalExt,
+                    );
+                    setState(() {
+                      row.variantImage = _ImageWrapper(
+                        localBytes: compressed.bytes,
+                        fileExtension: compressed.extension,
+                      );
+                    });
+                  },
+                ),
+                if (_mainImage?.serverUrl != null && _mainImage!.serverUrl!.isNotEmpty)
+                  ListTile(
+                    leading: const Icon(Icons.star_outline),
+                    title: const Text('استخدام الصورة الرئيسية'),
+                    onTap: () {
+                      setState(() {
+                        row.variantImage = _ImageWrapper(serverUrl: _mainImage!.serverUrl);
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                if (_galleryImages.isNotEmpty)
+                  ListTile(
+                    leading: const Icon(Icons.photo_library_outlined),
+                    title: const Text('اختيار من معرض المنتج'),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final url = await _openGalleryPickerDialog();
+                      if (url == null || url.isEmpty) return;
+                      setState(() {
+                        row.variantImage = _ImageWrapper(serverUrl: url);
+                      });
+                    },
+                  ),
+                if (row.variantImage != null)
+                  ListTile(
+                    leading: const Icon(Icons.delete_outline, color: Colors.red),
+                    title: const Text('إزالة الصورة'),
+                    onTap: () {
+                      setState(() {
+                        row.variantImage = null;
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<String?> _openGalleryPickerDialog() async {
+    if (_galleryImages.isEmpty) return null;
+    return showDialog<String?>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('اختيار صورة من المعرض'),
+          content: SizedBox(
+            width: 520,
+            child: GridView.builder(
+              shrinkWrap: true,
+              itemCount: _galleryImages.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              itemBuilder: (context, index) {
+                final img = _galleryImages[index];
+                final url = img.serverUrl;
+                return InkWell(
+                  onTap: () => Navigator.pop(context, url),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: img.localBytes != null
+                        ? Image.memory(img.localBytes!, fit: BoxFit.cover)
+                        : (url == null || url.isEmpty)
+                            ? Container(color: Colors.grey.shade200)
+                            : AppNetworkImage(
+                                url: url,
+                                variant: ImageVariant.thumbnail,
+                                fit: BoxFit.cover,
+                                placeholder: const ShimmerImagePlaceholder(),
+                                errorWidget: const Icon(Icons.image_not_supported_outlined),
+                              ),
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('إلغاء'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildInventoryCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.inventory_2_outlined, color: Color(0xFF0A2647)),
+                SizedBox(width: 8),
+                Text(
+                  'المخزون والتوفر',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'اختر سياسة المخزون الأنسب للمنتج. يمكن ربط المخزون على مستوى المنتج أو على مستوى المتغيرات.',
+              style: TextStyle(fontSize: 11, color: Colors.grey),
+            ),
+            const Divider(),
+
+            DropdownButtonFormField<String>(
+              initialValue: _inventoryPolicy,
+              isExpanded: true,
+              decoration: const InputDecoration(
+                labelText: 'سياسة المخزون',
+                prefixIcon: Icon(Icons.rule),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: 'track_qty',
+                  child: Text(
+                    'تتبع الكمية',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: 'always_in_stock',
+                  child: Text(
+                    'متوفر دائماً',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: 'status_based',
+                  child: Text(
+                    'حسب الحالة',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+              onChanged: (v) {
+                if (v == null) return;
+                setState(() => _inventoryPolicy = v);
+              },
+            ),
+
+            const SizedBox(height: 10),
+
+            if (_inventoryPolicy == 'track_qty')
+              const Text(
+                'سيتم استخدام مخزون المنتج أو مخزون المتغيرات (إن وُجدت).',
+                style: TextStyle(fontSize: 11, color: Colors.grey),
+              )
+            else if (_inventoryPolicy == 'always_in_stock')
+              const Text(
+                'لن يتم طلب رقم مخزون وسيُعتبر المنتج متاحاً دائماً.',
+                style: TextStyle(fontSize: 11, color: Colors.grey),
+              )
+            else
+              const Text(
+                'سيتم حفظ حالة التوفر كقيمة (متوفر/غير متوفر) بدون مخزون رقمي.',
+                style: TextStyle(fontSize: 11, color: Colors.grey),
+              ),
+
+            const SizedBox(height: 10),
+            if (_inventoryPolicy == 'track_qty') ...[
+              TextFormField(
+                controller: _baseStockController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'مخزون المنتج (إن لم تستخدم المتغيرات)',
+                  prefixIcon: Icon(Icons.numbers),
+                ),
+              ),
+            ],
+
+            if (_inventoryPolicy == 'status_based')
+              SwitchListTile(
+                value: _statusBasedInStock,
+                contentPadding: EdgeInsets.zero,
+                title: const Text('متوفر في المخزون'),
+                onChanged: (v) => setState(() => _statusBasedInStock = v),
+              ),
+          ],
         ),
       ),
     );
@@ -825,19 +1575,47 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              _buildSelectorOption(
-                "منتج فردي (Standard)",
-                Icons.shopping_bag_outlined,
-                false,
-              ),
-              _buildSelectorOption(
-                "عروض توفير (Bundles)",
-                Icons.layers_outlined,
-                true,
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 520;
+
+              if (isNarrow) {
+                return Column(
+                  children: [
+                    _buildSelectorOption(
+                      "منتج فردي (قياسي)",
+                      Icons.shopping_bag_outlined,
+                      false,
+                      expand: false,
+                    ),
+                    const SizedBox(height: 6),
+                    _buildSelectorOption(
+                      "عروض توفير",
+                      Icons.layers_outlined,
+                      true,
+                      expand: false,
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  _buildSelectorOption(
+                    "منتج فردي (قياسي)",
+                    Icons.shopping_bag_outlined,
+                    false,
+                    expand: true,
+                  ),
+                  _buildSelectorOption(
+                    "عروض توفير",
+                    Icons.layers_outlined,
+                    true,
+                    expand: true,
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 4),
           Text(
@@ -851,39 +1629,60 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     );
   }
 
-  Widget _buildSelectorOption(String title, IconData icon, bool isOffer) {
+  Widget _buildSelectorOption(
+    String title,
+    IconData icon,
+    bool isOffer, {
+    required bool expand,
+  }) {
     final isSelected = _isOfferMode == isOffer;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          // فقط إذا كنا نضيف منتج جديد نسمح بالتغيير بحرية
-          // إذا كان تعديل، نفضل عدم التغيير الجذري إلا بحذر، لكن سأتركه متاحاً
-          setState(() => _isOfferMode = isOffer);
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF0A2647) : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon,
-                  size: 18,
-                  color: isSelected ? Colors.white : Colors.grey[600]),
-              const SizedBox(width: 8),
-              Text(title,
-                  style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.grey[600],
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13)),
-            ],
-          ),
+    final child = GestureDetector(
+      onTap: () {
+        // فقط إذا كنا نضيف منتج جديد نسمح بالتغيير بحرية
+        // إذا كان تعديل، نفضل عدم التغيير الجذري إلا بحذر، لكن سأتركه متاحاً
+        if (_isMattressMode && isOffer) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'وضع العروض غير مدعوم في منتجات الفرشات بالتسعير التلقائي.'),
+            ),
+          );
+          return;
+        }
+        setState(() => _isOfferMode = isOffer);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF0A2647) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon,
+                size: 18, color: isSelected ? Colors.white : Colors.grey[600]),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: isSelected ? Colors.white : Colors.grey[600],
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
+
+    if (!expand) return child;
+    return Expanded(child: child);
   }
 
   Widget _buildOffersCard() {
@@ -900,7 +1699,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               children: [
                 Icon(Icons.local_offer, color: Colors.orange),
                 SizedBox(width: 10),
-                Text("نظام العروض (Bundles)",
+                Text("نظام العروض",
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -1069,7 +1868,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("📝 المعلومات الأساسية",
+            const Text("المعلومات الأساسية",
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
@@ -1141,6 +1940,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   initialValue: _selectedCategory.isNotEmpty
                       ? _selectedCategory
                       : (items.isNotEmpty ? items.first.value : null),
+                  isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: "القسم",
                     prefixIcon: Icon(Icons.category),
@@ -1149,12 +1949,27 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                     fillColor: Colors.white,
                   ),
                   items: items,
+                  selectedItemBuilder: (context) => items
+                      .map(
+                        (item) => Text(
+                          (item.child is Text)
+                              ? ((item.child as Text).data ?? '')
+                              : (item.value ?? ''),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      )
+                      .toList(),
                   onChanged: (v) {
                     if (v == null) return;
                     // عند تغيير الفئة الرئيسية، نلغي اختيار الفئة الفرعية السابقة
                     setState(() {
                       _selectedCategory = v;
                       _selectedSubCategoryId = null;
+                      _isMattressMode = v == 'mattresses';
+                      if (_isMattressMode) {
+                        _isOfferMode = false;
+                      }
                     });
                     _loadSubCategoriesFor(v);
                   },
@@ -1169,6 +1984,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             else if (_subCategories.isNotEmpty)
               DropdownButtonFormField<String>(
                 initialValue: _selectedSubCategoryId,
+                isExpanded: true,
                 decoration: const InputDecoration(
                   labelText: "الفئة الفرعية",
                   prefixIcon: Icon(Icons.label_outline),
@@ -1180,7 +1996,11 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                     .map(
                       (sub) => DropdownMenuItem<String>(
                         value: sub['id'] as String,
-                        child: Text(sub['name'] as String? ?? ''),
+                        child: Text(
+                          sub['name'] as String? ?? '',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     )
                     .toList(),
@@ -1196,6 +2016,33 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             _buildDescriptionEditor(),
 
             const SizedBox(height: 12),
+            
+            // ✅ حقل حجم الشحن
+            DropdownButtonFormField<String>(
+              initialValue: _shippingSize,
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: "حجم الشحن",
+                prefixIcon: const Icon(Icons.local_shipping),
+                border: const OutlineInputBorder(),
+                filled: true,
+                fillColor: Colors.white,
+                helperText: "يحدد تكلفة التوصيل حسب حجم المنتج",
+              ),
+              items: const [
+                DropdownMenuItem(
+                    value: 'small', child: Text('صغير (وسائد، مناشف)')),
+                DropdownMenuItem(
+                    value: 'medium', child: Text('متوسط (لحاف، بطانية)')),
+                DropdownMenuItem(
+                    value: 'large', child: Text('كبير (طاولة، مرتبة)')),
+                DropdownMenuItem(
+                    value: 'x_large', child: Text('كبير جداً (غرفة نوم)')),
+              ],
+              onChanged: (v) => setState(() => _shippingSize = v!),
+            ),
+            
+            const SizedBox(height: 12),
             SwitchListTile(
               title: const Text("منتج مميز (Featured)"),
               subtitle: const Text("يظهر في الشريط العلوي"),
@@ -1203,7 +2050,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               onChanged: (v) => setState(() => _isFeatured = v),
             ),
             SwitchListTile(
-              title: const Text("⚡ عرض فلاش (Flash Deal)"),
+              title: const Text("عرض فلاش (Flash Deal)"),
               subtitle: const Text("يظهر في قسم العروض المؤقتة"),
               value: _isFlashDeal,
               onChanged: (v) => setState(() => _isFlashDeal = v),
@@ -1281,7 +2128,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("📸 الصور والألوان",
+            const Text("الصور والألوان",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const Divider(),
             GestureDetector(
@@ -1308,13 +2155,13 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                                 _mainImage!.localBytes!,
                                 fit: BoxFit.cover,
                               )
-                            : CachedNetworkImage(
-                                imageUrl: _mainImage!.serverUrl!,
+                            : AppNetworkImage(
+                                url: _mainImage!.serverUrl!,
+                                variant: ImageVariant.homeBanner,
                                 fit: BoxFit.cover,
-                                memCacheHeight: 600,
-                                placeholder: (context, url) =>
+                                placeholder:
                                     const ShimmerImagePlaceholder(),
-                                errorWidget: (context, url, error) => const Icon(
+                                errorWidget: const Icon(
                                   Icons.image_not_supported_outlined,
                                   color: Colors.grey,
                                 ),
@@ -1322,86 +2169,208 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-              const Text("المعرض والألوان:", style: TextStyle(fontSize: 12)),
-              TextButton.icon(
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    "المعرض والألوان:",
+                    style: TextStyle(fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                TextButton.icon(
                   onPressed: () => _pickImage(false),
                   icon: const Icon(Icons.add_photo_alternate),
-                  label: const Text("إضافة صورة"))
-            ]),
-            ..._galleryImages.asMap().entries.map((entry) {
-              final index = entry.key;
-              final img = entry.value;
-              return Container(
-                margin: const EdgeInsets.only(bottom: 10),
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[300]!),
-                    borderRadius: BorderRadius.circular(8)),
-                child: Row(
-                  children: [
-                    SizedBox(
-                        width: 60,
-                        height: 60,
-                        child: img.localBytes != null
-                            ? Image.memory(
-                                img.localBytes!,
-                                fit: BoxFit.cover,
-                              )
-                            : CachedNetworkImage(
-                                imageUrl: img.serverUrl!,
-                                fit: BoxFit.cover,
-                                memCacheHeight: 300,
-                                placeholder: (context, url) =>
-                                    const ShimmerImagePlaceholder(),
-                                errorWidget: (context, url, error) => const Icon(
-                                  Icons.image_not_supported_outlined,
-                                  color: Colors.grey,
-                                ),
-                              )),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text("اللون المرتبط:",
-                              style: TextStyle(fontSize: 10)),
-                          Row(
-                            children: [
-                              SizedBox(
-                                  width: 100,
-                                  child: TextField(
-                                      controller: TextEditingController(
-                                          text: img.colorName),
-                                      onChanged: (v) => img.colorName = v,
-                                      decoration: const InputDecoration(
-                                          hintText: "اسم اللون",
-                                          isDense: true))),
-                              const SizedBox(width: 10),
-                              GestureDetector(
-                                onTap: () => _showColorPicker(index),
-                                child: Container(
-                                  width: 30,
-                                  height: 30,
-                                  decoration: BoxDecoration(
-                                      color: img.colorValue,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.grey)),
+                  label: const Text(
+                    "إضافة صورة",
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                )
+              ],
+            ),
+            if (_isPickingGalleryImages)
+              const Padding(
+                padding: EdgeInsets.only(top: 10, bottom: 6),
+                child: LinearProgressIndicator(minHeight: 3),
+              ),
+            if (_galleryImages.isNotEmpty)
+              ReorderableListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _galleryImages.length,
+                onReorder: _reorderGalleryImages,
+                itemBuilder: (context, index) {
+                  final img = _galleryImages[index];
+                  return Container(
+                    key: ValueKey(img.id),
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: LayoutBuilder(
+                      builder: (context, c) {
+                        final isNarrow = c.maxWidth < 520;
+
+                        final leading = Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ReorderableDragStartListener(
+                              index: index,
+                              child: const Padding(
+                                padding: EdgeInsetsDirectional.only(end: 6),
+                                child: Icon(Icons.drag_handle, color: Colors.grey),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 60,
+                              height: 60,
+                              child: img.localBytes != null
+                                  ? Image.memory(
+                                      img.localBytes!,
+                                      fit: BoxFit.cover,
+                                    )
+                                  : AppNetworkImage(
+                                      url: img.serverUrl!,
+                                      variant: ImageVariant.thumbnail,
+                                      fit: BoxFit.cover,
+                                      placeholder: const ShimmerImagePlaceholder(),
+                                      errorWidget: const Icon(
+                                        Icons.image_not_supported_outlined,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                            ),
+                          ],
+                        );
+
+                        final colorEditor = Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: img.colorNameCtrl,
+                                onChanged: (v) {
+                                  img.colorName = v;
+                                  img.colorNameManuallyEdited = true;
+                                },
+                                decoration: const InputDecoration(
+                                  hintText: "اسم اللون",
+                                  isDense: true,
                                 ),
                               ),
+                            ),
+                            const SizedBox(width: 10),
+                            GestureDetector(
+                              onTap: () => _showColorPicker(index),
+                              child: Container(
+                                width: 30,
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  color: img.colorValue,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.grey),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+
+                        final actions = Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Wrap(
+                              spacing: 10,
+                              runSpacing: 6,
+                              children: [
+                                IconButton(
+                                  tooltip: 'تعيين كأول صورة في المعرض',
+                                  icon: Icon(
+                                    Icons.star_outline,
+                                    color: index == 0
+                                        ? Colors.amber
+                                        : Colors.grey.withValues(alpha: 0.8),
+                                  ),
+                                  iconSize: 22,
+                                  visualDensity: VisualDensity.compact,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 36,
+                                    minHeight: 36,
+                                  ),
+                                  padding: const EdgeInsets.all(6),
+                                  onPressed: () => _setGalleryImageAsFirst(index),
+                                ),
+                                IconButton(
+                                  tooltip: 'حذف',
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    color: Colors.red,
+                                  ),
+                                  iconSize: 22,
+                                  visualDensity: VisualDensity.compact,
+                                  constraints: const BoxConstraints(
+                                    minWidth: 36,
+                                    minHeight: 36,
+                                  ),
+                                  padding: const EdgeInsets.all(6),
+                                  onPressed: () {
+                                    setState(() {
+                                      final removed = _galleryImages.removeAt(index);
+                                      removed.dispose();
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+
+                        final editor = Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "اللون المرتبط:",
+                              style: TextStyle(fontSize: 10),
+                            ),
+                            const SizedBox(height: 4),
+                            colorEditor,
+                          ],
+                        );
+
+                        if (!isNarrow) {
+                          return Row(
+                            children: [
+                              leading,
+                              const SizedBox(width: 12),
+                              Expanded(child: editor),
+                              const SizedBox(width: 10),
+                              actions,
                             ],
-                          )
-                        ],
-                      ),
+                          );
+                        }
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                leading,
+                                const SizedBox(width: 10),
+                                const Spacer(),
+                                actions,
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            editor,
+                          ],
+                        );
+                      },
                     ),
-                    IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () =>
-                            setState(() => _galleryImages.removeAt(index)))
-                  ],
-                ),
-              );
-            }),
+                  );
+                },
+              ),
           ],
         ),
       ),
@@ -1415,54 +2384,607 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("📏 المقاسات (أساسية)",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const Divider(),
-            const Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                "تُستخدم هذه المقاسات في تصفية المنتجات وتوليد المتغيرات تلقائياً.",
-                style: TextStyle(fontSize: 11, color: Colors.grey),
-              ),
-            ),
-            const SizedBox(height: 8),
             Row(
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _sizeInputCtrl,
-                    decoration: const InputDecoration(
-                      hintText: "أضف مقاس (مثلاً 200x200)",
-                    ),
-                  ),
+                const Text(
+                  "الخيارات (Attributes)",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.add_circle, color: Color(0xFF0A2647)),
+                const Spacer(),
+                TextButton.icon(
                   onPressed: () {
-                    if (_sizeInputCtrl.text.isNotEmpty) {
-                      setState(() {
-                        _sizes.add(_sizeInputCtrl.text);
-                        _sizeInputCtrl.clear();
-                      });
-                    }
+                    setState(() {
+                      _dynamicOptions.add(_DynamicOptionRow.empty());
+                    });
                   },
+                  icon: const Icon(Icons.add),
+                  label: const Text('إضافة خيار'),
                 ),
               ],
             ),
-            Wrap(
-              spacing: 8,
-              children: _sizes
-                  .map((size) => Chip(
-                        label: Text(size),
-                        onDeleted: () => setState(() => _sizes.remove(size)),
-                      ))
-                  .toList(),
+            const Divider(),
+            const Text(
+              'أضف خيارات مرنة مثل: اللون، نوع القماش، الخامة... ثم أدخل القيم كـ Chips.',
+              style: TextStyle(fontSize: 11, color: Colors.grey),
             ),
+            const SizedBox(height: 12),
+            if (_dynamicOptions.isEmpty)
+              const Text(
+                'لا توجد خيارات بعد. اضغط "إضافة خيار".',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              )
+            else
+              ..._dynamicOptions.asMap().entries.map((entry) {
+                final index = entry.key;
+                final row = entry.value;
+
+                void addValue() {
+                  final v = row.valueInputCtrl.text.trim();
+                  if (v.isEmpty) return;
+                  setState(() {
+                    if (!row.values.contains(v)) {
+                      row.values.add(v);
+                    }
+                    row.valueInputCtrl.clear();
+                  });
+                }
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.grey[50],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: row.nameCtrl,
+                              decoration: const InputDecoration(
+                                labelText: 'اسم الخيار (مثال: Color)',
+                                isDense: true,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              setState(() {
+                                final removed = _dynamicOptions.removeAt(index);
+                                removed.dispose();
+                              });
+                            },
+                            icon: const Icon(Icons.delete_outline, color: Colors.red),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: row.valueInputCtrl,
+                              onSubmitted: (_) => addValue(),
+                              decoration: const InputDecoration(
+                                labelText: 'إضافة قيمة',
+                                hintText: 'مثال: Red',
+                                isDense: true,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: addValue,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0A2647),
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('إضافة'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: row.values
+                            .map(
+                              (v) => Chip(
+                                label: Text(v),
+                                onDeleted: () {
+                                  setState(() {
+                                    row.values.remove(v);
+                                  });
+                                },
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ],
+                  ),
+                );
+              }),
           ],
         ),
       ),
     );
+  }
+
+  /// ✅ يُستخدم لقراءة أرقام من إدخال مثل: "190,195,200" أو "190/195/200".
+  List<int> _parseCsvInts(String input) {
+    final matches = RegExp(r'\d+').allMatches(input);
+    final values = <int>{};
+    for (final m in matches) {
+      final s = m.group(0);
+      if (s == null) continue;
+      final v = int.tryParse(s);
+      if (v != null) values.add(v);
+    }
+    final list = values.toList()..sort();
+    return list;
+  }
+
+  /// ✅ بطاقة إعداد الفرشات بنظام تسعير احترافي.
+  ///
+  /// يدعم الآن وضعين:
+  /// - per_sqm: حسب متر مربع (معادلة)
+  /// - by_width: سعر يدوي حسب العرض فقط (الطول لا يؤثر بالسعر)
+  Widget _buildMattressModeCard() {
+    final availableWidths = _deriveMattressWidthsFromInputs();
+    final lengths = _parseCsvInts(_mattressLengthsCtrl.text);
+
+    final baseFee = double.tryParse(_mattressBaseFeeCtrl.text.trim()) ?? 0;
+    final perSqm = double.tryParse(_mattressPricePerSqmCtrl.text.trim()) ?? 0;
+
+    int? widthsCount;
+    int? totalCombinations;
+    if (availableWidths.isNotEmpty) {
+      widthsCount = availableWidths.length;
+      totalCombinations = widthsCount * lengths.length;
+    }
+
+    double? example;
+    if (_isMattressMode && availableWidths.isNotEmpty) {
+      final w = availableWidths.first;
+      if (_mattressPricingMode == 'by_width') {
+        final map = _buildMattressWidthPrices();
+        final v = map[w.toString()];
+        if (v != null) {
+          example = v;
+        }
+      } else if (lengths.isNotEmpty) {
+        final widthM = w / 100.0;
+        final lengthM = lengths.first / 100.0;
+        final area = widthM * lengthM;
+        example = baseFee + (area * perSqm);
+      }
+    }
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.bed, color: Color(0xFF0A2647)),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    '🛏️ إعدادات الفرشات (تسعير تلقائي حسب المقاس)',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ),
+                Switch(
+                  value: _isMattressMode,
+                  onChanged: (v) {
+                    setState(() {
+                      _isMattressMode = v;
+                      if (v) _isOfferMode = false;
+                    });
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'فعّل هذا الخيار لبيع الفرشة حسب العرض/الطول مع حساب السعر تلقائياً.\n'
+              'بدل إدخال قائمة طويلة من المقاسات وأسعارها.',
+              style: TextStyle(fontSize: 11, color: Colors.grey),
+            ),
+
+            if (!_isMattressMode) ...[
+              const SizedBox(height: 10),
+              const Text(
+                'إذا عطّلت وضع الفرشات، سيتم استخدام المقاسات الأساسية مثل باقي المنتجات.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ] else ...[
+              if (totalCombinations != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6.0),
+                  child: Text(
+                    'سيتم توليد ${totalCombinations.toString()} مقاس تلقائياً (عروض: ${widthsCount ?? '-'} × أطوال: ${lengths.length}).',
+                    style: const TextStyle(fontSize: 11, color: Colors.blueGrey),
+                  ),
+                ),
+              const Divider(height: 22),
+              const Text(
+                '١) المقاسات المتاحة (بالسنتيمتر)',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _mattressWidthsCtrl,
+                keyboardType: TextInputType.text,
+                decoration: const InputDecoration(
+                  labelText: 'قائمة عروض مخصصة (اختياري)',
+                  hintText: 'مثال: 90,95,115,125,135,145,155,165,175,185,195,205,210,215,220',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _mattressWidthMinCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'العرض من (cm)',
+                        isDense: true,
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _mattressWidthMaxCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'العرض إلى (cm)',
+                        isDense: true,
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _mattressWidthStepCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'الخطوة (cm)',
+                        isDense: true,
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'ملاحظة: إذا أدخلت "قائمة عروض مخصصة" سيتم اعتمادها وتجاهل min/max/step.',
+                style: TextStyle(fontSize: 11, color: Colors.grey),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _mattressLengthsCtrl,
+                keyboardType: TextInputType.text,
+                decoration: const InputDecoration(
+                  labelText: 'الأطوال (cm) مفصولة بفواصل/سلاش',
+                  hintText: 'مثال: 190,195,200',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+              ),
+
+              const SizedBox(height: 14),
+              const Text(
+                '٢) نظام التسعير',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  ChoiceChip(
+                    label: const Text('حسب متر مربع'),
+                    selected: _mattressPricingMode == 'per_sqm',
+                    onSelected: (v) {
+                      if (!v) return;
+                      setState(() => _mattressPricingMode = 'per_sqm');
+                    },
+                  ),
+                  ChoiceChip(
+                    label: const Text('سعر يدوي حسب العرض'),
+                    selected: _mattressPricingMode == 'by_width',
+                    onSelected: (v) {
+                      if (!v) return;
+                      setState(() => _mattressPricingMode = 'by_width');
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              if (_mattressPricingMode == 'per_sqm') ...[
+                const Text(
+                  'هذا الوضع يحسب السعر حسب مساحة الفرشة (م²).',
+                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _mattressBaseFeeCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'مبلغ ثابت (Base)',
+                          isDense: true,
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.attach_money, size: 18),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _mattressPricePerSqmCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'سعر لكل متر مربع',
+                          isDense: true,
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.square_foot, size: 18),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                const Text(
+                  'هذا الوضع يجعل السعر يختلف حسب العرض فقط (الطول لا يؤثر على السعر).',
+                  style: TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _mattressDefaultWidthPriceCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'سعر افتراضي (اختياري)',
+                          isDense: true,
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.attach_money, size: 18),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton.icon(
+                      onPressed: _applyDefaultPriceToAllWidths,
+                      icon: const Icon(Icons.content_copy),
+                      label: const Text('نسخ للجميع'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    TextButton.icon(
+                      onPressed: _syncMattressWidthPriceRowsFromWidths,
+                      icon: const Icon(Icons.auto_awesome),
+                      label: const Text('توليد جدول الأسعار'),
+                    ),
+                    const SizedBox(width: 8),
+                    if (_mattressWidthPriceRows.isNotEmpty)
+                      Text(
+                        'عدد الأسعار: ${_mattressWidthPriceRows.length}',
+                        style: const TextStyle(fontSize: 11, color: Colors.grey),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ..._mattressWidthPriceRows.map((row) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Text(
+                            'عرض ${row.widthCm} سم',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextField(
+                            controller: row.priceCtrl,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: 'السعر',
+                              isDense: true,
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.attach_money, size: 18),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, color: Colors.red),
+                          onPressed: () {
+                            setState(() {
+                              _mattressWidthPriceRows.remove(row);
+                              row.dispose();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
+
+              if (example != null) ...[
+                const SizedBox(height: 10),
+                Text(
+                  _mattressPricingMode == 'by_width'
+                      ? 'معاينة (تقريباً) لأصغر عرض: ${example.toStringAsFixed(2)} د.أ'
+                      : 'معاينة (تقريباً) لأصغر مقاس: ${example.toStringAsFixed(2)} د.أ',
+                  style: const TextStyle(fontSize: 12, color: Colors.green),
+                ),
+              ],
+              const SizedBox(height: 6),
+              const Text(
+                'ملاحظة: يمكنك أيضاً إضافة استثناءات أسعار عبر "المتغيرات المتقدمة" (لأحجام محددة فقط).',
+                style: TextStyle(fontSize: 11, color: Colors.grey),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<int> _deriveMattressWidthsFromInputs() {
+    final custom = _parseCsvInts(_mattressWidthsCtrl.text);
+    if (custom.isNotEmpty) return custom;
+
+    final wMin = int.tryParse(_mattressWidthMinCtrl.text.trim());
+    final wMax = int.tryParse(_mattressWidthMaxCtrl.text.trim());
+    final wStep = int.tryParse(_mattressWidthStepCtrl.text.trim());
+
+    if (wMin == null || wMax == null || wStep == null) return const [];
+    if (wMin <= 0 || wMax < wMin || wStep <= 0) return const [];
+
+    final count = ((wMax - wMin) ~/ wStep) + 1;
+    if (count <= 0 || count > 500) return const [];
+
+    final list = <int>[];
+    for (int w = wMin; w <= wMax; w += wStep) {
+      list.add(w);
+    }
+    return list;
+  }
+
+  /// يبني `Map<String, double>` لأسعار العرض.
+  /// مثال: {"90": 22.1, "95": 23.0}
+  Map<String, double> _buildMattressWidthPrices() {
+    final map = <String, double>{};
+    for (final row in _mattressWidthPriceRows) {
+      final price = double.tryParse(row.priceCtrl.text.trim());
+      if (price == null) continue;
+      map[row.widthCm.toString()] = price;
+    }
+    return map;
+  }
+
+  void _syncMattressWidthPriceRowsFromWidths() {
+    final widths = _deriveMattressWidthsFromInputs();
+    if (widths.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('أدخل العروض (قائمة أو min/max/step) أولاً.')),
+      );
+      return;
+    }
+
+    setState(() {
+      final existing = <int, _MattressWidthPriceRow>{
+        for (final r in _mattressWidthPriceRows) r.widthCm: r,
+      };
+
+      // نعيد بناء القائمة حسب widths الحالية (مع الحفاظ على الأسعار القديمة)
+      final rebuilt = <_MattressWidthPriceRow>[];
+      for (final w in widths) {
+        final old = existing[w];
+        if (old != null) {
+          rebuilt.add(old);
+        } else {
+          rebuilt.add(_MattressWidthPriceRow(widthCm: w));
+        }
+      }
+
+      // تخلص من الصفوف التي لم تعد ضمن widths
+      for (final r in _mattressWidthPriceRows) {
+        if (!widths.contains(r.widthCm)) {
+          r.dispose();
+        }
+      }
+
+      _mattressWidthPriceRows
+        ..clear()
+        ..addAll(rebuilt);
+
+      // إذا كان هناك سعر افتراضي، نملأ الفراغات
+      _applyDefaultPriceToAllWidths();
+    });
+  }
+
+  void _applyDefaultPriceToAllWidths() {
+    final defaultPrice =
+        double.tryParse(_mattressDefaultWidthPriceCtrl.text.trim());
+    if (defaultPrice == null) return;
+
+    setState(() {
+      for (final row in _mattressWidthPriceRows) {
+        if (row.priceCtrl.text.trim().isEmpty) {
+          row.priceCtrl.text = defaultPrice.toStringAsFixed(2);
+        }
+      }
+    });
+  }
+
+  void _tryAutoFillMattressBasePrice() {
+    // لا نغيّر السعر إذا كان معبّأ
+    if (_priceController.text.trim().isNotEmpty) return;
+
+    if (_mattressPricingMode == 'by_width') {
+      final map = _buildMattressWidthPrices();
+      if (map.isEmpty) return;
+      final min = map.values.reduce((a, b) => a < b ? a : b);
+      _priceController.text = min.toStringAsFixed(2);
+      return;
+    }
+
+    // per_sqm
+    final widths = _deriveMattressWidthsFromInputs();
+    final lengths = _parseCsvInts(_mattressLengthsCtrl.text);
+    if (widths.isEmpty || lengths.isEmpty) return;
+
+    final baseFee = double.tryParse(_mattressBaseFeeCtrl.text.trim()) ?? 0;
+    final perSqm = double.tryParse(_mattressPricePerSqmCtrl.text.trim()) ?? 0;
+
+    final w = widths.first;
+    final l = lengths.first;
+    final area = (w / 100.0) * (l / 100.0);
+    final price = baseFee + (area * perSqm);
+    if (price > 0) {
+      _priceController.text = price.toStringAsFixed(2);
+    }
   }
 
   Widget _buildVariantsCard() {
@@ -1478,11 +3000,15 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               children: [
                 const Icon(Icons.grid_view, color: Color(0xFF0A2647)),
                 const SizedBox(width: 8),
-                const Text(
-                  "المتغيرات المتقدمة (لون + مقاس + وحدة + سعر)",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                const Expanded(
+                  child: Text(
+                    "المتغيرات المتقدمة (لون + مقاس + وحدة + سعر)",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 8),
                 Switch(
                   value: _useAdvancedVariants,
                   onChanged: (v) => setState(() => _useAdvancedVariants = v),
@@ -1553,51 +3079,144 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 children: _variantRows.map((row) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: row.priceCtrl,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: "السعر",
-                              prefixIcon: Icon(Icons.attach_money, size: 16),
-                              isDense: true,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isNarrow = constraints.maxWidth < 720;
+
+                        final priceStockRow = Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: row.priceCtrl,
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  labelText: "السعر",
+                                  prefixIcon:
+                                      Icon(Icons.attach_money, size: 16),
+                                  isDense: true,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: TextField(
-                            controller: row.stockCtrl,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              labelText: "المخزون",
-                              isDense: true,
+                            if (_inventoryPolicy == 'track_qty') ...[
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: TextField(
+                                  controller: row.stockCtrl,
+                                  keyboardType: TextInputType.number,
+                                  decoration: const InputDecoration(
+                                    labelText: "المخزون",
+                                    isDense: true,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        );
+
+                        final skuImageDeleteRow = Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: TextField(
+                                controller: row.skuCtrl,
+                                decoration: const InputDecoration(
+                                  labelText: "SKU (اختياري)",
+                                  isDense: true,
+                                ),
+                              ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          flex: 2,
-                          child: TextField(
-                            controller: row.skuCtrl,
-                            decoration: const InputDecoration(
-                              labelText: "SKU (اختياري)",
-                              isDense: true,
+                            const SizedBox(width: 6),
+                            Expanded(
+                              flex: 2,
+                              child: Row(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: SizedBox(
+                                      width: 44,
+                                      height: 44,
+                                      child: row.variantImage?.localBytes !=
+                                              null
+                                          ? Image.memory(
+                                              row.variantImage!.localBytes!,
+                                              fit: BoxFit.cover,
+                                            )
+                                          : (row.variantImage?.serverUrl !=
+                                                      null &&
+                                                  row.variantImage!.serverUrl!
+                                                      .trim()
+                                                      .isNotEmpty)
+                                              ? AppNetworkImage(
+                                                  url: row
+                                                      .variantImage!.serverUrl!,
+                                                  variant:
+                                                      ImageVariant.thumbnail,
+                                                  fit: BoxFit.cover,
+                                                  placeholder:
+                                                      const ShimmerImagePlaceholder(),
+                                                  errorWidget: const Icon(
+                                                    Icons
+                                                        .image_not_supported_outlined,
+                                                    color: Colors.grey,
+                                                  ),
+                                                )
+                                              : Container(
+                                                  color: Colors.grey.shade200,
+                                                  child: const Icon(
+                                                    Icons.image_outlined,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      onPressed: () =>
+                                          _openVariantImagePicker(row),
+                                      icon: const Icon(Icons.photo_outlined,
+                                          size: 18),
+                                      label: Text(
+                                        row.variantImage == null
+                                            ? 'اختيار صورة'
+                                            : 'تغيير',
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline,
-                              color: Colors.red),
-                          onPressed: () {
-                            setState(() {
-                              _variantRows.remove(row);
-                            });
-                          },
-                        ),
-                      ],
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline,
+                                  color: Colors.red),
+                              onPressed: () {
+                                setState(() {
+                                  _variantRows.remove(row);
+                                });
+                              },
+                            ),
+                          ],
+                        );
+
+                        if (!isNarrow) {
+                          return Row(
+                            children: [
+                              Expanded(child: priceStockRow),
+                              const SizedBox(width: 6),
+                              Expanded(flex: 5, child: skuImageDeleteRow),
+                            ],
+                          );
+                        }
+
+                        return Column(
+                          children: [
+                            priceStockRow,
+                            const SizedBox(height: 8),
+                            skuImageDeleteRow,
+                          ],
+                        );
+                      },
                     ),
                   );
                 }).toList(),
@@ -1698,17 +3317,20 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       });
     }
 
-    // استنتاج الألوان المتاحة من صور المعرض
+    // المصدر 1 (الجديد): خيارات ديناميكية (Attributes)
+    final dynOptions = _dynamicOptions
+        .where((o) => o.nameCtrl.text.trim().isNotEmpty && o.values.isNotEmpty)
+        .toList();
+
+    // المصدر 2 (القديم): ألوان المعرض + مقاسات legacy
     final availableColors = _galleryImages
         .map((img) => img.colorName.trim())
         .where((name) => name.isNotEmpty)
         .toSet()
         .toList();
-
-    // المقاسات المتاحة من بطاقة المقاسات الأساسية
     final availableSizes = List<String>.from(_sizes);
 
-    if (availableColors.isEmpty && availableSizes.isEmpty) {
+    if (dynOptions.isEmpty && availableColors.isEmpty && availableSizes.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -1720,6 +3342,11 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
 
     final selectedColors = <String>{...availableColors};
     final selectedSizes = <String>{...availableSizes};
+
+    // خيارات ديناميكية: نخليها كلها محددة افتراضياً
+    final Map<String, Set<String>> selectedDyn = {
+      for (final o in dynOptions) o.nameCtrl.text.trim(): {...o.values}
+    };
 
     final unitCtrl = TextEditingController(
         text: _unitLabelCtrl.text.trim().isNotEmpty
@@ -1802,6 +3429,53 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                       ),
                       const SizedBox(height: 12),
                     ],
+
+                    if (dynOptions.isNotEmpty) ...[
+                      const Text('خيارات إضافية',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 6),
+                      ...dynOptions.map((opt) {
+                        final name = opt.nameCtrl.text.trim();
+                        final values = opt.values;
+                        final selectedSet = selectedDyn[name] ?? <String>{};
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(name),
+                              const SizedBox(height: 6),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: values.map((val) {
+                                  final isSelected = selectedSet.contains(val);
+                                  return FilterChip(
+                                    label: Text(val),
+                                    selected: isSelected,
+                                    onSelected: (v) {
+                                      setStateDialog(() {
+                                        final set = selectedDyn.putIfAbsent(
+                                          name,
+                                          () => <String>{},
+                                        );
+                                        if (v) {
+                                          set.add(val);
+                                        } else {
+                                          set.remove(val);
+                                        }
+                                      });
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 12),
+                    ],
+
                     const Divider(),
                     const SizedBox(height: 8),
                     TextField(
@@ -1866,6 +3540,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                       'stock': parsedStock,
                       'colors': selectedColors.toList(),
                       'sizes': selectedSizes.toList(),
+                      'dyn': {
+                        for (final e in selectedDyn.entries)
+                          e.key: e.value.toList(),
+                      },
                     };
                     Navigator.of(dialogContext).pop();
                   },
@@ -1888,6 +3566,19 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     final List<String> selectedSizesList =
         (result!['sizes'] as List).cast<String>();
 
+    final Map<String, List<String>> dynSelected = {};
+    if (result!['dyn'] is Map) {
+      final m = Map<String, dynamic>.from(result!['dyn'] as Map);
+      for (final e in m.entries) {
+        if (e.value is List) {
+          dynSelected[e.key.toString()] = (e.value as List)
+              .map((x) => x.toString())
+              .where((x) => x.trim().isNotEmpty)
+              .toList();
+        }
+      }
+    }
+
     // إذا لم يتم اختيار أي لون أو مقاس، نستخدم قيمة فارغة كي لا نمنع التوليد.
     final colorsToUse =
         selectedColorsList.isEmpty ? <String>[''] : selectedColorsList;
@@ -1903,22 +3594,65 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     }
 
     setState(() {
-      for (final color in colorsToUse) {
-        for (final size in sizesToUse) {
-          final key = '${color.trim()}|${size.trim()}|$unit';
-          if (existingKeys.contains(key)) continue;
+      // مولد جديد: إذا في خيارات ديناميكية مختارة، نستخدمها لعمل combinations
+      final dynEntries = dynSelected.entries
+          .where((e) => e.key.trim().isNotEmpty && e.value.isNotEmpty)
+          .toList();
 
-          final newRow = _VariantRow.empty(defaultUnit: unit);
-          newRow.colorCtrl.text = color.trim();
-          newRow.sizeCtrl.text = size.trim();
-          newRow.priceCtrl.text = price.toStringAsFixed(2);
-          if (stock != null) {
-            newRow.stockCtrl.text = stock.toString();
+      List<Map<String, String>> combinations = <Map<String, String>>[{}];
+      for (final e in dynEntries) {
+        final next = <Map<String, String>>[];
+        for (final combo in combinations) {
+          for (final v in e.value) {
+            final c = Map<String, String>.from(combo);
+            c[e.key] = v;
+            next.add(c);
           }
-
-          _variantRows.add(newRow);
-          existingKeys.add(key);
         }
+        combinations = next;
+        if (combinations.length > 200) {
+          combinations = combinations.take(200).toList();
+          break;
+        }
+      }
+
+      // fallback: إذا لا يوجد dyn combinations، نستخدم القديم colors x sizes
+      if (combinations.length == 1 && combinations.first.isEmpty) {
+        combinations = <Map<String, String>>[];
+        for (final color in colorsToUse) {
+          for (final size in sizesToUse) {
+            combinations.add({
+              if (color.trim().isNotEmpty) 'color': color.trim(),
+              if (size.trim().isNotEmpty) 'size': size.trim(),
+            });
+          }
+        }
+      }
+
+      for (final combo in combinations) {
+        final color = combo['color'] ?? '';
+        final size = combo['size'] ?? '';
+
+        final key = '${color.trim()}|${size.trim()}|$unit|${combo.entries.map((e) => '${e.key}:${e.value}').join(',')}';
+        if (existingKeys.contains(key)) continue;
+
+        final newRow = _VariantRow.empty(defaultUnit: unit);
+        if (color.trim().isNotEmpty) newRow.colorCtrl.text = color.trim();
+        if (size.trim().isNotEmpty) newRow.sizeCtrl.text = size.trim();
+        newRow.priceCtrl.text = price.toStringAsFixed(2);
+        if (_inventoryPolicy == 'track_qty' && stock != null) {
+          newRow.stockCtrl.text = stock.toString();
+        }
+
+        // أي مفاتيح غير color/size تحفظ في attributes
+        for (final e in combo.entries) {
+          if (e.key == 'color' || e.key == 'size') continue;
+          if (e.key.trim().isEmpty || e.value.trim().isEmpty) continue;
+          newRow.attributes[e.key] = e.value;
+        }
+
+        _variantRows.add(newRow);
+        existingKeys.add(key);
       }
     });
 
@@ -1986,17 +3720,72 @@ class _EditorButton extends StatelessWidget {
 }
 
 class _ImageWrapper {
+  final String id;
   Uint8List? localBytes;
   String? serverUrl;
   String fileExtension;
   String colorName;
   Color colorValue;
-  _ImageWrapper(
-      {this.localBytes,
-      this.serverUrl,
-      this.fileExtension = 'jpg',
-      this.colorName = '',
-      this.colorValue = Colors.grey});
+  final TextEditingController colorNameCtrl;
+  bool colorNameManuallyEdited = false;
+
+  _ImageWrapper({
+    String? id,
+    this.localBytes,
+    this.serverUrl,
+    this.fileExtension = 'jpg',
+    this.colorName = '',
+    this.colorValue = Colors.grey,
+  })  : id = id ?? DateTime.now().microsecondsSinceEpoch.toString(),
+        colorNameCtrl = TextEditingController(text: colorName);
+
+  void dispose() {
+    colorNameCtrl.dispose();
+  }
+}
+
+class _DynamicOptionRow {
+  final TextEditingController nameCtrl;
+  final TextEditingController valueInputCtrl;
+  final List<String> values;
+
+  _DynamicOptionRow({
+    required this.nameCtrl,
+    required this.valueInputCtrl,
+    required this.values,
+  });
+
+  factory _DynamicOptionRow.empty() {
+    return _DynamicOptionRow(
+      nameCtrl: TextEditingController(),
+      valueInputCtrl: TextEditingController(),
+      values: <String>[],
+    );
+  }
+
+  factory _DynamicOptionRow.fromJson(Map<String, dynamic> json) {
+    final rawValues = json['values'];
+    final parsedValues = rawValues is List
+        ? rawValues.map((e) => e.toString()).where((e) => e.trim().isNotEmpty).toList()
+        : <String>[];
+    return _DynamicOptionRow(
+      nameCtrl: TextEditingController(text: json['name']?.toString() ?? ''),
+      valueInputCtrl: TextEditingController(),
+      values: parsedValues,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': nameCtrl.text.trim(),
+      'values': values,
+    };
+  }
+
+  void dispose() {
+    nameCtrl.dispose();
+    valueInputCtrl.dispose();
+  }
 }
 
 /// كلاس مساعد لإدارة حقول المتغير في شاشة المنتج
@@ -2008,6 +3797,8 @@ class _VariantRow {
   final TextEditingController priceCtrl;
   final TextEditingController stockCtrl;
   final TextEditingController skuCtrl;
+  final Map<String, String> attributes;
+  _ImageWrapper? variantImage;
 
   _VariantRow({
     required this.id,
@@ -2017,6 +3808,8 @@ class _VariantRow {
     required this.priceCtrl,
     required this.stockCtrl,
     required this.skuCtrl,
+    required this.attributes,
+    this.variantImage,
   });
 
   factory _VariantRow.empty({String? defaultUnit}) {
@@ -2028,6 +3821,7 @@ class _VariantRow {
       priceCtrl: TextEditingController(),
       stockCtrl: TextEditingController(),
       skuCtrl: TextEditingController(),
+      attributes: <String, String>{},
     );
   }
 
@@ -2040,6 +3834,11 @@ class _VariantRow {
       priceCtrl: TextEditingController(text: v.price.toString()),
       stockCtrl: TextEditingController(text: v.stock?.toString() ?? ''),
       skuCtrl: TextEditingController(text: v.sku ?? ''),
+      attributes: Map<String, String>.from(v.attributes),
+      variantImage:
+          (v.imageUrl != null && v.imageUrl!.trim().isNotEmpty)
+              ? _ImageWrapper(serverUrl: v.imageUrl)
+              : null,
     );
   }
 
@@ -2049,7 +3848,9 @@ class _VariantRow {
       unitCtrl.text.trim().isEmpty &&
       priceCtrl.text.trim().isEmpty &&
       stockCtrl.text.trim().isEmpty &&
-      skuCtrl.text.trim().isEmpty;
+      skuCtrl.text.trim().isEmpty &&
+      variantImage == null &&
+      attributes.isEmpty;
 
   void dispose() {
     colorCtrl.dispose();
@@ -2058,5 +3859,20 @@ class _VariantRow {
     priceCtrl.dispose();
     stockCtrl.dispose();
     skuCtrl.dispose();
+  }
+}
+
+/// صف بسيط لتسعير الفرشات يدوياً حسب العرض.
+class _MattressWidthPriceRow {
+  final int widthCm;
+  final TextEditingController priceCtrl;
+
+  _MattressWidthPriceRow({required this.widthCm, double? price})
+      : priceCtrl = TextEditingController(
+          text: price != null ? price.toStringAsFixed(2) : '',
+        );
+
+  void dispose() {
+    priceCtrl.dispose();
   }
 }

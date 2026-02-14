@@ -8,7 +8,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:doctor_store/main.dart';
+import 'package:doctor_store/app/app.dart';
 
 void main() {
   testWidgets('App renders home screen without crashing', (WidgetTester tester) async {

@@ -1,6 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
+import 'package:doctor_store/features/product/data/product_repository.dart';
+import 'package:doctor_store/features/product/domain/models/similar_products_query.dart';
+
+final productRepositoryProvider = Provider<ProductRepository>((ref) {
+  return ProductRepository();
+});
 
 /// عدّاد مشاهدات المنتج (يشمل الزوّار غير المسجلين)
 final productViewsProvider = FutureProvider.family<int, String>((ref, productId) async {
@@ -17,6 +23,27 @@ final productViewsProvider = FutureProvider.family<int, String>((ref, productId)
   // في حال فشل العد لأي سبب نعيد 0 بشكل آمن
   final count = response.count;
   return count;
+});
+
+/// تحميل منتجات فئة معيّنة مرة واحدة (أسرع للويب) مع كاش تلقائي من Riverpod.
+final productsByCategoryProvider = FutureProvider.family<List<Product>, String>((ref, categoryId) async {
+  final repo = ref.watch(productRepositoryProvider);
+  return repo.fetchByCategory(categoryId: categoryId);
+});
+
+/// تحميل كل المنتجات مرة واحدة (أسرع للويب) مع كاش تلقائي من Riverpod.
+final allProductsProvider = FutureProvider<List<Product>>((ref) async {
+  final repo = ref.watch(productRepositoryProvider);
+  return repo.fetchAll();
+});
+
+final similarProductsProvider = FutureProvider.family<List<Product>, SimilarProductsQuery>((ref, q) async {
+  final repo = ref.watch(productRepositoryProvider);
+  return repo.fetchSimilarSmart(
+    categoryId: q.categoryId,
+    excludeId: q.excludeId,
+    limit: q.limit,
+  );
 });
 
 /// تدفق لحظي لكل المنتجات مع دعم Realtime (INSERT/UPDATE/DELETE)

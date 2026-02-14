@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_card.dart';
+import 'package:doctor_store/shared/utils/responsive_layout.dart';
 
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key});
+  final String? initialQuery;
+
+  const SearchScreen({
+    super.key,
+    this.initialQuery,
+  });
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -54,6 +60,19 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    final initialQuery = widget.initialQuery?.trim();
+    if (initialQuery != null && initialQuery.isNotEmpty) {
+      _controller.text = initialQuery;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _search(initialQuery);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -76,16 +95,38 @@ class _SearchScreenState extends State<SearchScreen> {
           ? const Center(child: Text("لم نجد نتائج تطابق بحثك!"))
           : _results.isEmpty && _controller.text.isEmpty
             ? const Center(child: Text("ابدأ بكتابة اسم المنتج للبحث"))
-            : GridView.builder(
-                padding: const EdgeInsets.all(10),
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 260,
-                  childAspectRatio: 0.64,
-                  crossAxisSpacing: 15,
-                  mainAxisSpacing: 15,
-                ),
-                itemCount: _results.length,
-                itemBuilder: (context, index) => ProductCard(product: _results[index]),
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  final crossAxisCount = ResponsiveLayout.gridCountForWidth(
+                    constraints.maxWidth,
+                    desiredItemWidth: 120,
+                    minCount: 3,
+                    maxCount: 5,
+                  );
+                  final isCompact = crossAxisCount >= 3;
+                  const spacing = 12.0;
+                  final mainAxisExtent = ResponsiveLayout.productCardMainAxisExtent(
+                    constraints.maxWidth,
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: spacing,
+                    isCompact: isCompact,
+                  );
+
+                  return GridView.builder(
+                    padding: const EdgeInsets.all(10),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      mainAxisExtent: mainAxisExtent,
+                      crossAxisSpacing: spacing,
+                      mainAxisSpacing: spacing,
+                    ),
+                    itemCount: _results.length,
+                    itemBuilder: (context, index) => ProductCard(
+                      product: _results[index],
+                      isCompact: isCompact,
+                    ),
+                  );
+                },
               ),
     );
   }

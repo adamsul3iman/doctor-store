@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:doctor_store/shared/widgets/constrained_dialog.dart';
 
 // ignore_for_file: use_build_context_synchronously
 
@@ -124,11 +125,13 @@ class _ReviewsSectionState extends State<ReviewsSection> {
         builder: (context, setDialogState) {
           return Dialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+            child: ConstrainedDialog(
+              maxWidth: 550,
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                   Container(
                     padding: const EdgeInsets.all(15),
                     decoration: BoxDecoration(
@@ -197,7 +200,8 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                         : const Text("متابعة للتقييم", style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
-                ],
+                  ],
+                ),
               ),
             ),
           );

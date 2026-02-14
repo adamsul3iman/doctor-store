@@ -5,8 +5,10 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import 'package:doctor_store/core/theme/app_theme.dart';
 import 'package:doctor_store/features/cart/application/cart_manager.dart';
+import 'package:doctor_store/features/recently_viewed/application/recently_viewed_manager.dart';
 import 'package:doctor_store/features/auth/presentation/widgets/account_icon.dart';
 import 'package:doctor_store/shared/widgets/quick_nav_bar.dart';
+import 'package:doctor_store/shared/utils/link_share_helper.dart';
 
 /// Reusable AppBar for RTL layout with:
 /// Right: [Menu/Back, Share, Cart]
@@ -98,13 +100,18 @@ class CustomAppBarContent extends ConsumerWidget {
   });
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cartItems = ref.watch(cartProvider);
-    final cartCount =
-        cartItems.fold<int>(0, (sum, item) => sum + item.quantity);
+    final cartCount = ref.watch(
+      cartProvider.select(
+        (items) => items.fold<int>(0, (sum, item) => sum + item.quantity),
+      ),
+    );
+
+    final recentlyViewedCount = ref.watch(recentlyViewedCountProvider);
 
     // إخفاء أيقونة السلة داخل صفحة السلة نفسها بناءً على المسار الحالي
     final String matchedLocation = GoRouterState.of(context).matchedLocation;
     final bool isCartRoute = matchedLocation == '/cart';
+    final bool isRecentlyViewedRoute = matchedLocation == '/recently_viewed';
 
     final appBarTitleStyle = Theme.of(context).appBarTheme.titleTextStyle ??
         const TextStyle(
@@ -126,106 +133,158 @@ class CustomAppBarContent extends ConsumerWidget {
 
     return SizedBox(
       height: kToolbarHeight,
-      child: Stack(
-        alignment: Alignment.center,
+      child: Row(
         children: [
-          // Center: logo or title (مرن مع قص عند الطول الزائد)
-          Positioned.fill(
-            left: 160, // مساحة كبيرة لأيقونات البحث + السلة + الحساب
-            right: 60,  // مساحة لأيقونة الرجوع/القائمة
+          IconButton(
+            tooltip: isHome ? 'القائمة' : 'رجوع',
+            icon: Icon(
+              isHome ? PhosphorIcons.list() : PhosphorIcons.arrowLeft(),
+              color: iconColor,
+            ),
+            onPressed: () {
+              if (isHome) {
+                showQuickNavBar(context);
+              } else {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/');
+                }
+              }
+            },
+          ),
+          Expanded(
             child: Center(child: center),
           ),
-
-          // Right side: only Menu / Back (leading in RTL)
-          Align(
-            alignment: Alignment.centerRight,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  tooltip: isHome ? 'القائمة' : 'رجوع',
-                  icon: Icon(
-                    isHome ? PhosphorIcons.list() : PhosphorIcons.arrowLeft(),
-                    color: iconColor,
-                  ),
-                  onPressed: () {
-                    if (isHome) {
-                      showQuickNavBar(context);
-                    } else {
-                      if (context.canPop()) {
-                        context.pop();
-                      } else {
-                        context.go('/');
-                      }
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-
-          // Left side: Search + Cart + Profile (actions in RTL)
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (showSearch)
-                  IconButton(
-                    tooltip: 'بحث',
-                    icon: Icon(
-                      PhosphorIcons.magnifyingGlass(),
-                      color: iconColor,
-                    ),
-                    onPressed: onSearchTap,
-                  ),
-                if (!isCartRoute)
-                  InkWell(
-                    borderRadius: BorderRadius.circular(999),
-                    onTap: () => context.push('/cart'),
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Icon(
-                            PhosphorIcons.shoppingBag(),
-                            color: iconColor,
-                            size: 22,
-                          ),
+          Flexible(
+            fit: FlexFit.loose,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                reverse: true,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (showSearch)
+                      IconButton(
+                        tooltip: 'بحث',
+                        icon: Icon(
+                          PhosphorIcons.magnifyingGlass(),
+                          color: iconColor,
                         ),
-                        if (cartCount > 0)
-                          Positioned(
-                            top: -2,
-                            right: -2,
-                            child: Container(
-                              padding: const EdgeInsets.all(3),
-                              decoration: BoxDecoration(
-                                color: Colors.redAccent,
-                                borderRadius: BorderRadius.circular(999),
+                        onPressed: onSearchTap,
+                      ),
+                    if (showShare && (sharePath != null || onShareTap != null))
+                      IconButton(
+                        tooltip: 'مشاركة',
+                        icon: Icon(
+                          PhosphorIcons.shareNetwork(),
+                          color: iconColor,
+                        ),
+                        onPressed: onShareTap ?? () {
+                          if (sharePath != null && shareTitle != null) {
+                            shareAppPage(
+                              path: sharePath!,
+                              title: shareTitle!,
+                            );
+                          }
+                        },
+                      ),
+                    if (!isRecentlyViewedRoute && recentlyViewedCount > 0)
+                      InkWell(
+                        borderRadius: BorderRadius.circular(999),
+                        onTap: () => context.push('/recently_viewed'),
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Icon(
+                                PhosphorIcons.clockCounterClockwise(),
+                                color: iconColor,
+                                size: 22,
                               ),
-                              constraints: const BoxConstraints(
-                                minWidth: 16,
-                                minHeight: 16,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  '$cartCount',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
+                            ),
+                            if (recentlyViewedCount > 0)
+                              Positioned(
+                                top: -2,
+                                right: -2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blueAccent,
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 16,
+                                    minHeight: 16,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      '$recentlyViewedCount',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(width: 4),
+                    if (!isCartRoute)
+                      InkWell(
+                        borderRadius: BorderRadius.circular(999),
+                        onTap: () => context.push('/cart'),
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Icon(
+                                PhosphorIcons.shoppingBag(),
+                                color: iconColor,
+                                size: 22,
+                              ),
                             ),
-                          ),
-                      ],
-                    ),
-                  ),
-                const SizedBox(width: 4),
-                AccountIcon(color: iconColor),
-              ],
+                            if (cartCount > 0)
+                              Positioned(
+                                top: -2,
+                                right: -2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
+                                    color: Colors.redAccent,
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 16,
+                                    minHeight: 16,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      '$cartCount',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(width: 4),
+                    AccountIcon(color: iconColor),
+                  ],
+                ),
+              ),
             ),
           ),
         ],

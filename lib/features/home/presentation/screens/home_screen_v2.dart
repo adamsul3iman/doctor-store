@@ -6,12 +6,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'dart:ui' as dbo;
 
 // المشروع
 import 'package:doctor_store/shared/services/supabase_service.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
-import 'package:doctor_store/shared/utils/analytics_service.dart';
+import 'package:doctor_store/shared/services/analytics_service.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_card.dart';
 // import 'package:doctor_store/shared/utils/product_nav_helper.dart'; // لم نعد نستخدمه في v2
 import 'package:doctor_store/features/cart/application/cart_manager.dart';
@@ -24,7 +23,10 @@ import 'package:doctor_store/shared/utils/seo_manager.dart';
 import 'package:doctor_store/features/auth/application/user_data_manager.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
 import 'package:doctor_store/shared/widgets/custom_app_bar.dart';
-import 'package:doctor_store/providers/products_provider.dart';
+import 'package:doctor_store/features/product/presentation/providers/products_provider.dart';
+import 'package:doctor_store/shared/utils/categories_provider.dart';
+import 'package:doctor_store/shared/utils/responsive_layout.dart';
+import 'package:doctor_store/shared/widgets/responsive_center_wrapper.dart';
 
 // Widgets خاصة بالهوم
 import '../widgets/dining_table_section.dart';
@@ -33,15 +35,17 @@ import '../widgets/home_banner.dart';
 import '../widgets/mattress_section.dart';
 import '../widgets/pillow_carousel.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_card_skeleton.dart';
-import '../widgets/flash_sale_section.dart';
 import '../widgets/owner_section.dart';
+import '../widgets/urgency_deals_section.dart';
+import '../widgets/live_activity_section.dart';
+import '../widgets/personalized_section.dart';
 
 /// مزوّد المنتجات المستخدم في تبويبات "الكل / مفارش / فرشات ..." يعتمد الآن على
 /// allProductsStreamProvider لضمان توفر منتجات من جميع الأقسام وليس آخر 6 فقط.
-final latestProductsProviderV2 = allProductsStreamProvider;
+final latestProductsProviderV2 = allProductsProvider;
 
-final diningProductsProviderV2 = StreamProvider<List<Product>>((ref) {
-  return SupabaseService().getDiningProductsStream();
+final diningProductsProviderV2 = FutureProvider<List<Product>>((ref) async {
+  return SupabaseService().getDiningProducts();
 });
 
 /// بيانات الـ Quick Grid (أعلى 8 أقسام) – مستوحاة من ModernCategorySection
@@ -131,14 +135,43 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
   late final int _homeStartMs;
   bool _homeLatestLogged = false;
   bool _didPrecacheHomeImages = false;
+  bool _listenersRegistered = false;
 
   @override
   void initState() {
     super.initState();
     _homeStartMs = DateTime.now().millisecondsSinceEpoch;
 
-    // نفس حدث الزيارة المستخدم في الهوم الأصلية
+    // تتبع حدث الزيارة للتحليلات
     AnalyticsService.instance.trackEvent('home_visit');
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    
+    // تتبع شامل لزيارة الصفحة الرئيسية (بعد تحميل الـ context)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        AnalyticsService.instance.trackSiteVisit(
+          pageUrl: '/home',
+          deviceType: _detectDeviceType(),
+          country: 'Kuwait', // يمكن تحسينه لاحقاً باستخدام IP
+        );
+      }
+    });
+  }
+
+  // دالة لاكتشاف نوع الجهاز
+  String _detectDeviceType() {
+    final data = MediaQuery.of(context);
+    if (data.size.width < 768) {
+      return 'mobile';
+    } else if (data.size.width < 1024) {
+      return 'tablet';
+    } else {
+      return 'desktop';
+    }
   }
 
   Future<void> _launchSocial(String url) async {
@@ -149,60 +182,134 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final latestProductsAsync = ref.watch(latestProductsProviderV2);
-    final diningProductsAsync = ref.watch(diningProductsProviderV2);
+    if (!_listenersRegistered) {
+      _listenersRegistered = true;
 
-    final cartItems = ref.watch(cartProvider);
-    final user = ref.watch(userProfileProvider);
-    final cartCount = cartItems.fold<int>(
-      0,
-      (sum, item) => sum + item.quantity,
+      // Riverpod v2.6: ref.listen يجب أن يكون داخل build.
+      // نسجلها مرة واحدة فقط لتجنب التكرار.
+      ref.listen<AsyncValue<List<Product>>>(
+        latestProductsProviderV2,
+        (previous, next) {
+          next.whenData((products) {
+            _precacheHomeImages(products);
+          });
+        },
+      );
+
+      ref.listen<AsyncValue<dynamic>>(
+        seoPageProvider('home'),
+        (previous, next) {
+          next.whenData((page) {
+            SeoManager.setPageSeo(
+              title: (page?.title.isNotEmpty ?? false)
+                  ? page!.title
+                  : 'متجر الدكتور - حلول النوم والراحة',
+              description: (page?.description.isNotEmpty ?? false)
+                  ? page!.description
+                  : 'متجر الدكتور يقدم فرشات طبية، مفارش، وسائد وإكسسوارات نوم بجودة عالية وتجربة شراء سهلة عبر الويب والواتساب.',
+              imageUrl: page?.imageUrl,
+            );
+          });
+        },
+      );
+    }
+
+    final latestProductsAsync = ref.watch(
+      latestProductsProviderV2.select((p) => p),
     );
-    final settingsAsync = ref.watch(settingsProvider);
-    final sectionsAsync = ref.watch(homeSectionsProvider);
-    final seoHomeAsync = ref.watch(seoPageProvider('home'));
+    final diningProductsAsync = ref.watch(
+      diningProductsProviderV2.select((p) => p),
+    );
 
-    // Pre-cache أهم صور المنتجات في الصفحة الرئيسية (أول مرة فقط)
-    _precacheHomeImages(latestProductsAsync);
+    final cartCount = ref.watch(
+      cartProvider.select(
+        (items) => items.fold<int>(0, (sum, item) => sum + item.quantity),
+      ),
+    );
+    final cartHasItems = ref.watch(cartProvider.select((items) => items.isNotEmpty));
+    final user = ref.watch(
+      userProfileProvider.select((u) => u),
+    );
+    final settingsAsync = ref.watch(
+      settingsProvider.select((s) => s),
+    );
+    final sectionsAsync = ref.watch(
+      homeSectionsProvider.select((s) => s),
+    );
 
     final sectionsConfig = sectionsAsync.asData?.value;
     bool isSectionEnabled(String key) =>
         sectionsConfig == null ? true : (sectionsConfig[key]?.enabled ?? true);
 
-    // تحديث SEO للصفحة الرئيسية (ويب فقط) كما في الهوم الحالية
-    seoHomeAsync.whenData((page) {
-      SeoManager.setPageSeo(
-        title: (page?.title.isNotEmpty ?? false)
-            ? page!.title
-            : 'متجر الدكتور - حلول النوم والراحة',
-        description: (page?.description.isNotEmpty ?? false)
-            ? page!.description
-            : 'متجر الدكتور يقدم فرشات طبية، مفارش، وسائد وإكسسوارات نوم بجودة عالية وتجربة شراء سهلة عبر الويب والواتساب.',
-        imageUrl: page?.imageUrl,
-      );
-    });
-
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF8F9FA),
 
       // زر الـ FAB كما هو
       floatingActionButton: settingsAsync.when(
         data: (settings) {
-          if (cartItems.isNotEmpty) {
-            return FloatingActionButton.extended(
-              onPressed: () => context.push('/cart'),
-              backgroundColor: const Color(0xFF0A2647),
-              label: Text(
-                "إتمام الطلب ($cartCount)",
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+          if (cartHasItems) {
+            return Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF0A2647), Color(0xFF1A3A5F)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0A2647).withValues(alpha: 0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                    spreadRadius: -2,
+                  ),
+                ],
               ),
-              icon: const Icon(
-                Icons.shopping_cart_checkout,
-                color: Colors.white,
+              child: FloatingActionButton.extended(
+                onPressed: () => context.push('/cart'),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                highlightElevation: 0,
+                label: Row(
+                  children: [
+                    const Icon(
+                      Icons.shopping_cart_checkout,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "إتمام الطلب",
+                      style: GoogleFonts.almarai(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        "$cartCount",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
           } else {
@@ -221,33 +328,48 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
         error: (error, stack) => null,
       ),
 
-      body: CustomScrollView(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // Invalidate all providers to refresh data
+          ref.invalidate(latestProductsProviderV2);
+          ref.invalidate(diningProductsProviderV2);
+          ref.invalidate(categoriesConfigProvider);
+          ref.invalidate(homeSectionsProvider);
+          
+          // Wait for the refresh to complete
+          await Future.delayed(const Duration(milliseconds: 500));
+          
+          // Track analytics
+          AnalyticsService.instance.trackEvent('home_pull_to_refresh');
+        },
+        color: const Color(0xFF0A2647),
+        backgroundColor: Colors.white,
+        displacement: 60,
+        child: CustomScrollView(
         cacheExtent: 800.0,
         slivers: [
-          // ================= 1) شريط العنوان (كما هو تقريباً) =================
+          // ================= 1) شريط العنوان: أبيض أنيق مع أيقونات واضحة =================
           SliverAppBar(
             pinned: true,
             floating: true,
             snap: true,
             elevation: 0,
-            scrolledUnderElevation: 0,
-            backgroundColor: Colors.transparent,
+            scrolledUnderElevation: 2,
+            backgroundColor: Colors.white,
             toolbarHeight: 64,
             bottom: _buildTopBanner(context, user),
-            flexibleSpace: ClipRRect(
-              child: BackdropFilter(
-                filter: dbo.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.75),
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Colors.grey.withValues(alpha: 0.1),
-                        width: 1,
-                      ),
-                    ),
+            iconTheme: const IconThemeData(color: Color(0xFF0A2647)),
+            actionsIconTheme: const IconThemeData(color: Color(0xFF0A2647)),
+            flexibleSpace: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0A2647).withValues(alpha: 0.08),
+                    blurRadius: 12,
+                    offset: const Offset(0, 2),
                   ),
-                ),
+                ],
               ),
             ),
             automaticallyImplyLeading: false,
@@ -258,11 +380,10 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
                 tag: 'app_logo_home_unique_v2',
                 child: Image.asset(
                   'assets/images/logo.png',
-                  height: 40,
+                  height: 42,
                   fit: BoxFit.contain,
                 ),
               ),
-              // لا نحتاج أيقونة بحث مستقلة في الهيدر، الاكتفاء بمربع البحث أسفل الهيدر
               showSearch: false,
               sharePath: '/',
               shareTitle: 'متجر الدكتور - الصفحة الرئيسية',
@@ -270,253 +391,264 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
           ),
 
           // ================= 2) Header: Search Bar + Hero =================
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                const SizedBox(height: 12),
-                _buildInlineSearchBar(context),
-                const SizedBox(height: 12),
+          SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  const SizedBox(height: 12),
+                  _buildInlineSearchBar(context),
+                  const SizedBox(height: 12),
 
-                // يمكن اعتبار CinematicHeroSection كبانر سينمائي في الأعلى
-                if (isSectionEnabled(HomeSectionKeys.hero))
-                  const CinematicHeroSection(),
+                  // يمكن اعتبار CinematicHeroSection كبانر سينمائي في الأعلى
+                  if (isSectionEnabled(HomeSectionKeys.hero))
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final isWide = constraints.maxWidth >= 900;
+                        return SizedBox(
+                          height: isWide ? 420 : null,
+                          child: const CinematicHeroSection(),
+                        );
+                      },
+                    ),
 
-                const SizedBox(height: 12),
-              ],
+                  const SizedBox(height: 12),
+                ],
+              ),
             ),
           ),
 
           // ================= 3) Quick Grid (Top 8 Categories) =================
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            sliver: SliverToBoxAdapter(
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  'تصفح سريع',
-                  style: GoogleFonts.almarai(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF0A2647),
-                  ),
-                ),
-              ),
+          SliverToBoxAdapter(
+            child: _buildSectionHeader(
+              context,
+              title: 'تصفح سريع',
+              actionText: 'عرض الكل',
+              actionIcon: Icons.grid_view_rounded,
+              onActionTap: () => context.push('/browse_all'),
             ),
           ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                // نجعل الخلية أطول قليلاً حتى لا يحدث Overflow بسيط في بعض الأجهزة الصغيرة
-                childAspectRatio: 0.8,
-              ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final cat = _quickCategories[index];
-                  return _QuickCategoryTile(category: cat);
+          SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: _buildCategoriesGrid(ref),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+          // ================= 4b) قسم العروض المحدودة - NEW! =================
+          SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: SliverToBoxAdapter(
+              child: latestProductsAsync.when(
+                data: (products) {
+                  final flashProducts =
+                      products.where((p) => p.isFlashDeal).toList();
+                  if (flashProducts.isEmpty) return const SizedBox.shrink();
+                  return UrgencyDealsSection(
+                    products: flashProducts,
+                    dealEndTime: DateTime.now().add(const Duration(hours: 6)),
+                  );
                 },
-                childCount: _quickCategories.length > 8
-                    ? 8
-                    : _quickCategories.length,
+                loading: () => const SizedBox.shrink(),
+                error: (e, s) => const SizedBox.shrink(),
               ),
             ),
           ),
 
-          // ================= 4) Flash Sale Section (قبل التبويبات) =================
-          if (isSectionEnabled(HomeSectionKeys.flashSale))
-            SliverToBoxAdapter(
-              child: Column(
-                children: const [
-                  SizedBox(height: 12),
-                  FlashSaleSection(),
-                  SizedBox(height: 8),
-                ],
+          // ================= 4c) قسم النشاط الحي - NEW! =================
+          SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: SliverToBoxAdapter(
+              child: latestProductsAsync.when(
+                data: (products) {
+                  if (products.isEmpty) return const SizedBox.shrink();
+                  return LiveActivitySection(products: products);
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (e, s) => const SizedBox.shrink(),
               ),
             ),
+          ),
+
+          // ================= 4d) قسم "خصيصاً لك" - NEW! =================
+          const SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: SliverToBoxAdapter(
+              child: PersonalizedSection(),
+            ),
+          ),
 
           // ================= 5) وصل حديثاً (قائمة أفقية بسيطة) =================
           SliverToBoxAdapter(
-            child: latestProductsAsync.when(
-              data: (products) {
-                if (products.isEmpty) {
-                  return const SizedBox.shrink();
-                }
+            child: _buildSectionHeader(
+              context,
+              title: 'وصل حديثاً',
+              actionText: 'عرض الكل',
+              onActionTap: () => context.push('/all_products?sort=new'),
+            ),
+          ),
+          SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: SliverToBoxAdapter(
+              child: latestProductsAsync.when(
+                data: (products) {
+                  if (products.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
 
-                // تسجيل حدث Analytics مرة واحدة عند تحميل المنتجات الجديدة
-                if (!_homeLatestLogged) {
-                  _homeLatestLogged = true;
-                  final durationMs =
-                      DateTime.now().millisecondsSinceEpoch - _homeStartMs;
-                  AnalyticsService.instance.trackEvent(
-                    'home_latest_loaded',
-                    props: {
-                      'duration_ms': durationMs,
-                      'count': products.length,
-                    },
+                  // تسجيل حدث Analytics مرة واحدة عند تحميل المنتجات الجديدة
+                  if (!_homeLatestLogged) {
+                    _homeLatestLogged = true;
+                    final durationMs =
+                        DateTime.now().millisecondsSinceEpoch - _homeStartMs;
+                    AnalyticsService.instance.trackEvent(
+                      'home_latest_loaded',
+                      props: {
+                        'duration_ms': durationMs,
+                        'count': products.length,
+                      },
+                    );
+                  }
+
+                  final latest = products.take(12).toList();
+
+                  return SizedBox(
+                    height: 280,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: latest.length,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(width: 16),
+                      addAutomaticKeepAlives: false,
+                      addRepaintBoundaries: false,
+                      cacheExtent: 100,
+                      itemBuilder: (context, index) {
+                        final product = latest[index];
+                        return SizedBox(
+                          width: 180,
+                          child: ProductCard(
+                            product: product,
+                            isCompact: true,
+                          ),
+                        );
+                      },
+                    ),
                   );
-                }
-
-                final latest = products.take(12).toList();
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'وصل حديثاً',
-                            style: GoogleFonts.almarai(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFF0A2647),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () => context.push('/all_products?sort=new'),
-                            child: Text(
-                              'عرض الكل',
-                              style: GoogleFonts.almarai(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF0A2647),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 260,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: latest.length,
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          separatorBuilder: (_, __) => const SizedBox(width: 12),
-                          itemBuilder: (context, index) {
-                            final product = latest[index];
-                            return SizedBox(
-                              width: 170,
-                              child: ProductCard(
-                                product: product,
-                                isCompact: true,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              loading: () => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: SizedBox(
-                  height: 220,
+                },
+                loading: () => SizedBox(
+                  height: 240,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: 4,
-                    separatorBuilder: (_, __) => const SizedBox(width: 12),
+                    separatorBuilder: (_, __) => const SizedBox(width: 16),
                     itemBuilder: (_, __) => const SizedBox(
-                      width: 170,
+                      width: 180,
                       child: ProductCardSkeleton(),
                     ),
                   ),
                 ),
+                error: (e, s) => const SizedBox.shrink(),
               ),
-              error: (e, s) => const SizedBox.shrink(),
             ),
           ),
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
           // ================= 6) الأقسام التسويقية الرئيسية (كما في الهوم الأصلية) =================
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                // قسم الفرشات الطبية (يعتمد على أحدث المنتجات)
-                latestProductsAsync.when(
-                  data: (products) => MattressSection(products: products),
-                  loading: () => const SizedBox.shrink(),
-                  error: (e, s) => const SizedBox.shrink(),
-                ),
-
-                // شريط المخدات (وسائد) كسحب سريع للعروض
-                latestProductsAsync.when(
-                  data: (products) => PillowCarousel(products: products),
-                  loading: () => const SizedBox.shrink(),
-                  error: (e, s) => const SizedBox.shrink(),
-                ),
-
-                // قسم طاولات السفرة
-                if (isSectionEnabled(HomeSectionKeys.dining))
-                  diningProductsAsync.when(
-                    data: (products) => DiningTableSection(
-                      products: products,
-                      title: _resolveSectionTitle(
-                        sectionsConfig,
-                        HomeSectionKeys.dining,
-                        'طاولات سفرة فاخرة',
-                      ),
-                      subtitle: _resolveSectionSubtitle(
-                        sectionsConfig,
-                        HomeSectionKeys.dining,
-                        'تشكيلة مختارة لطاولات سفرة تجمع العائلة بأجواء دافئة.',
-                      ),
-                    ),
+          SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  // قسم الفرشات الطبية (يعتمد على أحدث المنتجات)
+                  latestProductsAsync.when(
+                    data: (products) => MattressSection(products: products),
                     loading: () => const SizedBox.shrink(),
                     error: (e, s) => const SizedBox.shrink(),
                   ),
-              ],
+
+                  const SizedBox(height: 24),
+
+                  // شريط المخدات (وسائد) كسحب سريع للعروض
+                  latestProductsAsync.when(
+                    data: (products) => PillowCarousel(products: products),
+                    loading: () => const SizedBox.shrink(),
+                    error: (e, s) => const SizedBox.shrink(),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // قسم طاولات السفرة
+                  if (isSectionEnabled(HomeSectionKeys.dining))
+                    diningProductsAsync.when(
+                      data: (products) => DiningTableSection(
+                        products: products,
+                        title: _resolveSectionTitle(
+                          sectionsConfig,
+                          HomeSectionKeys.dining,
+                          'طاولات سفرة فاخرة',
+                        ),
+                        subtitle: _resolveSectionSubtitle(
+                          sectionsConfig,
+                          HomeSectionKeys.dining,
+                          'تشكيلة مختارة لطاولات سفرة تجمع العائلة بأجواء دافئة.',
+                        ),
+                      ),
+                      loading: () => const SizedBox.shrink(),
+                      error: (e, s) => const SizedBox.shrink(),
+                    ),
+                ],
+              ),
             ),
           ),
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
           // ================= 8) الأقسام السفلية + الفوتر =================
-          SliverList(
-            delegate: SliverChildListDelegate([
-              const SizedBox(height: 20),
+          SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                const SizedBox(height: 24),
 
-              // بانر منتصف الصفحة إن كان مفعّلاً من لوحة التحكم
-              if (isSectionEnabled(HomeSectionKeys.middleBanner))
-                const HomeBanner(position: 'middle'),
+                // بانر منتصف الصفحة إن كان مفعّلاً من لوحة التحكم
+                if (isSectionEnabled(HomeSectionKeys.middleBanner))
+                  const HomeBanner(position: 'middle'),
 
-              if (isSectionEnabled(HomeSectionKeys.owner))
-                const OwnerSection(),
+                if (isSectionEnabled(HomeSectionKeys.owner))
+                  const OwnerSection(),
 
-              if (isSectionEnabled(HomeSectionKeys.baby))
-                _buildFeaturedSection(
-                  context,
-                  title: _resolveSectionTitle(
-                    sectionsConfig,
-                    HomeSectionKeys.baby,
-                    "عالم الطفل السعيد 👶",
+                if (isSectionEnabled(HomeSectionKeys.baby))
+                  _buildFeaturedSection(
+                    context,
+                    title: _resolveSectionTitle(
+                      sectionsConfig,
+                      HomeSectionKeys.baby,
+                      "عالم الطفل السعيد 👶",
+                    ),
+                    subtitle: _resolveSectionSubtitle(
+                      sectionsConfig,
+                      HomeSectionKeys.baby,
+                      "كل ما يحتاجه طفلك لنوم هادئ وآمن.",
+                    ),
+                    category: "baby_supplies",
+                    bgColor: const Color(0xFFFFF0F5),
                   ),
-                  subtitle: _resolveSectionSubtitle(
-                    sectionsConfig,
-                    HomeSectionKeys.baby,
-                    "كل ما يحتاجه طفلك لنوم هادئ وآمن.",
-                  ),
-                  category: "baby_supplies",
-                  bgColor: const Color(0xFFFFF0F5),
-                ),
 
-              const AppFooter(),
-              const SizedBox(height: 80),
-            ]),
+                const AppFooter(),
+                // مساحة كافية للـ FAB + safe area
+                const SizedBox(height: 100),
+              ]),
+            ),
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 
-  void _precacheHomeImages(AsyncValue<List<Product>> latestProductsAsync) {
+  void _precacheHomeImages(List<Product> products) {
     if (_didPrecacheHomeImages) return;
-
-    final products = latestProductsAsync.asData?.value;
-    if (products == null || products.isEmpty) return;
+    if (products.isEmpty) return;
 
     _didPrecacheHomeImages = true;
 
@@ -658,41 +790,229 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
       child: GestureDetector(
         onTap: () => showProductSearchBottomSheet(context),
         child: Container(
-          height: 48,
+          height: 52,
           decoration: BoxDecoration(
-            color: Colors.grey[100],
+            color: Colors.white,
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
-              color: Colors.grey.withValues(alpha: 0.2),
-              width: 1,
+              color: const Color(0xFF0A2647).withValues(alpha: 0.15),
+              width: 1.5,
             ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0D000000),
+                blurRadius: 12,
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             children: [
               Icon(
-                Icons.search,
-                color: Colors.grey[600],
+                Icons.search_rounded,
+                color: const Color(0xFF0A2647).withValues(alpha: 0.6),
+                size: 24,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'ابحث عن منتج، قسم أو عرض...',
                   style: GoogleFonts.almarai(
-                    fontSize: 13,
+                    fontSize: 14,
                     color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const Icon(
-                Icons.tune_rounded,
-                size: 20,
-                color: Color(0xFF0A2647),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0A2647).withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.tune_rounded,
+                  size: 20,
+                  color: Color(0xFF0A2647),
+                ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// عنوان سكشن موحّد مع فاصل أنيق
+  Widget _buildSectionHeader(
+    BuildContext context, {
+    required String title,
+    String? actionText,
+    VoidCallback? onActionTap,
+    IconData? actionIcon,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 4,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0A2647),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: GoogleFonts.almarai(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFF0A2647),
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ],
+          ),
+          if (actionText != null && onActionTap != null)
+            TextButton.icon(
+              onPressed: onActionTap,
+              icon: Icon(
+                actionIcon ?? Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: const Color(0xFF0A2647),
+              ),
+              label: Text(
+                actionText,
+                style: GoogleFonts.almarai(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF0A2647),
+                ),
+              ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// بناء شبكة الأقسام الديناميكية من قاعدة البيانات
+  Widget _buildCategoriesGrid(WidgetRef ref) {
+    final categoriesAsync = ref.watch(categoriesConfigProvider);
+
+    return categoriesAsync.when(
+      data: (categories) {
+        if (categories.isEmpty) {
+          // إذا لم تكن هناك أقسام في قاعدة البيانات، نستخدم الأقسام الثابتة
+          return _buildStaticCategoriesGrid();
+        }
+
+        // نعرض أول 8 أقسام نشطة فقط
+        final displayCategories = categories.take(8).toList();
+
+        return SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          sliver: SliverLayoutBuilder(
+            builder: (context, constraints) {
+              final crossAxisCount = ResponsiveLayout.gridCountForWidth(
+                constraints.crossAxisExtent,
+                desiredItemWidth: 92,
+                minCount: 3,
+                maxCount: 6,
+              );
+
+              return SliverGrid(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                  childAspectRatio: 0.75,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final category = displayCategories[index];
+                    return _CategoryTileFromDB(category: category);
+                  },
+                  childCount: displayCategories.length,
+                ),
+              );
+            },
+          ),
+        );
+      },
+      loading: () => SliverPadding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        sliver: SliverLayoutBuilder(
+          builder: (context, constraints) {
+            final crossAxisCount = ResponsiveLayout.gridCountForWidth(
+              constraints.crossAxisExtent,
+              desiredItemWidth: 92,
+              minCount: 3,
+              maxCount: 6,
+            );
+
+            return SliverGrid(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                childAspectRatio: 0.75,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                (_, __) => const _CategoryTileSkeleton(),
+                childCount: 8,
+              ),
+            );
+          },
+        ),
+      ),
+      error: (error, stack) {
+        // في حالة الخطأ، نعرض الأقسام الثابتة
+        return _buildStaticCategoriesGrid();
+      },
+    );
+  }
+
+  /// شبكة الأقسام الثابتة (احتياطية)
+  Widget _buildStaticCategoriesGrid() {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      sliver: SliverLayoutBuilder(
+        builder: (context, constraints) {
+          final crossAxisCount = ResponsiveLayout.gridCountForWidth(
+            constraints.crossAxisExtent,
+            desiredItemWidth: 92,
+            minCount: 3,
+            maxCount: 6,
+          );
+
+          return SliverGrid(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 0.75,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final category = _quickCategories[index];
+                return _QuickCategoryTile(category: category);
+              },
+              childCount: _quickCategories.length,
+            ),
+          );
+        },
       ),
     );
   }
@@ -777,7 +1097,125 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
   }
 }
 
-/// عنصر واحد في الـ Quick Grid
+/// عنصر واحد في الـ Quick Grid من قاعدة البيانات - محسّن بتدرج وظل
+class _CategoryTileFromDB extends StatelessWidget {
+  final AppCategoryConfig category;
+
+  const _CategoryTileFromDB({required this.category});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        context.push('/category/${category.id}', extra: {
+          'name': category.name,
+          'color': category.color,
+        });
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white,
+              category.color.withValues(alpha: 0.08),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: category.color.withValues(alpha: 0.25),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: category.color.withValues(alpha: 0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    category.color.withValues(alpha: 0.8),
+                    category.color,
+                  ],
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: category.color.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Icon(
+                category.icon,
+                size: 24,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 6),
+            AutoSizeText(
+              category.name,
+              maxLines: 2,
+              minFontSize: 10,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.almarai(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: const Color(0xFF0A2647),
+                height: 1.2,
+              ),
+            ),
+            const SizedBox(height: 2),
+            AutoSizeText(
+              category.subtitle,
+              maxLines: 1,
+              minFontSize: 8,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.almarai(
+                fontSize: 9,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Skeleton للأقسام أثناء التحميل - نسخة سريعة بدون animation
+class _CategoryTileSkeleton extends StatelessWidget {
+  const _CategoryTileSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(16),
+      ),
+    );
+  }
+}
+
+/// عنصر واحد في الـ Quick Grid (الثابت - احتياطي) - محسّن بتدرج وظل
 class _QuickCategoryTile extends StatelessWidget {
   final _QuickCategory category;
 
@@ -794,26 +1232,55 @@ class _QuickCategoryTile extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: category.color.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: category.color.withValues(alpha: 0.35),
-            width: 0.8,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white,
+              category.color.withValues(alpha: 0.08),
+            ],
           ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: category.color.withValues(alpha: 0.25),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: category.color.withValues(alpha: 0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: category.color.withValues(alpha: 0.18),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    category.color.withValues(alpha: 0.8),
+                    category.color,
+                  ],
+                ),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: category.color.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
               child: Icon(
                 category.icon,
-                size: 20,
+                size: 24,
                 color: Colors.white,
               ),
             ),
@@ -821,13 +1288,14 @@ class _QuickCategoryTile extends StatelessWidget {
             AutoSizeText(
               category.name,
               maxLines: 2,
-              minFontSize: 9,
+              minFontSize: 10,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: GoogleFonts.almarai(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
                 color: const Color(0xFF0A2647),
+                height: 1.2,
               ),
             ),
             const SizedBox(height: 2),
@@ -840,6 +1308,7 @@ class _QuickCategoryTile extends StatelessWidget {
               style: GoogleFonts.almarai(
                 fontSize: 9,
                 color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],

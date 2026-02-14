@@ -3,17 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:doctor_store/shared/utils/analytics_service.dart';
+import 'package:doctor_store/shared/services/analytics_service.dart';
 
 import 'package:doctor_store/features/product/presentation/widgets/product_card.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_card_skeleton.dart';
 import 'package:doctor_store/shared/widgets/empty_state_widget.dart';
-import 'package:doctor_store/providers/products_provider.dart';
+import 'package:doctor_store/features/product/presentation/providers/products_provider.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/shared/widgets/app_footer.dart';
 import 'package:doctor_store/shared/utils/sub_categories_provider.dart';
 import 'package:doctor_store/shared/widgets/custom_app_bar.dart';
 import 'package:doctor_store/shared/utils/categories_provider.dart';
+import 'package:doctor_store/shared/widgets/responsive_center_wrapper.dart';
+import 'package:doctor_store/shared/utils/responsive_layout.dart';
 
 class CategoryScreen extends ConsumerStatefulWidget {
   final String categoryId;
@@ -40,6 +42,18 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
   late final int _startMs;
   bool _loadLogged = false;
 
+  // دالة لاكتشاف نوع الجهاز
+  String _detectDeviceType() {
+    final data = MediaQuery.of(context);
+    if (data.size.width < 768) {
+      return 'mobile';
+    } else if (data.size.width < 1024) {
+      return 'tablet';
+    } else {
+      return 'desktop';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -48,9 +62,206 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final productsAsync = ref.watch(productsByCategoryStreamProvider(widget.categoryId));
+    final productsAsync =
+        ref.watch(productsByCategoryStreamProvider(widget.categoryId));
     final subCatsAsync =
         ref.watch(subCategoriesByParentProvider(widget.categoryId));
+
+    final List<Widget> productSlivers = productsAsync.when<List<Widget>>(
+      data: (products) {
+        if (!_loadLogged) {
+          _loadLogged = true;
+          final durationMs = DateTime.now().millisecondsSinceEpoch - _startMs;
+          
+          // تتبع زيارة صفحة القسم
+          AnalyticsService.instance.trackSiteVisit(
+            pageUrl: '/category/${widget.categoryId}',
+            deviceType: _detectDeviceType(),
+            country: 'Kuwait',
+          );
+          
+          AnalyticsService.instance.trackEvent('category_products_loaded', props: {
+            'duration_ms': durationMs,
+            'count': products.length,
+            'category': widget.categoryId,
+          });
+        }
+
+        if (products.isEmpty) {
+          return [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: EmptyStateWidget(
+                icon: FontAwesomeIcons.boxOpen,
+                title: "لا توجد منتجات حالياً",
+                subtitle: "لم يتم إضافة منتجات لهذا القسم بعد.\nعد لاحقاً!",
+                buttonText: "تصفح أقسام أخرى",
+                onButtonPressed: () => context.pop(),
+              ),
+            ),
+          ];
+        }
+
+        // تطبيق البحث الذكي + الفلاتر محلياً
+        var filteredProducts = List<Product>.from(products);
+
+        if (_searchQuery.trim().isNotEmpty) {
+          final q = _searchQuery.trim().toLowerCase();
+          filteredProducts = filteredProducts.where((p) {
+            final text = (
+              '${p.title} ${p.description} ${p.categoryArabic} ${p.tags.join(' ')}'
+            ).toLowerCase();
+            return text.contains(q);
+          }).toList();
+        }
+
+        if (_onlyFeatured) {
+          filteredProducts =
+              filteredProducts.where((p) => p.isFeatured).toList();
+        }
+        if (_onlyOnOffer) {
+          filteredProducts =
+              filteredProducts.where((p) => p.hasOffers).toList();
+        }
+        if (_selectedSubCategoryId != null) {
+          filteredProducts = filteredProducts
+              .where((p) => p.subCategoryId == _selectedSubCategoryId)
+              .toList();
+        }
+
+        if (filteredProducts.isEmpty) {
+          return [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: EmptyStateWidget(
+                icon: Icons.search_off,
+                title: "لم نجد نتائج مطابقة",
+                subtitle: "جرّب إزالة بعض الفلاتر أو تغيير طريقة الترتيب.",
+                buttonText: "إلغاء الفلاتر",
+                onButtonPressed: () => setState(() {
+                  _onlyFeatured = false;
+                  _onlyOnOffer = false;
+                }),
+              ),
+            ),
+          ];
+        }
+
+        if (_sortBy == 'price_low') {
+          filteredProducts.sort((a, b) => a.price.compareTo(b.price));
+        } else if (_sortBy == 'price_high') {
+          filteredProducts.sort((a, b) => b.price.compareTo(a.price));
+        }
+        // 'newest' هو الترتيب الافتراضي من قاعدة البيانات
+
+        return [
+          SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: _buildCategoryIntro(filteredProducts.length),
+              ),
+            ),
+          ),
+          SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              sliver: SliverLayoutBuilder(
+                builder: (context, constraints) {
+                  final crossAxisCount = ResponsiveLayout.gridCountForWidth(
+                    constraints.crossAxisExtent,
+                    desiredItemWidth: 120,
+                    minCount: 3,
+                    maxCount: 5,
+                  );
+                  final isCompact = crossAxisCount >= 3;
+                  const spacing = 12.0;
+                  final mainAxisExtent = ResponsiveLayout.productCardMainAxisExtent(
+                    constraints.crossAxisExtent,
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: spacing,
+                    isCompact: isCompact,
+                  );
+
+                  return SliverGrid(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      mainAxisSpacing: spacing,
+                      crossAxisSpacing: spacing,
+                      mainAxisExtent: mainAxisExtent,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => ProductCard(
+                        product: filteredProducts[index],
+                        isCompact: isCompact,
+                      ),
+                      childCount: filteredProducts.length,
+                      addAutomaticKeepAlives: false,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ];
+      },
+      loading: () => [
+        SliverResponsiveCenterPadding(
+          minSidePadding: 0,
+          sliver: SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: SliverLayoutBuilder(
+              builder: (context, constraints) {
+                final crossAxisCount = ResponsiveLayout.gridCountForWidth(
+                  constraints.crossAxisExtent,
+                  desiredItemWidth: 120,
+                  minCount: 3,
+                  maxCount: 5,
+                );
+                final isCompact = crossAxisCount >= 3;
+                const spacing = 12.0;
+                final mainAxisExtent = ResponsiveLayout.productCardMainAxisExtent(
+                  constraints.crossAxisExtent,
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: spacing,
+                  isCompact: isCompact,
+                );
+
+                return SliverGrid(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    mainAxisSpacing: spacing,
+                    crossAxisSpacing: spacing,
+                    mainAxisExtent: mainAxisExtent,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => const ProductCardSkeleton(),
+                    childCount: 6,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+      error: (err, stack) => [
+        SliverResponsiveCenterPadding(
+          minSidePadding: 0,
+          sliver: SliverFillRemaining(
+            child: EmptyStateWidget(
+              icon: Icons.wifi_off,
+              title: "خطأ في الاتصال",
+              subtitle: "تأكد من اتصالك بالإنترنت وحاول مجدداً",
+              buttonText: "إعادة المحاولة",
+              onButtonPressed: () => ref
+                  .refresh(productsByCategoryStreamProvider(widget.categoryId)),
+            ),
+          ),
+        ),
+      ],
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFFAFAFA),
@@ -297,134 +508,17 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
             ),
           ),
 
-          // 3. شبكة المنتجات + بطاقة تعريف بالقسم
-          productsAsync.when(
-            data: (products) {
-              if (!_loadLogged) {
-                _loadLogged = true;
-                final durationMs = DateTime.now().millisecondsSinceEpoch - _startMs;
-                AnalyticsService.instance.trackEvent('category_products_loaded', props: {
-                  'duration_ms': durationMs,
-                  'count': products.length,
-                  'category': widget.categoryId,
-                });
-              }
+          // 3. شبكة المنتجات (Slivers) — بناء كسول لتحسين الأداء
+          ...productSlivers,
 
-              if (products.isEmpty) {
-                return SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: EmptyStateWidget(
-                    icon: FontAwesomeIcons.boxOpen,
-                    title: "لا توجد منتجات حالياً",
-                    subtitle: "لم يتم إضافة منتجات لهذا القسم بعد.\nعد لاحقاً!",
-                    buttonText: "تصفح أقسام أخرى",
-                    onButtonPressed: () => context.pop(),
-                  ),
-                );
-              }
-
-              // تطبيق البحث الذكي + الفلاتر محلياً
-              var filteredProducts = List<Product>.from(products);
-
-              if (_searchQuery.trim().isNotEmpty) {
-                final q = _searchQuery.trim().toLowerCase();
-                filteredProducts = filteredProducts.where((p) {
-                  final text = (
-                    '${p.title} ${p.description} ${p.categoryArabic} ${p.tags.join(' ')}'
-                  ).toLowerCase();
-                  return text.contains(q);
-                }).toList();
-              }
-
-              if (_onlyFeatured) {
-                filteredProducts = filteredProducts.where((p) => p.isFeatured).toList();
-              }
-              if (_onlyOnOffer) {
-                filteredProducts = filteredProducts.where((p) => p.hasOffers).toList();
-              }
-              if (_selectedSubCategoryId != null) {
-                filteredProducts = filteredProducts
-                    .where((p) => p.subCategoryId == _selectedSubCategoryId)
-                    .toList();
-              }
-
-              if (filteredProducts.isEmpty) {
-                return SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: EmptyStateWidget(
-                    icon: Icons.search_off,
-                    title: "لم نجد نتائج مطابقة",
-                    subtitle: "جرّب إزالة بعض الفلاتر أو تغيير طريقة الترتيب.",
-                    buttonText: "إلغاء الفلاتر",
-                    onButtonPressed: () => setState(() {
-                      _onlyFeatured = false;
-                      _onlyOnOffer = false;
-                    }),
-                  ),
-                );
-              }
-
-              if (_sortBy == 'price_low') {
-                filteredProducts.sort((a, b) => a.price.compareTo(b.price));
-              } else if (_sortBy == 'price_high') {
-                filteredProducts.sort((a, b) => b.price.compareTo(a.price));
-              }
-              // 'newest' هو الترتيب الافتراضي من قاعدة البيانات
-
-              return SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildCategoryIntro(filteredProducts.length),
-                      const SizedBox(height: 16),
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        cacheExtent: 800.0,
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 260,
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
-                          childAspectRatio: 0.64,
-                        ),
-                        itemCount: filteredProducts.length,
-                        itemBuilder: (context, index) => ProductCard(product: filteredProducts[index]),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-            loading: () => SliverPadding(
-              padding: const EdgeInsets.all(16),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 260,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 0.64,
-                ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => const ProductCardSkeleton(),
-                  childCount: 6,
-                ),
-              ),
-            ),
-            error: (err, stack) => SliverFillRemaining(
-              child: EmptyStateWidget(
-                icon: Icons.wifi_off,
-                title: "خطأ في الاتصال",
-                subtitle: "تأكد من اتصالك بالإنترنت وحاول مجدداً",
-                buttonText: "إعادة المحاولة",
-                onButtonPressed: () => ref.refresh(productsByCategoryStreamProvider(widget.categoryId)),
-              ),
-            ),
+          const SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: SliverToBoxAdapter(child: SizedBox(height: 30)),
           ),
-          
-          const SliverToBoxAdapter(child: SizedBox(height: 30)),
-          const SliverToBoxAdapter(child: AppFooter()),
+          const SliverResponsiveCenterPadding(
+            minSidePadding: 0,
+            sliver: SliverToBoxAdapter(child: AppFooter()),
+          ),
         ],
       ),
     );

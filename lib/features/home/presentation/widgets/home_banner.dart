@@ -1,11 +1,12 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
+import 'package:doctor_store/shared/widgets/app_network_image.dart';
+import 'package:doctor_store/shared/repositories/banner_repository.dart';
 
 class HomeBanner extends StatefulWidget {
   final String position; // 'top' or 'middle'
@@ -37,12 +38,9 @@ class _HomeBannerState extends State<HomeBanner> {
 
   Future<void> _fetchBanners() async {
     try {
-      final data = await Supabase.instance.client
-          .from('banners')
-          .select()
-          .eq('is_active', true)
-          .eq('position', widget.position)
-          .order('sort_order', ascending: true);
+      final data = await BannerRepository().fetchActiveBannersByPosition(
+        position: widget.position,
+      );
 
       if (mounted) {
         setState(() {
@@ -51,13 +49,17 @@ class _HomeBannerState extends State<HomeBanner> {
         });
         if (_banners.length > 1) _startAutoScroll();
       }
-    } catch (e) {
-      debugPrint("Error fetching banners: $e");
+    } catch (_) {
+      // قد لا تكون Supabase مهيّأة بعد (مثلاً أثناء الاختبارات).
+      // لا نطبع الخطأ لتجنب الضوضاء، فقط ننهي حالة التحميل.
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _startAutoScroll() {
+    // على الويب: نوقف التشغيل التلقائي لتقليل الضغط وتحسين السلاسة
+    if (kIsWeb) return;
+
     _timer = Timer.periodic(const Duration(seconds: 5), (Timer timer) {
       if (_currentPage < _banners.length - 1) {
         _currentPage++;
@@ -154,18 +156,13 @@ class _HomeBannerState extends State<HomeBanner> {
             fit: StackFit.expand,
             children: [
               // أ. الصورة الخلفية
-              CachedNetworkImage(
-                imageUrl: buildOptimizedImageUrl(
-                  banner['image_url'] as String,
-                  variant: ImageVariant.homeBanner,
-                ),
+              AppNetworkImage(
+                url: banner['image_url'] as String,
+                variant: ImageVariant.homeBanner,
                 fit: BoxFit.cover,
-                filterQuality: FilterQuality.low,
-                memCacheHeight: 580,
+                placeholder: Container(color: Colors.grey[200]),
+                errorWidget: const Icon(Icons.error),
                 fadeInDuration: const Duration(milliseconds: 200),
-                fadeOutDuration: Duration.zero,
-                placeholder: (context, url) => Container(color: Colors.grey[200]),
-                errorWidget: (context, url, error) => const Icon(Icons.error),
               ),
 
               // ب. التدرج اللوني (Gradient) لضمان وضوح النص

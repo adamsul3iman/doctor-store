@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:doctor_store/shared/utils/wishlist_manager.dart';
+import 'package:doctor_store/shared/widgets/constrained_dialog.dart';
 
 class WelcomeDialog extends ConsumerStatefulWidget {
   const WelcomeDialog({super.key});
@@ -52,10 +52,9 @@ class _WelcomeDialogState extends ConsumerState<WelcomeDialog> {
       // 2. الحفظ المحلي في الهاتف
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('is_registered_client', true);
-      await prefs.setString('user_email', email);
-      
-      // 3. تحديث حالة المفضلة (لربطها بالإيميل)
-      await ref.read(wishlistProvider.notifier).refreshAfterLogin();
+      // لا نستخدم user_email هنا لأن المفضلة أصبحت بعد تسجيل الدخول فقط.
+      // نحتفظ بالإيميل كاشتراك (newsletter) فقط.
+      await prefs.setString('newsletter_email', email);
 
       // ✅ الإصلاح الأساسي: التحقق من أن الواجهة لا تزال موجودة قبل التفاعل معها
       if (mounted) {
@@ -89,11 +88,13 @@ class _WelcomeDialogState extends ConsumerState<WelcomeDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       backgroundColor: Colors.white,
       elevation: 5,
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      child: ConstrainedDialog(
+        maxWidth: 550,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
             // أيقونة في الأعلى
             Container(
               padding: const EdgeInsets.all(16),
@@ -175,7 +176,8 @@ class _WelcomeDialogState extends ConsumerState<WelcomeDialog> {
               },
               child: const Text("تصفح كزائر (تخطي)", style: TextStyle(color: Colors.grey, fontSize: 12)),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

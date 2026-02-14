@@ -2,12 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:flex_color_picker/flex_color_picker.dart'; // ✅ مكتبة اختيار الألوان
 import 'package:doctor_store/shared/utils/app_notifier.dart';
 import 'package:doctor_store/shared/utils/image_compressor.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
+import 'package:doctor_store/shared/widgets/app_network_image.dart';
 
 class AdminBannersView extends StatefulWidget {
   const AdminBannersView({super.key});
@@ -194,19 +193,12 @@ class _AdminBannersViewState extends State<AdminBannersView> {
                                 child: SizedBox(
                                   height: 150,
                                   width: double.infinity,
-                                  child: CachedNetworkImage(
-                                    imageUrl: buildOptimizedImageUrl(
-                                      (banner['image_url'] ?? '').toString(),
-                                      variant: ImageVariant.homeBanner,
-                                    ),
+                                  child: AppNetworkImage(
+                                    url: (banner['image_url'] ?? '').toString(),
+                                    variant: ImageVariant.homeBanner,
                                     fit: BoxFit.cover,
-                                    memCacheHeight: 400,
-                                    placeholder: (c,u) => Shimmer.fromColors(
-                                      baseColor: Colors.grey[300]!,
-                                      highlightColor: Colors.grey[100]!,
-                                      child: Container(color: Colors.white),
-                                    ),
-                                    errorWidget: (c,u,e) => const Center(child: Icon(Icons.error)),
+                                    placeholder: Container(color: Colors.grey[200]),
+                                    errorWidget: const Center(child: Icon(Icons.error)),
                                   ),
                                 ),
                               ),
@@ -375,6 +367,14 @@ class _AddBannerDialogState extends State<_AddBannerDialog> {
       return;
     }
 
+    // ✅ حماية: الرفع يجب أن يتم بعد تسجيل الدخول
+    final client = Supabase.instance.client;
+    final user = client.auth.currentUser;
+    if (user == null) {
+      AppNotifier.showError(context, 'يرجى تسجيل الدخول أولاً');
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -382,8 +382,8 @@ class _AddBannerDialogState extends State<_AddBannerDialog> {
       final fileName = 'banner_${DateTime.now().millisecondsSinceEpoch}.$_imageExtension';
       final path = 'banners/$fileName';
       
-      await Supabase.instance.client.storage.from('banners').uploadBinary(path, _imageBytes!);
-      final imageUrl = Supabase.instance.client.storage.from('banners').getPublicUrl(path);
+      await client.storage.from('banners').uploadBinary(path, _imageBytes!);
+      final imageUrl = client.storage.from('banners').getPublicUrl(path);
 
       // 2. حفظ البيانات
       await Supabase.instance.client.from('banners').insert({
@@ -750,20 +750,15 @@ class _EditBannerDialogState extends State<_EditBannerDialog> {
                                 _existingImageUrl!.isNotEmpty)
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
-                                child: CachedNetworkImage(
-                                  imageUrl: buildOptimizedImageUrl(
-                                    _existingImageUrl!,
-                                    variant: ImageVariant.homeBanner,
-                                  ),
+                                child: AppNetworkImage(
+                                  url: _existingImageUrl!,
+                                  variant: ImageVariant.homeBanner,
                                   fit: BoxFit.cover,
-                                  memCacheHeight: 400,
-                                  placeholder: (c, u) => Shimmer.fromColors(
-                                    baseColor: Colors.grey[300]!,
-                                    highlightColor: Colors.grey[100]!,
-                                    child: Container(color: Colors.white),
+                                  placeholder: Container(color: Colors.grey[200]),
+                                  errorWidget: const Icon(
+                                    Icons.broken_image,
+                                    color: Colors.grey,
                                   ),
-                                  errorWidget: (c, u, e) => const Center(
-                                      child: Icon(Icons.error)),
                                 ),
                               )
                             : const Column(

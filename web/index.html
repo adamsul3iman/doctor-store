@@ -6,17 +6,109 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <!-- ترك إدارة الـ viewport لفلاتر نفسها لتجنّب التحذيرات على الويب -->
-  <meta name="description" content="متجر الدكتور - بياضات وكهربائيات وكل ما يحتاجه منزلك">
-  <meta name="theme-color" content="#0A2647">
 
+  <!-- ===== Brand / SEO basics ===== -->
+  <title>متجر الدكتور | Doctor Store</title>
+  <meta name="description" content="متجر الدكتور | Doctor Store - بياضات، فرشات طبية، كهربائيات منزلية، وعروض يومية داخل الأردن.">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+  <meta name="theme-color" content="#0A2647">
+  <meta name="application-name" content="متجر الدكتور | Doctor Store">
+
+  <!-- Language / Locale hints -->
+  <link rel="alternate" href="https://drstore.me/" hreflang="ar-JO" />
+  <link rel="alternate" href="https://drstore.me/" hreflang="x-default" />
+
+  <!-- Canonical (تعديل الدومين إذا تغيّر) -->
+  <link rel="canonical" href="https://drstore.me/" />
+
+  <!-- Open Graph / Social Sharing -->
+  <meta property="og:site_name" content="متجر الدكتور | Doctor Store" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="متجر الدكتور | Doctor Store" />
+  <meta property="og:description" content="بياضات، فرشات طبية، كهربائيات منزلية، وعروض يومية داخل الأردن." />
+  <meta property="og:url" content="https://drstore.me/" />
+  <meta property="og:image" content="https://drstore.me/icons/Icon-512.png" />
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="متجر الدكتور | Doctor Store" />
+  <meta name="twitter:description" content="بياضات، فرشات طبية، كهربائيات منزلية، وعروض يومية داخل الأردن." />
+  <meta name="twitter:image" content="https://drstore.me/icons/Icon-512.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://drstore.me/#website",
+          "name": "متجر الدكتور | Doctor Store",
+          "url": "https://drstore.me/",
+          "inLanguage": "ar-JO",
+          "publisher": { "@id": "https://drstore.me/#organization" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://drstore.me/search?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://drstore.me/#organization",
+          "name": "متجر الدكتور | Doctor Store",
+          "url": "https://drstore.me/",
+          "logo": "https://drstore.me/icons/Icon-512.png",
+          "telephone": "+962791988868",
+          "contactPoint": [
+            {
+              "@type": "ContactPoint",
+              "telephone": "+962791988868",
+              "contactType": "customer service",
+              "areaServed": "JO",
+              "availableLanguage": ["ar"]
+            }
+          ],
+          "sameAs": [
+            "https://web.facebook.com/dr.store.home.appliances",
+            "https://www.instagram.com/dr.store_home_appliances"
+          ]
+        },
+        {
+          "@type": "Store",
+          "@id": "https://drstore.me/#store",
+          "name": "متجر الدكتور | Doctor Store",
+          "url": "https://drstore.me/",
+          "telephone": "+962791988868",
+          "hasMap": "https://www.google.com/maps/place/?q=place_id:ChIJ79KvIQBnGxUR3pjxVOIJx68",
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 32.011875,
+            "longitude": 36.014609
+          },
+          "address": {
+            "@type": "PostalAddress",
+            "addressCountry": "JO",
+            "addressRegion": "الزرقاء",
+            "addressLocality": "الرصيفة",
+            "streetAddress": "شارع الملك حسين - بجانب مسجد مدينة الحجاج"
+          }
+        }
+      ]
+    }
+  </script>
+
+  <!-- ===== PWA ===== -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="doctor_store">
+  <meta name="apple-mobile-web-app-title" content="متجر الدكتور">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-
-  <title>متجر الدكتور | Doctor Store</title>
   <link rel="manifest" href="manifest.json">
 
   <script>
@@ -35,6 +127,17 @@
   </script>
 </head>
 <body>
+  <noscript>
+    <div style="max-width: 720px; margin: 24px auto; padding: 0 16px; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; direction: rtl;">
+      <h1 style="margin: 0 0 8px; color: #0A2647; font-size: 28px;">متجر الدكتور | Doctor Store</h1>
+      <p style="margin: 0 0 12px; color: #334155; line-height: 1.8;">
+        متجر إلكتروني داخل الأردن لبيع البياضات، الفرشات الطبية، والكهربائيات المنزلية. الرجاء تفعيل JavaScript لعرض المتجر.
+      </p>
+      <p style="margin: 0;">
+        <a href="https://drstore.me/" style="color: #0A2647; font-weight: 700; text-decoration: underline;">الدخول إلى المتجر</a>
+      </p>
+    </div>
+  </noscript>
   
   <style>
     :root {
@@ -275,6 +378,41 @@
   </style>
 
 
-  <script src="flutter_bootstrap.js" async></script>
+  <script src="flutter.js" defer></script>
+
+  <script>
+    window.addEventListener('load', function () {
+      if (window._flutter && window._flutter.loader) {
+        window._flutter.loader.loadEntrypoint({
+          onEntrypointLoaded: function (engineInitializer) {
+            engineInitializer.initializeEngine().then(function (appRunner) {
+              return appRunner.runApp();
+            });
+          }
+        });
+      } else {
+        console.error('[Flutter] flutter.js loaded but _flutter.loader is not available.');
+      }
+    });
+  </script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+          console.log('[SW] Skipped registration on localhost.');
+          return;
+        }
+        navigator.serviceWorker.register('/service-worker.js')
+          .then((registration) => {
+            console.log('[SW] Service Worker registered with scope:', registration.scope);
+          })
+          .catch((err) => {
+            console.log('[SW] Service Worker registration failed:', err);
+          });
+      });
+    }
+  </script>
 </body>
 </html>

@@ -13,11 +13,12 @@ import 'admin_banners_view.dart';
 import 'admin_orders_view.dart';
 import 'admin_clients_view.dart';
 import 'admin_reviews_view.dart';
-import 'admin_settings_view.dart';
+import 'analytics_view.dart';
 import 'admin_coupons_view.dart';
 import 'admin_categories_view.dart';
 import 'admin_delivery_zones_view.dart';
 import 'admin_sub_categories_view.dart';
+import 'shipping_costs_screen.dart'; // ✅ صفحة إدارة أسعار الشحن
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -33,33 +34,104 @@ class _AdminDashboardState extends State<AdminDashboard> {
   static const _kLastAdminTabKey = 'admin_last_tab';
 
   // القائمة البرمجية للصفحات
-  final List<Widget> _views = [
-    const DashboardHomeView(),
+  List<Widget> get _views => [
+    DashboardHomeView(onNavigateToTab: (index) {
+      setState(() => _selectedIndex = index);
+      _saveLastTab(index);
+    }),
     const AdminOrdersView(),
     const AdminProductsView(),
     const AdminCategoriesView(),
     const AdminSubCategoriesView(),
     const AdminCouponsView(),
-    const AdminDeliveryZonesView(),
     const AdminBannersView(),
-    const AdminClientsView(),
     const AdminReviewsView(),
-    const AdminSettingsView(),
+    const AdminClientsView(),
+    const AdminDeliveryZonesView(),
+    const ShippingCostsScreen(), // ✅ صفحة إدارة أسعار الشحن
+    const AnalyticsView(),
   ];
 
   // بيانات عناصر القائمة
   final List<_AdminMenuItem> _menuItems = [
-    _AdminMenuItem("الرئيسية", Icons.dashboard_outlined, Icons.dashboard),
-    _AdminMenuItem("الطلبات", FontAwesomeIcons.boxOpen, FontAwesomeIcons.box),
-    _AdminMenuItem("المنتجات", Icons.inventory_2_outlined, Icons.inventory_2),
-    _AdminMenuItem("الأقسام", Icons.category_outlined, Icons.category),
-    _AdminMenuItem("الفئات الفرعية", Icons.label_outline, Icons.label),
-    _AdminMenuItem("الكوبونات", Icons.local_offer_outlined, Icons.local_offer),
-    _AdminMenuItem("مناطق التوصيل", Icons.delivery_dining_outlined, Icons.delivery_dining),
-    _AdminMenuItem("البانرات", Icons.view_carousel_outlined, Icons.view_carousel),
-    _AdminMenuItem("العملاء", Icons.people_outline, Icons.people),
-    _AdminMenuItem("التقييمات", Icons.star_outline, Icons.star),
-    _AdminMenuItem("الإعدادات", Icons.settings_outlined, Icons.settings),
+    _AdminMenuItem(
+      title: 'نظرة عامة',
+      icon: Icons.dashboard_outlined,
+      activeIcon: Icons.dashboard,
+      group: _AdminMenuGroup.overview,
+    ),
+    _AdminMenuItem(
+      title: 'الطلبات',
+      icon: FontAwesomeIcons.boxOpen,
+      activeIcon: FontAwesomeIcons.box,
+      group: _AdminMenuGroup.orders,
+    ),
+    _AdminMenuItem(
+      title: 'المنتجات',
+      icon: Icons.inventory_2_outlined,
+      activeIcon: Icons.inventory_2,
+      group: _AdminMenuGroup.catalog,
+    ),
+    _AdminMenuItem(
+      title: 'الأقسام',
+      icon: Icons.category_outlined,
+      activeIcon: Icons.category,
+      group: _AdminMenuGroup.catalog,
+    ),
+    _AdminMenuItem(
+      title: 'الفئات الفرعية',
+      icon: Icons.label_outline,
+      activeIcon: Icons.label,
+      group: _AdminMenuGroup.catalog,
+    ),
+    _AdminMenuItem(
+      title: 'الكوبونات',
+      icon: Icons.local_offer_outlined,
+      activeIcon: Icons.local_offer,
+      group: _AdminMenuGroup.marketing,
+    ),
+    _AdminMenuItem(
+      title: 'البانرات',
+      icon: Icons.view_carousel_outlined,
+      activeIcon: Icons.view_carousel,
+      group: _AdminMenuGroup.marketing,
+    ),
+    _AdminMenuItem(
+      title: 'التقييمات',
+      icon: Icons.star_outline,
+      activeIcon: Icons.star,
+      group: _AdminMenuGroup.marketing,
+    ),
+    _AdminMenuItem(
+      title: 'العملاء',
+      icon: Icons.people_outline,
+      activeIcon: Icons.people,
+      group: _AdminMenuGroup.marketing,
+    ),
+    _AdminMenuItem(
+      title: 'مناطق التوصيل',
+      icon: Icons.delivery_dining_outlined,
+      activeIcon: Icons.delivery_dining,
+      group: _AdminMenuGroup.operations,
+    ),
+    _AdminMenuItem(
+      title: 'أسعار الشحن',
+      icon: Icons.local_shipping_outlined,
+      activeIcon: Icons.local_shipping,
+      group: _AdminMenuGroup.operations,
+    ),
+    _AdminMenuItem(
+      title: 'الإحصائيات',
+      icon: Icons.analytics_outlined,
+      activeIcon: Icons.analytics,
+      group: _AdminMenuGroup.overview,
+    ),
+    _AdminMenuItem(
+      title: 'الإعدادات',
+      icon: Icons.settings_outlined,
+      activeIcon: Icons.settings,
+      group: _AdminMenuGroup.settings,
+    ),
   ];
 
   @override
@@ -84,14 +156,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   Widget build(BuildContext context) {
     // ✅ استخدام LayoutBuilder للتبديل بين تصميم الموبايل والكمبيوتر
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth >= 900) {
-          return _buildDesktopLayout();
-        } else {
-          return _buildMobileLayout();
-        }
-      },
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth >= 900) {
+            return _buildDesktopLayout();
+          } else {
+            return _buildMobileLayout();
+          }
+        },
+      ),
     );
   }
 
@@ -99,46 +174,29 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget _buildDesktopLayout() {
     return Scaffold(
       backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: Text('لوحة التحكم', style: GoogleFonts.almarai(fontWeight: FontWeight.bold, color: Colors.white)),
+        centerTitle: true,
+        backgroundColor: const Color(0xFF0A2647),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home_outlined, color: Colors.white),
+            tooltip: 'العودة للمتجر',
+            onPressed: () => context.go('/'),
+          ),
+        ],
+      ),
       body: Row(
         children: [
-          NavigationRail(
-            extended: _isExtended,
-            backgroundColor: const Color(0xFF0A2647),
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: (int index) {
+          Expanded(child: _views[_selectedIndex]),
+          const VerticalDivider(thickness: 1, width: 1),
+          _buildSidebar(
+            isDrawer: false,
+            onNavigate: (index) {
               setState(() => _selectedIndex = index);
               _saveLastTab(index);
             },
-            leading: Column(
-              children: [
-                const SizedBox(height: 20),
-                Icon(Icons.local_hospital, color: Colors.white, size: _isExtended ? 40 : 30),
-                if (_isExtended) ...[
-                  const SizedBox(height: 10),
-                  Text("متجر الدكتور", style: GoogleFonts.almarai(color: Colors.white, fontWeight: FontWeight.bold)),
-                ],
-                const SizedBox(height: 20),
-                IconButton(
-                  icon: Icon(_isExtended ? Icons.arrow_back_ios : Icons.arrow_forward_ios, color: Colors.white70, size: 16),
-                  onPressed: () => setState(() => _isExtended = !_isExtended),
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
-            destinations: _menuItems.map((item) {
-              return NavigationRailDestination(
-                icon: Icon(item.icon, color: Colors.white70),
-                selectedIcon: Icon(item.activeIcon, color: const Color(0xFFD4AF37)),
-                label: Text(item.title, style: GoogleFonts.almarai(color: Colors.white)),
-              );
-            }).toList(),
-            unselectedIconTheme: const IconThemeData(color: Colors.white70),
-            selectedIconTheme: const IconThemeData(color: Color(0xFFD4AF37)),
-            selectedLabelTextStyle: GoogleFonts.almarai(color: const Color(0xFFD4AF37), fontWeight: FontWeight.bold),
-            unselectedLabelTextStyle: GoogleFonts.almarai(color: Colors.white70),
           ),
-          const VerticalDivider(thickness: 1, width: 1),
-          Expanded(child: _views[_selectedIndex]),
         ],
       ),
     );
@@ -155,53 +213,198 @@ class _AdminDashboardState extends State<AdminDashboard> {
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await Supabase.instance.client.auth.signOut();
-              if (mounted) context.go('/');
+            icon: const Icon(Icons.home_outlined),
+            tooltip: 'العودة للمتجر',
+            onPressed: () {
+              context.go('/');
             },
           )
         ],
       ),
       drawer: Drawer(
+        child: _buildSidebar(
+          isDrawer: true,
+          onNavigate: (index) {
+            setState(() => _selectedIndex = index);
+            _saveLastTab(index);
+            Navigator.pop(context);
+          },
+        ),
+      ),
+      body: _views[_selectedIndex],
+    );
+  }
+
+  Widget _buildSidebar({
+    required bool isDrawer,
+    required void Function(int index) onNavigate,
+  }) {
+    const navy = Color(0xFF0A2647);
+    const orange = Color(0xFFFF6F00);
+
+    final grouped = <_AdminMenuGroup, List<MapEntry<int, _AdminMenuItem>>>{};
+    for (var i = 0; i < _menuItems.length; i++) {
+      grouped.putIfAbsent(_menuItems[i].group, () => []).add(MapEntry(i, _menuItems[i]));
+    }
+
+    Widget groupHeader(String title) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
+        child: Text(
+          title,
+          style: GoogleFonts.almarai(
+            color: Colors.white.withValues(alpha: 0.7),
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+          ),
+        ),
+      );
+    }
+
+    Widget navTile(int index, _AdminMenuItem item) {
+      final isSelected = _selectedIndex == index;
+      return ListTile(
+        dense: true,
+        leading: Icon(
+          isSelected ? item.activeIcon : item.icon,
+          color: isSelected ? orange : Colors.white.withValues(alpha: 0.75),
+          size: 20,
+        ),
+        title: _isExtended || isDrawer
+            ? Text(
+                item.title,
+                style: GoogleFonts.almarai(
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.9),
+                  fontSize: 14,
+                ),
+              )
+            : null,
+        selected: isSelected,
+        selectedTileColor: Colors.white.withValues(alpha: 0.08),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        onTap: () => onNavigate(index),
+      );
+    }
+
+    final content = Container(
+      width: isDrawer ? null : (_isExtended ? 280 : 88),
+      color: navy,
+      child: SafeArea(
         child: Column(
           children: [
-            UserAccountsDrawerHeader(
-              decoration: const BoxDecoration(color: Color(0xFF0A2647)),
-              accountName: Text("لوحة التحكم", style: GoogleFonts.almarai(fontWeight: FontWeight.bold, fontSize: 18)),
-              accountEmail: Text("admin@doctorstore.com", style: GoogleFonts.almarai(color: Colors.white70)),
-              currentAccountPicture: const CircleAvatar(backgroundColor: Colors.white, child: Icon(Icons.person, color: Color(0xFF0A2647), size: 30)),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+              child: Row(
+                children: [
+                  const Icon(Icons.local_hospital, color: Colors.white, size: 26),
+                  if (_isExtended || isDrawer) ...[
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'متجر الدكتور',
+                        style: GoogleFonts.almarai(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                  if (!isDrawer)
+                    IconButton(
+                      tooltip: _isExtended ? 'تصغير' : 'توسيع',
+                      icon: Icon(
+                        _isExtended
+                            ? Icons.chevron_right
+                            : Icons.chevron_left,
+                        color: Colors.white70,
+                      ),
+                      onPressed: () => setState(() => _isExtended = !_isExtended),
+                    ),
+                ],
+              ),
             ),
+            Divider(color: Colors.white.withValues(alpha: 0.12), height: 1),
             Expanded(
-              child: ListView.builder(
-                itemCount: _menuItems.length,
-                itemBuilder: (context, index) {
-                  final item = _menuItems[index];
-                  final isSelected = _selectedIndex == index;
-                  return ListTile(
-                    leading: Icon(isSelected ? item.activeIcon : item.icon, color: isSelected ? const Color(0xFF0A2647) : Colors.grey[600]),
-                    title: Text(item.title, style: GoogleFonts.almarai(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, color: isSelected ? const Color(0xFF0A2647) : Colors.black87)),
-                    tileColor: isSelected ? const Color(0xFF0A2647).withValues(alpha: 0.05) : null,
-                    onTap: () {
-                      setState(() => _selectedIndex = index);
-                      _saveLastTab(index);
-                      Navigator.pop(context);
-                    },
-                  );
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                children: [
+                  groupHeader('نظرة عامة'),
+                  for (final entry in grouped[_AdminMenuGroup.overview] ?? const [])
+                    navTile(entry.key, entry.value),
+                  groupHeader('الطلبات'),
+                  for (final entry in grouped[_AdminMenuGroup.orders] ?? const [])
+                    navTile(entry.key, entry.value),
+                  groupHeader('الكتالوج'),
+                  for (final entry in grouped[_AdminMenuGroup.catalog] ?? const [])
+                    navTile(entry.key, entry.value),
+                  groupHeader('التسويق'),
+                  for (final entry in grouped[_AdminMenuGroup.marketing] ?? const [])
+                    navTile(entry.key, entry.value),
+                  groupHeader('العمليات'),
+                  for (final entry in grouped[_AdminMenuGroup.operations] ?? const [])
+                    navTile(entry.key, entry.value),
+                  groupHeader('الإعدادات'),
+                  for (final entry in grouped[_AdminMenuGroup.settings] ?? const [])
+                    navTile(entry.key, entry.value),
+                ],
+              ),
+            ),
+            Divider(color: Colors.white.withValues(alpha: 0.12), height: 1),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: ListTile(
+                dense: true,
+                leading: Icon(
+                  Icons.logout,
+                  color: Colors.red.shade300,
+                  size: 20,
+                ),
+                title: (_isExtended || isDrawer)
+                    ? Text(
+                        'تسجيل الخروج',
+                        style: GoogleFonts.almarai(
+                          color: Colors.red.shade200,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      )
+                    : null,
+                onTap: () async {
+                  await Supabase.instance.client.auth.signOut();
+                  if (mounted) context.go('/');
                 },
               ),
             ),
           ],
         ),
       ),
-      body: _views[_selectedIndex],
     );
+
+    return content;
   }
+}
+
+enum _AdminMenuGroup {
+  overview,
+  orders,
+  catalog,
+  marketing,
+  operations,
+  settings,
 }
 
 class _AdminMenuItem {
   final String title;
   final IconData icon;
   final IconData activeIcon;
-  _AdminMenuItem(this.title, this.icon, this.activeIcon);
+  final _AdminMenuGroup group;
+
+  const _AdminMenuItem({
+    required this.title,
+    required this.icon,
+    required this.activeIcon,
+    required this.group,
+  });
 }

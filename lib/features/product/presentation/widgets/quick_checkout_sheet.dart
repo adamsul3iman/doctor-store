@@ -8,6 +8,7 @@ import 'package:doctor_store/features/auth/application/user_data_manager.dart';
 import 'package:doctor_store/shared/utils/app_notifier.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
 import 'package:doctor_store/shared/utils/delivery_zones_provider.dart';
+import 'package:doctor_store/shared/utils/shipping_calculator.dart'; // ✅
 import 'package:doctor_store/shared/widgets/image_shimmer_placeholder.dart';
 
 const _brandColor = Color(0xFF0A2647);
@@ -74,6 +75,7 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
   bool _isSubmitting = false;
 
   DeliveryZone? _selectedZone;
+  double _dynamicDeliveryFee = 0.0; // ✅ سعر الشحن الديناميكي
 
   @override
   void initState() {
@@ -105,7 +107,8 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
     }
     if (base < 0) base = 0;
 
-    final shipping = _selectedZone?.price ?? 0;
+    // ✅ استخدام السعر الديناميكي أو القديم احتياطياً
+    final shipping = _dynamicDeliveryFee > 0 ? _dynamicDeliveryFee : (_selectedZone?.price ?? 0);
     return base + shipping;
   }
 
@@ -494,7 +497,8 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
       }
     }
 
-    final deliveryFee = _selectedZone?.price ?? 0;
+    // ✅ استخدام السعر الديناميكي
+    final deliveryFee = _dynamicDeliveryFee > 0 ? _dynamicDeliveryFee : (_selectedZone?.price ?? 0);
 
     return Container(
       width: double.infinity,
@@ -658,6 +662,7 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
         if (zones.isEmpty) return const SizedBox.shrink();
 
         final selectedName = _selectedZone?.name ?? 'اختر منطقة التوصيل';
+        final bool isRequired = zones.isNotEmpty; // ✅ إجباري
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
@@ -666,9 +671,10 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
             borderRadius: BorderRadius.circular(8),
             child: InputDecorator(
               decoration: InputDecoration(
-                labelText: 'منطقة التوصيل',
+                labelText: isRequired ? 'منطقة التوصيل *' : 'منطقة التوصيل', // ✅
                 hintText: 'اختر المدينة / المنطقة',
                 prefixIcon: const Icon(Icons.delivery_dining),
+                errorText: isRequired && _selectedZone == null ? 'يجب اختيار منطقة التوصيل' : null, // ✅
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide(color: Colors.grey.shade300),
@@ -793,7 +799,8 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
                                 return ListTile(
                                   title: Text(zone.name),
                                   subtitle: Text(
-                                    'رسوم التوصيل: ${zone.price.toStringAsFixed(2)} د.أ',
+                                    'رسوم التوصيل: يتم الحساب حسب حجم المنتج',
+                                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                                   ),
                                   trailing: isSelected
                                       ? const Icon(Icons.check, color: Color(0xFF0A2647))
@@ -817,6 +824,41 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
       setState(() {
         _selectedZone = selected;
       });
+      
+      // ✅ حساب سعر الشحن الديناميكي
+      _calculateDynamicShippingCost();
+    }
+  }
+  
+  /// ✅ حساب سعر الشحن بناءً على حجم المنتج
+  Future<void> _calculateDynamicShippingCost() async {
+    if (_selectedZone == null) {
+      setState(() => _dynamicDeliveryFee = 0.0);
+      return;
+    }
+    
+    try {
+      final zoneId = ShippingCalculator.zoneNameToId(_selectedZone!.name);
+      
+      // الحصول على حجم الشحن من المنتج
+      final shippingSize = widget.product.options['shipping_size'] as String? ?? 'small';
+      
+      final cost = await ShippingCalculator.getShippingCostForZone(
+        zoneId: zoneId,
+        shippingSize: shippingSize,
+      );
+      
+      if (mounted) {
+        setState(() {
+          _dynamicDeliveryFee = cost;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _dynamicDeliveryFee = _selectedZone?.price ?? 3.0;
+        });
+      }
     }
   }
 

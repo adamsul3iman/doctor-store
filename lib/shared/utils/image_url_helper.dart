@@ -4,7 +4,8 @@ import 'package:flutter/foundation.dart';
 enum ImageVariant {
   heroBanner, // بانرات سينمائية كبيرة
   homeBanner, // بانرات متوسطة في الصفحة الرئيسية
-  productCard, // كروت المنتجات في القوائم
+  productCard, // كروت المنتجات في القوائم (مربعة - cover)
+  mattressCard, // كرت الفرشات في الصفحة الرئيسية (بدون قص - contain)
   thumbnail, // ثامبنايل صغيرة (معرض الصور)
   fullScreen, // عرض صورة كاملة في شاشة التفاصيل
 }
@@ -49,6 +50,14 @@ String buildOptimizedImageUrl(
       height = 300;
       resizeMode = 'cover';
       quality = 60;
+      break;
+    case ImageVariant.mattressCard:
+      // كرت الفرشات بالواجهة الرئيسية: نعرض الصورة كاملة بدون قص.
+      // نحدد height أيضاً حتى ينتج إطار ثابت يسمح لنا بملء مساحة الكرت بدون قص المحتوى.
+      width = 420;
+      height = 320;
+      resizeMode = 'contain';
+      quality = 75;
       break;
     case ImageVariant.fullScreen:
       // عرض التفاصيل / المعرض الكامل – أكبر قليلاً لكن ما زال مع contain

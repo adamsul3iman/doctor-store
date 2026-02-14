@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
-import 'package:doctor_store/shared/utils/analytics_service.dart';
+import 'package:doctor_store/features/recently_viewed/application/recently_viewed_manager.dart';
+import 'package:doctor_store/shared/services/analytics_service.dart';
 import 'product_details_screen.dart';
 
-class ProductDetailsWrapper extends StatefulWidget {
+class ProductDetailsWrapper extends ConsumerStatefulWidget {
   final Product? productObj;
   final String? productId;
   final String? productSlug; // ✅ متغير جديد
@@ -13,10 +15,10 @@ class ProductDetailsWrapper extends StatefulWidget {
   const ProductDetailsWrapper({super.key, this.productObj, this.productId, this.productSlug});
 
   @override
-  State<ProductDetailsWrapper> createState() => _ProductDetailsWrapperState();
+  ConsumerState<ProductDetailsWrapper> createState() => _ProductDetailsWrapperState();
 }
 
-class _ProductDetailsWrapperState extends State<ProductDetailsWrapper> {
+class _ProductDetailsWrapperState extends ConsumerState<ProductDetailsWrapper> {
   late final Future<Product?> _productFuture;
   late final int _startMs;
 
@@ -67,6 +69,11 @@ class _ProductDetailsWrapperState extends State<ProductDetailsWrapper> {
   Widget build(BuildContext context) {
     // الحالة 1: المستخدم جاء من التطبيق والبيانات موجودة
     if (widget.productObj != null) {
+      // Add to recently viewed
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(recentlyViewedProvider.notifier).addToRecentlyViewed(widget.productObj!);
+      });
+      
       return ProductDetailsScreen(product: widget.productObj!);
     }
 
@@ -107,7 +114,14 @@ class _ProductDetailsWrapperState extends State<ProductDetailsWrapper> {
           }
 
           // تم تحميل البيانات بنجاح، اعرض الصفحة
-          return ProductDetailsScreen(product: snapshot.data!);
+          final product = snapshot.data!;
+          
+          // Add to recently viewed
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ref.read(recentlyViewedProvider.notifier).addToRecentlyViewed(product);
+          });
+          
+          return ProductDetailsScreen(product: product);
         },
       ),
     );

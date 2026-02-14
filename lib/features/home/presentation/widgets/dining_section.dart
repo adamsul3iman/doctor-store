@@ -60,18 +60,18 @@ class _DiningSectionState extends State<DiningSection> {
           fullText.contains('dining');
       if (!isTable) continue;
 
-      // اعتبار المنتج بورسلان إذا ذُكر ذلك في العنوان أو الوصف أو الوسوم
-      final isPorcelain =
-          fullText.contains('بورسلان') ||
-          fullText.contains('بورسل') ||
-          fullText.contains('porcel') ||
-          fullText.contains('porcelain');
+      // فلترة صارمة للبورسلان: يجب أن يحتوي على كلمة "بورسلان" بالعربية
+      final isPorcelain = fullText.contains('بورسلان');
+
+      // فلترة صارمة للخشب: يجب أن يحتوي على كلمة "خشب" بالعربية
+      final isWood = fullText.contains('خشب');
 
       if (isPorcelain) {
         _porcelainProducts.add(p);
-      } else {
+      } else if (isWood) {
         _woodProducts.add(p);
       }
+      // إذا لم يحتوي على أي من الكلمتين، لا يتم عرضه في أي من الفئتين
     }
   }
 

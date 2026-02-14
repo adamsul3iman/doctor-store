@@ -3,8 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doctor_store/shared/utils/image_compressor.dart';
+import 'package:doctor_store/shared/utils/image_url_helper.dart';
+import 'package:doctor_store/shared/widgets/app_network_image.dart';
 
 class AdminSettingsView extends StatefulWidget {
   const AdminSettingsView({super.key});
@@ -89,10 +90,25 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
   final _ownerBioController = TextEditingController();
   String _ownerImageUrl = '';
 
+  bool _freeShippingEnabled = true;
+  final _freeShippingThresholdController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     _loadSettings();
+  }
+
+  @override
+  void dispose() {
+    _whatsappController.dispose();
+    _facebookController.dispose();
+    _instagramController.dispose();
+    _tiktokController.dispose();
+    _ownerNameController.dispose();
+    _ownerBioController.dispose();
+    _freeShippingThresholdController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSettings() async {
@@ -109,6 +125,10 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
       _ownerNameController.text = data['owner_name'] ?? '';
       _ownerBioController.text = data['owner_bio'] ?? '';
       _ownerImageUrl = (data['owner_image_url'] as String?) ?? '';
+
+      _freeShippingEnabled = (data['free_shipping_enabled'] as bool?) ?? true;
+      _freeShippingThresholdController.text =
+          (data['free_shipping_threshold'] as num?)?.toDouble().toString() ?? '';
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -465,6 +485,9 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
   Future<void> _saveSettings() async {
     setState(() => _isLoading = true);
     try {
+      final thresholdText = _freeShippingThresholdController.text.trim();
+      final threshold = double.tryParse(thresholdText);
+
       await _supabase.from('app_settings').update({
         'whatsapp_number': _whatsappController.text,
         'facebook_url': _facebookController.text,
@@ -473,6 +496,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
         'owner_name': _ownerNameController.text,
         'owner_bio': _ownerBioController.text,
         'owner_image_url': _ownerImageUrl,
+        'free_shipping_enabled': _freeShippingEnabled,
+        if (threshold != null) 'free_shipping_threshold': threshold,
       }).eq('id', 1);
 
       if (mounted) {
@@ -709,6 +734,46 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
+                  "إعدادات الشحن المجاني",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'تحكم بإظهار بانر الشحن المجاني في السلة وتحديد قيمة الحد الأدنى للحصول عليه.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 12),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  value: _freeShippingEnabled,
+                  onChanged: (val) => setState(() => _freeShippingEnabled = val),
+                  title: const Text('تفعيل بانر الشحن المجاني في السلة'),
+                  activeThumbColor: const Color(0xFF0A2647),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _freeShippingThresholdController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(
+                    labelText: 'حد الشحن المجاني (دينار)',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.local_shipping_outlined),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Card(
+          elevation: 1,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
                   "قسم صاحب المتجر",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
@@ -730,13 +795,12 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: _ownerImageUrl.trim().isNotEmpty
-                                  ? CachedNetworkImage(
-                                      imageUrl: _ownerImageUrl,
+                                  ? AppNetworkImage(
+                                      url: _ownerImageUrl,
+                                      variant: ImageVariant.homeBanner,
                                       fit: BoxFit.cover,
-                                      memCacheHeight: 400,
-                                      placeholder: (context, url) =>
-                                          Container(color: Colors.grey[200]),
-                                      errorWidget: (c, u, e) => Container(
+                                      placeholder: Container(color: Colors.grey[200]),
+                                      errorWidget: Container(
                                         color: Colors.grey[200],
                                         child: const Icon(
                                           Icons.person,

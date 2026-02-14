@@ -6,6 +6,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_card.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_card_skeleton.dart';
+import 'package:doctor_store/shared/services/smart_search_service.dart';
+import 'package:doctor_store/shared/utils/responsive_layout.dart';
 
 class ProductSearchDelegate extends SearchDelegate {
   
@@ -261,8 +263,8 @@ class ProductSearchDelegate extends SearchDelegate {
     return Container(
       color: Colors.grey[50], // خلفية فاتحة
       child: FutureBuilder<List<Product>>(
-        // ✅ البحث الشامل (عنوان، وصف، قسم)
-        future: _searchProducts(cleanedQuery),
+        // ✅ البحث الذكي مع تصحيح الأخطاء والمرادفات
+        future: SmartSearchService.instance.smartSearch(cleanedQuery),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return _buildLoadingSkeleton();
@@ -283,31 +285,11 @@ class ProductSearchDelegate extends SearchDelegate {
             );
           }
 
-          var results = snapshot.data ?? [];
+          final results = snapshot.data ?? [];
 
-          // إذا لم يتم إيجاد نتائج، نحاول البحث باستخدام أول كلمة فقط كتحسين بسيط للذكاء
-          if (results.isEmpty && cleanedQuery.contains(' ')) {
-            final firstWord = cleanedQuery.split(' ').first;
-            return FutureBuilder<List<Product>>(
-              future: _searchProducts(firstWord),
-              builder: (context, secondSnapshot) {
-                if (secondSnapshot.connectionState == ConnectionState.waiting) {
-                  return _buildLoadingSkeleton();
-                }
-
-                results = secondSnapshot.data ?? [];
-
-                if (results.isEmpty) {
-                  return _buildEmptyState(cleanedQuery);
-                }
-
-                return _buildResultsGrid(results);
-              },
-            );
-          }
-
+          // ✨ لا نظهر "غير متوفر" - بدلاً من ذلك نقترح منتجات عشوائية
           if (results.isEmpty) {
-            return _buildEmptyState(cleanedQuery);
+            return _buildSuggestionsInsteadOfEmpty(cleanedQuery);
           }
 
           // عرض النتائج كشبكة
@@ -317,138 +299,194 @@ class ProductSearchDelegate extends SearchDelegate {
     );
   }
 
-  Widget _buildEmptyState(String cleanedQuery) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.search_off_rounded, size: 80, color: Colors.grey[300]),
-          const SizedBox(height: 20),
-          Text(
-            "لم نجد نتائج لـ \"$cleanedQuery\"",
-            style: GoogleFonts.almarai(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.bold),
+  /// عرض منتجات مقترحة بدلاً من "غير متوفر"
+  Widget _buildSuggestionsInsteadOfEmpty(String cleanedQuery) {
+    return FutureBuilder<List<Product>>(
+      // نجلب منتجات عشوائية لعرضها
+      future: _getRandomProducts(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _buildLoadingSkeleton();
+        }
+        
+        final suggestions = snapshot.data ?? [];
+        
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // رسالة لطيفة
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.lightbulb_outline, color: Colors.blue.shade700, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'لم نجد نتائج مطابقة تماماً، لكن قد تعجبك هذه المنتجات:',
+                        style: GoogleFonts.almarai(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blue.shade900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // عرض المنتجات المقترحة
+              if (suggestions.isNotEmpty)
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final crossAxisCount = ResponsiveLayout.gridCountForWidth(
+                      constraints.maxWidth,
+                      desiredItemWidth: 120,
+                      minCount: 3,
+                      maxCount: 5,
+                    );
+                    final isCompact = crossAxisCount >= 3;
+                    const spacing = 12.0;
+                    final mainAxisExtent = ResponsiveLayout.productCardMainAxisExtent(
+                      constraints.maxWidth,
+                      crossAxisCount: crossAxisCount,
+                      crossAxisSpacing: spacing,
+                      isCompact: isCompact,
+                    );
+
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        mainAxisExtent: mainAxisExtent,
+                        crossAxisSpacing: spacing,
+                        mainAxisSpacing: spacing,
+                      ),
+                      itemCount: suggestions.length,
+                      itemBuilder: (context, index) {
+                        return ProductCard(
+                          product: suggestions[index],
+                          isCompact: isCompact,
+                          heroTag: 'suggestion_${suggestions[index].id}',
+                        );
+                      },
+                    );
+                  },
+                )
+              else
+                Center(
+                  child: Text(
+                    'تصفح الأقسام لاكتشاف منتجاتنا',
+                    style: GoogleFonts.almarai(color: Colors.grey),
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(height: 10),
-          Text(
-            "حاول كتابة كلمة مختلفة أو تصفح الأقسام",
-            style: GoogleFonts.almarai(fontSize: 14, color: Colors.grey[400]),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildResultsGrid(List<Product> results) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 220,
-        childAspectRatio: 0.62,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: results.length,
-      itemBuilder: (context, index) {
-        return ProductCard(
-          product: results[index],
-          // ✅ إضافة Hero Tag فريد لمنع التعارض مع الصفحة الرئيسية
-          heroTag: 'search_${results[index].id}',
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = ResponsiveLayout.gridCountForWidth(
+          constraints.maxWidth,
+          desiredItemWidth: 120,
+          minCount: 3,
+          maxCount: 5,
+        );
+        final isCompact = crossAxisCount >= 3;
+        const spacing = 12.0;
+        final mainAxisExtent = ResponsiveLayout.productCardMainAxisExtent(
+          constraints.maxWidth,
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: spacing,
+          isCompact: isCompact,
+        );
+
+        return GridView.builder(
+          padding: const EdgeInsets.all(16),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            mainAxisExtent: mainAxisExtent,
+            crossAxisSpacing: spacing,
+            mainAxisSpacing: spacing,
+          ),
+          itemCount: results.length,
+          itemBuilder: (context, index) {
+            return ProductCard(
+              product: results[index],
+              isCompact: isCompact,
+              // ✅ إضافة Hero Tag فريد لمنع التعارض مع الصفحة الرئيسية
+              heroTag: 'search_${results[index].id}',
+            );
+          },
         );
       },
     );
   }
 
   Widget _buildLoadingSkeleton() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: GridView.builder(
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 220,
-          childAspectRatio: 0.62,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-        ),
-        itemCount: 6,
-        itemBuilder: (_, __) => const ProductCardSkeleton(),
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = ResponsiveLayout.gridCountForWidth(
+          constraints.maxWidth,
+          desiredItemWidth: 120,
+          minCount: 3,
+          maxCount: 5,
+        );
+        final isCompact = crossAxisCount >= 3;
+        const spacing = 12.0;
+        final mainAxisExtent = ResponsiveLayout.productCardMainAxisExtent(
+          constraints.maxWidth,
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: spacing,
+          isCompact: isCompact,
+        );
+
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: GridView.builder(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              mainAxisExtent: mainAxisExtent,
+              crossAxisSpacing: spacing,
+              mainAxisSpacing: spacing,
+            ),
+            itemCount: 6,
+            itemBuilder: (_, __) => const ProductCardSkeleton(),
+          ),
+        );
+      },
     );
   }
 
-  // خريطة ثابتة قديمة (للتوافق فقط) لتحويل بعض الأسماء العربية إلى IDs
-  String? _mapArabicCategoryToIdLegacy(String term) {
-    switch (term.trim()) {
-      case 'أطفال':
-        return 'baby_supplies';
-      case 'مخدات':
-        return 'pillows';
-      case 'طاولات':
-        return 'dining_table';
-      case 'سجاد':
-        return 'carpets';
-      case 'مفارش':
-        return 'bedding';
-      case 'ديكور':
-        return 'home_decor';
-      default:
-        return null;
-    }
-  }
-
-  /// محاولة ذكية لربط كلمة البحث العربية بأحد الأقسام الديناميكية
-  Future<String?> _mapArabicCategoryToIdDynamic(String term) async {
-    final cleaned = term.trim();
-    if (cleaned.isEmpty) return null;
-
-    // أولاً نحاول مطابقة الاسم مع جدول الأقسام مباشرة في Supabase
+  /// جلب منتجات عشوائية للاقتراحات
+  Future<List<Product>> _getRandomProducts() async {
     try {
       final supabase = Supabase.instance.client;
-      final List<dynamic> data = await supabase
-          .from('categories')
-          .select('id,name')
-          .ilike('name', '%$cleaned%')
-          .limit(1);
-
-      if (data.isNotEmpty) {
-        final row = data.first as Map<String, dynamic>;
-        final id = row['id'] as String?;
-        if (id != null && id.isNotEmpty) {
-          return id;
-        }
-      }
-    } catch (_) {
-      // في حال فشل الاتصال بجدول الأقسام نستمر بدون كسر البحث
-    }
-
-    // كـ fallback أخير نستخدم الخريطة الثابتة القديمة
-    return _mapArabicCategoryToIdLegacy(term);
-  }
-
-  // دالة البحث الفعلية
-  Future<List<Product>> _searchProducts(String queryTerm) async {
-    final supabase = Supabase.instance.client;
-    final trimmed = queryTerm.trim();
-
-    // 1) في حال كان النص يطابق إحدى الفئات في جدول الأقسام أو الخريطة القديمة
-    final categoryId = await _mapArabicCategoryToIdDynamic(trimmed);
-    if (categoryId != null) {
+      
+      // نجلب منتجات عشوائية (أول 12 منتج)
       final data = await supabase
           .from('products')
           .select()
           .eq('is_active', true)
-          .eq('category', categoryId)
-          .limit(30);
+          .limit(12);
 
       return data.map((e) => Product.fromJson(e)).toList();
+    } catch (e) {
+      debugPrint('Random products error: $e');
+      return [];
     }
-    
-    // 2) بحث عام بالعنوان + الوصف لأي نص آخر
-    final data = await supabase
-        .from('products')
-        .select()
-        .eq('is_active', true)
-        .or('title.ilike.%$trimmed%,description.ilike.%$trimmed%')
-        .limit(30);
-
-    return data.map((e) => Product.fromJson(e)).toList();
   }
 }

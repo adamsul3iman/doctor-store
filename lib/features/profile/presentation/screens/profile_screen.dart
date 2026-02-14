@@ -10,7 +10,7 @@ import 'package:doctor_store/features/auth/application/user_data_manager.dart';
 import 'package:doctor_store/shared/utils/image_compressor.dart';
 import 'package:doctor_store/features/cart/application/cart_manager.dart';
 import 'package:doctor_store/shared/utils/wishlist_manager.dart';
-import 'package:doctor_store/shared/utils/analytics_service.dart';
+import 'package:doctor_store/shared/services/analytics_service.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
 import '../widgets/edit_profile_sheet.dart';
 
@@ -62,64 +62,119 @@ class ProfileScreen extends ConsumerWidget {
 
                     const SizedBox(height: 24),
 
-                    // 3. القائمة
-                    _buildMenuItem(
-                      icon: Icons.person_outline,
-                      title: "تعديل البيانات",
-                      subtitle: "الاسم، الهاتف، العنوان",
-                      onTap: () => showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (_) => const EditProfileSheet(),
-                      ),
+                    // قسم: حسابي (البيانات الشخصية والأمان)
+                    _buildSectionTitle("حسابي"),
+                    _buildCard(
+                      children: [
+                        _buildMenuItem(
+                          icon: Icons.person_outline,
+                          title: "تعديل البيانات",
+                          subtitle: "الاسم، الهاتف، العنوان",
+                          onTap: () => showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (_) => const EditProfileSheet(),
+                          ),
+                        ),
+                        _buildDivider(),
+                        _buildMenuItem(
+                          icon: Icons.email_outlined,
+                          title: "البريد الإلكتروني",
+                          subtitle: "تحديث بريد تسجيل الدخول",
+                          onTap: () => _showChangeEmailDialog(context, ref),
+                        ),
+                        _buildDivider(),
+                        _buildMenuItem(
+                          icon: Icons.lock_outline,
+                          title: "كلمة المرور",
+                          subtitle: "تغيير/إعادة تعيين",
+                          onTap: () => _showChangePasswordDialog(context),
+                        ),
+                      ],
                     ),
-                    _buildMenuItem(
-                      icon: Icons.email_outlined,
-                      title: "تعديل البريد الإلكتروني",
-                      subtitle: "تحديث بريد تسجيل الدخول الخاص بك",
-                      onTap: () => _showChangeEmailDialog(context, ref),
-                    ),
-                    _buildMenuItem(
-                      icon: Icons.lock_reset,
-                      title: "تغيير كلمة المرور",
-                      subtitle: "تعيين كلمة مرور جديدة لحسابك",
-                      onTap: () => _showChangePasswordDialog(context),
-                    ),
-                    _buildMenuItem(
-                      icon: FontAwesomeIcons.boxOpen,
-                      title: "طلباتي السابقة",
-                      subtitle: "تتبع حالة طلباتك",
-                      onTap: () => context.push('/orders'), // تأكد أن الراوت معرف في main.dart
-                    ),
-                    if (user.isAdmin)
-                      _buildMenuItem(
-                        icon: Icons.dashboard_outlined,
-                        title: "لوحة التحكم (Admin)",
-                        subtitle: "إدارة المتجر بالكامل",
-                        isHighLighted: true,
-                        onTap: () => context.push('/admin/dashboard'),
-                      ),
-                    _buildMenuItem(
-                      icon: Icons.delete_forever,
-                      title: "حذف الحساب نهائياً",
-                      subtitle: "سيتم حذف حسابك وبياناتك وفقاً لسياسة الخصوصية",
-                      isDestructive: true,
-                      onTap: () => _showDeleteAccountDialog(context, ref),
-                    ),
-                    _buildMenuItem(
-                      icon: Icons.logout,
-                      title: "تسجيل الخروج",
-                      subtitle: "العودة للتصفح كضيف بدون حفظ الطلبات",
-                      isDestructive: true,
-                      onTap: () async {
-                        final shouldLogout = await _showLogoutConfirmDialog(context);
-                        if (!shouldLogout) return;
 
-                        await ref.read(userProfileProvider.notifier).logout();
-                        if (context.mounted) context.go('/');
-                      },
+                    const SizedBox(height: 24),
+
+                    // قسم: نشاطي (الطلبات)
+                    _buildSectionTitle("نشاطي"),
+                    _buildCard(
+                      children: [
+                        _buildMenuItem(
+                          icon: FontAwesomeIcons.boxOpen,
+                          title: "طلباتي السابقة",
+                          subtitle: "تتبع حالة طلباتك وتاريخ الشراء",
+                          showBadge: user.totalOrders > 0,
+                          badgeText: "${user.totalOrders}",
+                          onTap: () => context.push('/orders'),
+                        ),
+                      ],
                     ),
+
+                    // لوحة التحكم للمشرف (إن وجدت)
+                    if (user.isAdmin) ...[
+                      const SizedBox(height: 24),
+                      _buildSectionTitle("إدارة المتجر"),
+                      _buildCard(
+                        children: [
+                          _buildMenuItem(
+                            icon: Icons.dashboard_outlined,
+                            title: "لوحة التحكم",
+                            subtitle: "إدارة المنتجات والطلبات والإحصائيات",
+                            isHighLighted: true,
+                            onTap: () => context.push('/admin/dashboard'),
+                          ),
+                        ],
+                      ),
+                    ],
+
+                    const SizedBox(height: 32),
+
+                    // قسم: إدارة الحساب (في الأسفل وبشكل أقل وضوحاً)
+                    _buildSectionTitle("إدارة الحساب", color: Colors.grey),
+                    _buildCard(
+                      backgroundColor: Colors.grey[50],
+                      children: [
+                        // تسجيل الخروج
+                        _buildMenuItem(
+                          icon: Icons.logout,
+                          title: "تسجيل الخروج",
+                          subtitle: "العودة للتصفح كضيف",
+                          iconColor: Colors.orange[700],
+                          onTap: () async {
+                            final shouldLogout = await _showLogoutConfirmDialog(context);
+                            if (!shouldLogout) return;
+                            await ref.read(userProfileProvider.notifier).logout();
+                            if (context.mounted) context.go('/');
+                          },
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // حذف الحساب - في أسفل الصفحة كنص صغير غير بارز
+                    Center(
+                      child: TextButton.icon(
+                        onPressed: () => _showDeleteAccountDialog(context, ref),
+                        icon: Icon(Icons.delete_outline, size: 16, color: Colors.grey[500]),
+                        label: Text(
+                          "حذف الحساب نهائياً",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[500],
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ),
+                    ),
+                    
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -193,6 +248,12 @@ class ProfileScreen extends ConsumerWidget {
     BuildContext context,
     VoidCallback onChangeAvatar,
   ) {
+    final displayName = user.name.trim().isNotEmpty
+        ? user.name.trim()
+        : (user.email.trim().isNotEmpty
+            ? user.email.trim().split('@').first
+            : 'User');
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -231,7 +292,9 @@ class ProfileScreen extends ConsumerWidget {
                   child: user.avatarUrl.isNotEmpty
                       ? null
                       : Text(
-                          user.name.isNotEmpty ? user.name[0].toUpperCase() : "U",
+                          displayName.isNotEmpty
+                              ? displayName[0].toUpperCase()
+                              : "U",
                           style: const TextStyle(
                             fontSize: 26,
                             color: Colors.white,
@@ -268,7 +331,7 @@ class ProfileScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  user.name.isNotEmpty ? user.name : "ضيف متجر الدكتور",
+                  displayName,
                   style: GoogleFonts.almarai(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -484,28 +547,143 @@ class ProfileScreen extends ConsumerWidget {
     required VoidCallback onTap,
     bool isDestructive = false,
     bool isHighLighted = false,
+    bool showBadge = false,
+    String? badgeText,
+    Color? iconColor,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      decoration: BoxDecoration(
-        color: isHighLighted ? const Color(0xFF0A2647).withValues(alpha: 0.05) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: isHighLighted ? Border.all(color: const Color(0xFF0A2647).withValues(alpha: 0.2)) : null,
-      ),
-      child: ListTile(
+    final Color effectiveIconColor = iconColor ?? (isDestructive ? Colors.red : (isHighLighted ? const Color(0xFF0A2647) : const Color(0xFF5A6C7D)));
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         onTap: onTap,
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: isDestructive ? Colors.red.withValues(alpha: 0.1) : (isHighLighted ? const Color(0xFF0A2647).withValues(alpha: 0.1) : Colors.grey[100]),
-            borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isDestructive ? Colors.red.withValues(alpha: 0.08) : (isHighLighted ? const Color(0xFF0A2647).withValues(alpha: 0.08) : const Color(0xFFEEF2F5)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: effectiveIconColor, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.almarai(
+                        fontWeight: FontWeight.w600, 
+                        fontSize: 14, 
+                        color: isDestructive ? Colors.red[700] : Colors.black87,
+                      ),
+                    ),
+                    if (subtitle.isNotEmpty)
+                      Text(
+                        subtitle, 
+                        style: TextStyle(
+                          fontSize: 12, 
+                          color: Colors.grey[500],
+                          height: 1.3,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (showBadge && badgeText != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0A2647),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    badgeText,
+                    style: const TextStyle(
+                      color: Colors.white, 
+                      fontSize: 11, 
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )
+              else
+                const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+            ],
           ),
-          child: Icon(icon, color: isDestructive ? Colors.red : (isHighLighted ? const Color(0xFF0A2647) : Colors.black54)),
         ),
-        title: Text(title, style: GoogleFonts.almarai(fontWeight: FontWeight.bold, color: isDestructive ? Colors.red : Colors.black87)),
-        subtitle: subtitle.isNotEmpty ? Text(subtitle, style: const TextStyle(fontSize: 11)) : null,
-        trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
       ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title, {Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 12, top: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 16,
+            decoration: BoxDecoration(
+              color: color ?? const Color(0xFF0A2647),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: GoogleFonts.almarai(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: color ?? const Color(0xFF0A2647),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCard({required List<Widget> children, Color? backgroundColor}) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor ?? Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0A2647).withValues(alpha: 0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+            spreadRadius: -4,
+          ),
+        ],
+        border: Border.all(
+          color: backgroundColor == null 
+            ? Colors.grey.withValues(alpha: 0.08) 
+            : Colors.transparent,
+          width: 1,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: children,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDivider() {
+    return Divider(
+      height: 1,
+      indent: 66,
+      endIndent: 16,
+      color: Colors.grey[100],
     );
   }
 

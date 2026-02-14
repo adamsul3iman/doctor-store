@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:doctor_store/shared/utils/settings_provider.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
+import 'package:doctor_store/shared/widgets/app_network_image.dart';
 
 class OwnerSection extends ConsumerWidget {
   const OwnerSection({super.key});
@@ -43,17 +43,17 @@ class OwnerSection extends ConsumerWidget {
                     data: (settings) {
                       final url = settings.ownerImageUrl.trim();
                       if (url.isNotEmpty) {
-                        return CachedNetworkImage(
-                          imageUrl: buildOptimizedImageUrl(
-                            url,
-                            variant: ImageVariant.fullScreen,
-                          ),
+                        return SizedBox(
                           height: 220,
-                          fit: BoxFit.cover,
-                          errorWidget: (c, o, s) => _OwnerImageFallback(),
-                          placeholder: (c, o) => Container(
-                            height: 220,
-                            color: Colors.grey[200],
+                          child: AppNetworkImage(
+                            url: url,
+                            variant: ImageVariant.fullScreen,
+                            fit: BoxFit.cover,
+                            placeholder: Container(
+                              height: 220,
+                              color: Colors.grey[200],
+                            ),
+                            errorWidget: const _OwnerImageFallback(),
                           ),
                         );
                       }

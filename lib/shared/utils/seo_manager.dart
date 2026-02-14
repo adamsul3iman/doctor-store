@@ -72,7 +72,7 @@ class SeoManager {
 
     // بيانات المشاركة (Open Graph) - واتساب وفيسبوك
     _meta.ogTitle(ogTitle: product.title);
-    _meta.ogDescription(ogDescription: desc.isNotEmpty ? desc : "🔥 عرض خاص: ${product.price} د.أ - اضغط للتفاصيل");
+    _meta.ogDescription(ogDescription: desc.isNotEmpty ? desc : "عرض خاص: ${product.price} د.أ - اضغط للتفاصيل");
     _meta.ogImage(ogImage: product.imageUrl);
 
     // بيانات تويتر (Twitter Cards)

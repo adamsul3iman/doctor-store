@@ -5,10 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:doctor_store/app/router/app_router.dart';
 import 'package:doctor_store/features/auth/application/user_data_manager.dart';
 import 'package:doctor_store/features/cart/application/cart_manager.dart';
 import 'package:doctor_store/shared/utils/wishlist_manager.dart';
-import 'package:doctor_store/shared/utils/analytics_service.dart';
+import 'package:doctor_store/shared/services/analytics_service.dart';
 
 /// Widget يغلف الشجرة كاملة ليستمع لتغيرات حالة تسجيل الدخول في Supabase
 /// ويقوم تلقائياً بمزامنة بيانات المستخدم بعد نجاح تسجيل الدخول عبر Google
@@ -42,13 +43,20 @@ class _SupabaseAuthListenerState extends ConsumerState<SupabaseAuthListener> {
 
       if (event == AuthChangeEvent.signedIn) {
         if (!mounted) return;
-        final router = GoRouter.of(context);
-        final location = router.routerDelegate.currentConfiguration.uri.toString();
-        await handleSupabaseSignedIn(
-          ref: ref,
-          router: router,
-          currentLocation: location,
-        );
+
+        // نؤجل التنفيذ لحظة قصيرة لضمان اكتمال تهيئة الـ providers بعد تسجيل الدخول
+        // ولا نعتمد على BuildContext لتفادي مشكلة "No GoRouter found in context" على الويب.
+        Timer(const Duration(milliseconds: 50), () async {
+          if (!mounted) return;
+
+          final location =
+              appRouter.routerDelegate.currentConfiguration.uri.toString();
+          await handleSupabaseSignedIn(
+            ref: ref,
+            router: appRouter,
+            currentLocation: location,
+          );
+        });
       }
 
       // يمكن مستقبلاً التعامل مع signedOut هنا إذا احتجنا.

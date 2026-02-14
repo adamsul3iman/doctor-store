@@ -4,14 +4,17 @@ import 'package:go_router/go_router.dart';
 import 'package:doctor_store/core/theme/app_theme.dart';
 import 'package:doctor_store/features/home/presentation/screens/home_screen_v2.dart';
 import 'package:doctor_store/features/auth/presentation/screens/login_screen.dart';
+import 'package:doctor_store/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:doctor_store/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:doctor_store/features/cart/presentation/screens/cart_screen.dart';
 import 'package:doctor_store/features/product/presentation/screens/wishlist_screen.dart';
+import 'package:doctor_store/features/recently_viewed/presentation/screens/recently_viewed_screen.dart';
 import 'package:doctor_store/features/profile/presentation/screens/profile_screen.dart';
 import 'package:doctor_store/features/orders/presentation/screens/orders_screen.dart';
 import 'package:doctor_store/features/product/presentation/screens/search_screen.dart';
 import 'package:doctor_store/features/product/presentation/screens/all_products_screen.dart';
 import 'package:doctor_store/features/product/presentation/screens/category_screen.dart';
+import 'package:doctor_store/features/browse/presentation/screens/browse_all_screen.dart';
 import 'package:doctor_store/features/product/presentation/screens/product_details_wrapper.dart';
 import 'package:doctor_store/features/admin/presentation/screens/admin_dashboard.dart';
 import 'package:doctor_store/features/admin/presentation/screens/product_form_screen.dart';
@@ -21,6 +24,7 @@ import 'package:doctor_store/features/static/presentation/screens/about_screen.d
 import 'package:doctor_store/features/static/presentation/screens/privacy_screen.dart';
 import 'package:doctor_store/features/static/presentation/screens/terms_screen.dart';
 import 'package:doctor_store/features/static/presentation/screens/contact_screen.dart';
+import 'package:doctor_store/app/widgets/admin_guard.dart';
 
 /// تعريف الراوتر الرئيسي للتطبيق في ملف مستقل لسهولة الصيانة والتوسع
 final GoRouter appRouter = GoRouter(
@@ -38,6 +42,11 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) => _buildFadePage(state, const LoginScreen()),
     ),
     GoRoute(
+      path: '/signup',
+      pageBuilder: (context, state) =>
+          _buildFadePage(state, const SignUpScreen()),
+    ),
+    GoRoute(
       path: '/reset-password',
       pageBuilder: (context, state) =>
           _buildFadePage(state, const ResetPasswordScreen()),
@@ -51,6 +60,10 @@ final GoRouter appRouter = GoRouter(
       pageBuilder: (context, state) => _buildFadePage(state, const WishlistScreen()),
     ),
     GoRoute(
+      path: '/recently_viewed',
+      pageBuilder: (context, state) => _buildFadePage(state, const RecentlyViewedScreen()),
+    ),
+    GoRoute(
       path: '/profile',
       pageBuilder: (context, state) => _buildFadePage(state, const ProfileScreen()),
     ),
@@ -60,7 +73,10 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/search',
-      pageBuilder: (context, state) => _buildFadePage(state, const SearchScreen()),
+      pageBuilder: (context, state) => _buildFadePage(
+        state,
+        SearchScreen(initialQuery: state.uri.queryParameters['q']),
+      ),
     ),
     GoRoute(
       path: '/all_products',
@@ -70,6 +86,10 @@ final GoRouter appRouter = GoRouter(
           initialSort: state.uri.queryParameters['sort'],
         ),
       ),
+    ),
+    GoRoute(
+      path: '/browse_all',
+      pageBuilder: (context, state) => _buildFadePage(state, const BrowseAllScreen()),
     ),
     GoRoute(
       path: '/about',
@@ -151,11 +171,17 @@ final GoRouter appRouter = GoRouter(
     // مسارات الإدارة
     GoRoute(
       path: '/admin/dashboard',
-      pageBuilder: (context, state) => _buildFadePage(state, const AdminDashboard()),
+      pageBuilder: (context, state) => _buildFadePage(
+        state,
+        const AdminGuard(child: AdminDashboard()),
+      ),
     ),
     GoRoute(
       path: '/admin/add',
-      pageBuilder: (context, state) => _buildFadePage(state, const ProductFormScreen()),
+      pageBuilder: (context, state) => _buildFadePage(
+        state,
+        const AdminGuard(child: ProductFormScreen()),
+      ),
     ),
     GoRoute(
       path: '/admin/edit',
@@ -178,7 +204,7 @@ final GoRouter appRouter = GoRouter(
           child = const ProductFormScreen();
         }
 
-        return _buildFadePage(state, child);
+        return _buildFadePage(state, AdminGuard(child: child));
       },
     ),
   ],

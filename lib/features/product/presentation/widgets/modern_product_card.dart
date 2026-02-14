@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:auto_size_text/auto_size_text.dart';
@@ -9,43 +8,19 @@ import 'package:doctor_store/features/cart/application/cart_manager.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
 import 'package:doctor_store/shared/utils/product_nav_helper.dart';
 import 'package:doctor_store/shared/widgets/image_shimmer_placeholder.dart';
+import 'package:doctor_store/shared/widgets/app_network_image.dart';
 import 'package:doctor_store/core/theme/app_theme.dart';
-import 'package:doctor_store/shared/utils/categories_provider.dart';
 
-class ModernProductCard extends ConsumerStatefulWidget {
+class ModernProductCard extends ConsumerWidget {
   final Product product;
   final bool isCompact;
 
   const ModernProductCard({super.key, required this.product, this.isCompact = false});
 
   @override
-  ConsumerState<ModernProductCard> createState() => _ModernProductCardState();
-}
-
-class _ModernProductCardState extends ConsumerState<ModernProductCard>
-    with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => true;
-
-  @override
-  Widget build(BuildContext context) {
-    super.build(context);
-
-    final product = widget.product;
-    final isCompact = widget.isCompact;
-
-    // محاولة جلب اسم القسم ديناميكياً من جدول الأقسام (categories)
-    final categoriesAsync = ref.watch(categoriesConfigProvider);
-    String categoryLabel = product.categoryArabic;
-    final categories = categoriesAsync.asData?.value;
-    if (categories != null) {
-      for (final c in categories) {
-        if (c.id == product.category && c.name.trim().isNotEmpty) {
-          categoryLabel = c.name.trim();
-          break;
-        }
-      }
-    }
+  Widget build(BuildContext context, WidgetRef ref) {
+    final product = this.product;
+    final isCompact = this.isCompact;
 
     int discount = 0;
     if (product.oldPrice != null && product.oldPrice! > product.price) {
@@ -80,16 +55,12 @@ class _ModernProductCardState extends ConsumerState<ModernProductCard>
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      CachedNetworkImage(
-                        imageUrl: buildOptimizedImageUrl(
-                          product.originalImageUrl,
-                          variant: ImageVariant.productCard,
-                        ),
+                      AppNetworkImage(
+                        url: product.originalImageUrl,
+                        variant: ImageVariant.productCard,
                         fit: BoxFit.cover,
-                        filterQuality: FilterQuality.low,
-                        memCacheHeight: 340,
-                        placeholder: (context, url) => const ShimmerImagePlaceholder(),
-                        errorWidget: (context, url, error) => const Icon(
+                        placeholder: const ShimmerImagePlaceholder(),
+                        errorWidget: const Icon(
                           Icons.image_not_supported_outlined,
                           color: Colors.grey,
                         ),
@@ -120,103 +91,105 @@ class _ModernProductCardState extends ConsumerState<ModernProductCard>
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(10.0),
+                  padding: const EdgeInsets.all(12.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            categoryLabel,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey[500],
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          AutoSizeText(
-                            product.title,
-                            style: GoogleFonts.almarai(
-                              fontWeight: FontWeight.bold,
-                              fontSize: isCompact ? 11 : 13,
-                              height: 1.2,
-                            ),
-                            maxLines: 2,
-                            minFontSize: isCompact ? 10 : 12,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                      // العنوان فقط
+                      AutoSizeText(
+                        product.title,
+                        style: GoogleFonts.almarai(
+                          fontWeight: FontWeight.w600,
+                          fontSize: isCompact ? 12 : 14,
+                          height: 1.3,
+                          color: const Color(0xFF0A2647),
+                        ),
+                        maxLines: 2,
+                        minFontSize: isCompact ? 11 : 13,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const Spacer(),
+                      
+                      // السعر وزر السلة
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (product.oldPrice != null)
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (product.oldPrice != null && product.oldPrice! > product.price)
+                                  Text(
+                                    product.oldPrice!.toStringAsFixed(0),
+                                    style: TextStyle(
+                                      decoration: TextDecoration.lineThrough,
+                                      color: Colors.grey[400],
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
                                 Text(
-                                  "${product.oldPrice} د.أ",
+                                  "${product.price.toStringAsFixed(0)} د.أ",
                                   style: const TextStyle(
-                                    decoration: TextDecoration.lineThrough,
-                                    color: Colors.grey,
-                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: AppTheme.primary,
                                   ),
                                 ),
-                              Text(
-                                "${product.price} د.أ",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: AppTheme.primary,
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                          InkWell(
-                            onTap: () {
-                              final product = widget.product;
-                              final hasColors =
-                                  (product.options['colors'] is List &&
-                                      (product.options['colors'] as List).isNotEmpty);
-                              final hasSizes =
-                                  (product.options['sizes'] is List &&
-                                      (product.options['sizes'] as List).isNotEmpty);
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                final product = this.product;
+                                final hasColors = product.hasColorOptions;
+                                final hasSizes = product.hasSizeOptions;
 
-                              if (hasColors || hasSizes) {
-                                // منتج يحتاج اختيار لون/مقاس → نرسل العميل لصفحة التفاصيل
-                                context.push(
-                                  buildProductDetailsPath(product),
-                                  extra: product,
-                                );
-                                return;
-                              }
+                                if (hasColors || hasSizes) {
+                                  context.push(
+                                    buildProductDetailsPath(product),
+                                    extra: product,
+                                  );
+                                  return;
+                                }
 
-                              // منتج بدون خيارات → نسمح بالإضافة السريعة
-                              ref.read(cartProvider.notifier).addItem(product);
-                              ScaffoldMessenger.of(context)
-                                ..hideCurrentSnackBar()
-                                ..showSnackBar(
-                                  const SnackBar(
-                                    content: Text("تمت الإضافة للسلة"),
-                                    duration: Duration(seconds: 1),
-                                    backgroundColor: Color(0xFF0A2647),
-                                  ),
-                                );
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: AppTheme.primary.withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.add_shopping_cart,
-                                size: 18,
-                                color: AppTheme.primary,
+                                ref.read(cartProvider.notifier).addItem(product);
+                                ScaffoldMessenger.of(context)
+                                  ..hideCurrentSnackBar()
+                                  ..showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        "تمت الإضافة للسلة",
+                                        style: GoogleFonts.almarai(),
+                                      ),
+                                      duration: const Duration(milliseconds: 1500),
+                                      backgroundColor: const Color(0xFF0A2647),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                              },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppTheme.primary.withValues(alpha: 0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  Icons.add_shopping_cart,
+                                  size: 20,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),

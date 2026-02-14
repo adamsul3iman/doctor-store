@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:doctor_store/features/cart/application/cart_manager.dart';
 import 'package:doctor_store/shared/utils/settings_provider.dart';
 import 'package:doctor_store/features/auth/application/user_data_manager.dart';
-import 'package:doctor_store/shared/utils/analytics_service.dart';
+import 'package:doctor_store/shared/services/analytics_service.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
 import 'package:doctor_store/shared/utils/delivery_zones_provider.dart';
 import 'package:doctor_store/shared/utils/network_status_provider.dart';
 import 'package:doctor_store/shared/widgets/custom_app_bar.dart';
 import 'package:doctor_store/shared/widgets/image_shimmer_placeholder.dart';
+import 'package:doctor_store/shared/widgets/app_network_image.dart';
+import 'package:doctor_store/shared/widgets/free_shipping_progress_bar.dart';
 import 'package:doctor_store/core/theme/app_theme.dart';
+import 'package:doctor_store/shared/utils/shipping_calculator.dart'; // ✅
+import 'package:doctor_store/shared/utils/app_settings_provider.dart';
+import 'package:doctor_store/shared/widgets/responsive_center_wrapper.dart';
 
 // ignore_for_file: use_build_context_synchronously
 
@@ -32,6 +36,19 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   bool _isSubmitting = false;
 
   DeliveryZone? _selectedZone;
+  double _dynamicDeliveryFee = 0.0; // ✅ سعر الشحن الديناميكي
+
+  // دالة لاكتشاف نوع الجهاز
+  String _detectDeviceType() {
+    final data = MediaQuery.of(context);
+    if (data.size.width < 768) {
+      return 'mobile';
+    } else if (data.size.width < 1024) {
+      return 'tablet';
+    } else {
+      return 'desktop';
+    }
+  }
 
   @override
   void initState() {
@@ -43,8 +60,16 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
     // تتبع زيارة شاشة السلة
     final cartItems = ref.read(cartProvider);
+    
+    AnalyticsService.instance.trackSiteVisit(
+      pageUrl: '/cart',
+      deviceType: _detectDeviceType(),
+      country: 'Kuwait',
+    );
+    
     AnalyticsService.instance.trackEvent('cart_view', props: {
       'items_count': cartItems.length,
+      'total_value': cartItems.fold(0.0, (sum, item) => sum + (item.activePrice * item.quantity)),
     });
   }
 
@@ -62,6 +87,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final cartItems = ref.watch(cartProvider);
     final coupon = ref.watch(couponProvider);
     final settingsAsync = ref.watch(settingsProvider);
+    final appSettingsAsync = ref.watch(appSettingsStreamProvider);
     final deliveryZonesAsync = ref.watch(deliveryZonesProvider);
 
     // حساب مجموع المنتجات وقيمة الخصم محلياً
@@ -81,7 +107,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     }
 
     final double totalAfterDiscount = productsTotal - discountAmount;
-    final double deliveryFee = _selectedZone?.price ?? 0;
+    // ✅ استخدام السعر الديناميكي أو السعر القديم احتياطياً
+    final double deliveryFee = _dynamicDeliveryFee > 0 ? _dynamicDeliveryFee : (_selectedZone?.price ?? 0);
     final double grandTotal = totalAfterDiscount + deliveryFee;
 
     final bool requireDeliveryZone = deliveryZonesAsync.maybeWhen(
@@ -119,192 +146,204 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               builder: (context, constraints) {
                 // نجعل محتوى السلة بالكامل قابلاً للتمرير لتجنب مشكلة BOTTOM OVERFLOWED
                 // وكذلك لضمان ظهور جميع المنتجات وقسم تأكيد الطلب على الشاشات الصغيرة.
-            return SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints:
-                        BoxConstraints(minHeight: constraints.maxHeight),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildCheckoutSteps(),
-                        // زر تفريغ السلة بالكامل
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 4),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'سلة المشتريات',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                final isDesktop = constraints.maxWidth >= 900;
+
+                Widget buildCartItemsColumn({required EdgeInsets padding}) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildCheckoutSteps(),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'سلة المشتريات',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
                               ),
-                              TextButton.icon(
-                                onPressed: () async {
-                                  final confirm = await showDialog<bool>(
-                                    context: context,
-                                    builder: (ctx) => AlertDialog(
-                                      title: const Text('تفريغ السلة'),
-                                      content: const Text(
-                                        'هل أنت متأكد من حذف كل المنتجات من السلة؟',
+                            ),
+                            TextButton.icon(
+                              onPressed: () async {
+                                final confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text('تفريغ السلة'),
+                                    content: const Text(
+                                      'هل أنت متأكد من حذف كل المنتجات من السلة؟',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.of(ctx).pop(false),
+                                        child: const Text('إلغاء'),
                                       ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.of(ctx).pop(false),
-                                          child: const Text('إلغاء'),
-                                        ),
-                                        TextButton(
-                                          onPressed: () =>
-                                              Navigator.of(ctx).pop(true),
-                                          child: const Text('تفريغ'),
-                                        ),
-                                      ],
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.of(ctx).pop(true),
+                                        child: const Text('تفريغ'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+
+                                if (confirm == true) {
+                                  ref
+                                      .read(cartProvider.notifier)
+                                      .clearCart();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('تم تفريغ السلة'),
+                                      backgroundColor: Colors.red,
                                     ),
                                   );
-
-                                  if (confirm == true) {
-                                    ref
-                                        .read(cartProvider.notifier)
-                                        .clearCart();
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(
-                                      const SnackBar(
-                                        content: Text('تم تفريغ السلة'),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                  }
-                                },
-                                icon: const Icon(
-                                  Icons.delete_outline,
-                                  size: 18,
-                                  color: Colors.red,
-                                ),
-                                label: const Text(
-                                  'تفريغ السلة',
-                                  style: TextStyle(color: Colors.red),
-                                ),
+                                }
+                              },
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                size: 18,
+                                color: Colors.red,
                               ),
-                            ],
-                          ),
+                              label: const Text(
+                                'تفريغ السلة',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
                         ),
-                        // قائمة المنتجات داخل السلة – غير قابلة للتمرير منفصلاً
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics:
-                              const NeverScrollableScrollPhysics(),
-                          padding: const EdgeInsets.all(16),
-                          cacheExtent: 600,
-                          itemCount: cartItems.length,
-                          itemBuilder: (context, index) {
-                            final item = cartItems[index];
-                            return Card(
-                              margin: const EdgeInsets.only(bottom: 16),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Row(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: CachedNetworkImage(
-                                        imageUrl: buildOptimizedImageUrl(
-                                          item.product.imageUrl,
-                                          variant: ImageVariant.thumbnail,
-                                        ),
-                                        width: 80,
-                                        height: 80,
+                      ),
+                      appSettingsAsync.when(
+                        data: (settings) {
+                          if (!settings.freeShippingEnabled) {
+                            return const SizedBox.shrink();
+                          }
+                          return FreeShippingProgressBar(
+                            currentTotal: productsTotal,
+                            freeShippingThreshold:
+                                settings.freeShippingThreshold,
+                          );
+                        },
+                        loading: () => const SizedBox.shrink(),
+                        error: (_, __) => const SizedBox.shrink(),
+                      ),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: padding,
+                        cacheExtent: 600,
+                        itemCount: cartItems.length,
+                        itemBuilder: (context, index) {
+                          final item = cartItems[index];
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: SizedBox(
+                                      width: 80,
+                                      height: 80,
+                                      child: AppNetworkImage(
+                                        url: item.product.imageUrl,
+                                        variant: ImageVariant.thumbnail,
                                         fit: BoxFit.cover,
-                                        memCacheHeight: 220,
-                                        placeholder: (context, url) =>
+                                        placeholder:
                                             const ShimmerImagePlaceholder(),
-                                        errorWidget:
-                                            (context, url, error) =>
-                                                const Icon(
+                                        errorWidget: const Icon(
                                           Icons.broken_image,
                                           size: 24,
                                           color: Colors.grey,
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(item.product.title,
-                                              style: const TextStyle(
-                                                  fontWeight:
-                                                      FontWeight.bold)),
-                                          if (item.selectedSize != null)
-                                            Text(
-                                                "المقاس: ${item.selectedSize} | اللون: ${item.selectedColor ?? '-'}",
-                                                style: const TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.grey)),
-                                          Text("${item.activePrice} د.أ",
-                                              style: const TextStyle(
-                                                  color: Color(0xFF0A2647),
-                                                  fontWeight:
-                                                      FontWeight.bold)),
-                                        ],
-                                      ),
-                                    ),
-                                    Row(
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        IconButton(
-                                          onPressed: () => ref
-                                              .read(cartProvider.notifier)
-                                              .decrementQuantity(item),
-                                          icon: const Icon(
-                                              Icons.remove_circle_outline,
-                                              color: Colors.red),
+                                        Text(
+                                          item.product.title,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold),
                                         ),
-                                        Text("${item.quantity}",
+                                        if (item.selectedSize != null)
+                                          Text(
+                                            "المقاس: ${item.selectedSize} | اللون: ${item.selectedColor ?? '-'}",
                                             style: const TextStyle(
-                                                fontWeight:
-                                                    FontWeight.bold)),
-                                        IconButton(
-                                          onPressed: () => ref
-                                              .read(cartProvider.notifier)
-                                              .incrementQuantity(item),
-                                          icon: const Icon(
-                                              Icons.add_circle_outline,
-                                              color: Colors.green),
+                                                fontSize: 12,
+                                                color: Colors.grey),
+                                          ),
+                                        Text(
+                                          "${item.activePrice} د.أ",
+                                          style: const TextStyle(
+                                              color: Color(0xFF0A2647),
+                                              fontWeight: FontWeight.bold),
                                         ),
                                       ],
-                                    )
-                                  ],
-                                ),
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        onPressed: () => ref
+                                            .read(cartProvider.notifier)
+                                            .decrementQuantity(item),
+                                        icon: const Icon(
+                                            Icons.remove_circle_outline,
+                                            color: Colors.red),
+                                      ),
+                                      Text(
+                                        "${item.quantity}",
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      IconButton(
+                                        onPressed: () => ref
+                                            .read(cartProvider.notifier)
+                                            .incrementQuantity(item),
+                                        icon: const Icon(
+                                            Icons.add_circle_outline,
+                                            color: Colors.green),
+                                      ),
+                                    ],
+                                  )
+                                ],
                               ),
-                            );
-                          },
-                        ),
-                        // قسم تأكيد الطلب + الإجماليات يصبح جزءاً من نفس التمرير
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(20)),
-                            boxShadow: [
-                              BoxShadow(
-                                  color: Colors.grey.withValues(alpha: 0.1),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, -5))
-                            ],
-                          ),
-                          child: Form(
-                            key: _formKey,
-                            autovalidateMode:
-                                AutovalidateMode.onUserInteraction,
-                            child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.stretch,
-                              children: [
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  );
+                }
+
+                Widget buildCheckoutFormCard() {
+                  return Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withValues(alpha: 0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                                 Row(
                                   children: [
                                     Expanded(
@@ -671,9 +710,63 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                     textAlign: TextAlign.center,
                                   ),
                                 ),
-                              ],
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                if (isDesktop) {
+                  return SingleChildScrollView(
+                    child: ResponsiveCenterWrapper(
+                      maxWidth: 1200,
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        textDirection: TextDirection.rtl,
+                        children: [
+                          Expanded(
+                            flex: 6,
+                            child: buildCartItemsColumn(
+                              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                             ),
                           ),
+                          const SizedBox(width: 24),
+                          Expanded(
+                            flex: 4,
+                            child: buildCheckoutFormCard(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        buildCartItemsColumn(
+                          padding: const EdgeInsets.all(16),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(20)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withValues(alpha: 0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, -5),
+                              )
+                            ],
+                          ),
+                          child: buildCheckoutFormCard(),
                         ),
                       ],
                     ),
@@ -780,6 +873,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         if (zones.isEmpty) return const SizedBox.shrink();
 
         final selectedName = _selectedZone?.name ?? 'اختر منطقة التوصيل';
+        final bool isRequired = zones.isNotEmpty; // ✅ إجباري إذا كانت المناطق مفعّلة
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
@@ -787,11 +881,12 @@ class _CartScreenState extends ConsumerState<CartScreen> {
             onTap: () => _openDeliveryZoneBottomSheet(zones),
             borderRadius: BorderRadius.circular(8),
             child: InputDecorator(
-              decoration: const InputDecoration(
-                labelText: 'منطقة التوصيل',
+              decoration: InputDecoration(
+                labelText: isRequired ? 'منطقة التوصيل *' : 'منطقة التوصيل', // ✅
                 hintText: 'اختر المدينة / المنطقة',
-                prefixIcon: Icon(Icons.delivery_dining),
-                border: OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.delivery_dining),
+                border: const OutlineInputBorder(),
+                errorText: isRequired && _selectedZone == null ? 'يجب اختيار منطقة التوصيل' : null, // ✅
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -800,6 +895,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     child: Text(
                       selectedName,
                       overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: _selectedZone == null && isRequired
+                            ? Colors.grey
+                            : Colors.black87,
+                      ),
                     ),
                   ),
                   const Icon(Icons.arrow_drop_down),
@@ -894,7 +994,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                 return ListTile(
                                   title: Text(zone.name),
                                   subtitle: Text(
-                                    'رسوم التوصيل: ${zone.price.toStringAsFixed(2)} د.أ',
+                                    'رسوم التوصيل: يتم الحساب حسب حجم الطلب',
+                                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                                   ),
                                   trailing: isSelected
                                       ? const Icon(Icons.check,
@@ -919,6 +1020,38 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       setState(() {
         _selectedZone = selected;
       });
+      
+      // ✅ حساب سعر الشحن الديناميكي
+      _calculateDynamicShippingCost();
+    }
+  }
+  
+  /// ✅ حساب سعر الشحن بناءً على أكبر حجم في السلة
+  Future<void> _calculateDynamicShippingCost() async {
+    final cartItems = ref.read(cartProvider);
+    if (cartItems.isEmpty || _selectedZone == null) {
+      setState(() => _dynamicDeliveryFee = 0.0);
+      return;
+    }
+    
+    try {
+      final zoneId = ShippingCalculator.zoneNameToId(_selectedZone!.name);
+      final cost = await ShippingCalculator.calculateShippingCost(
+        zoneId: zoneId,
+        items: cartItems,
+      );
+      
+      if (mounted) {
+        setState(() {
+          _dynamicDeliveryFee = cost;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _dynamicDeliveryFee = _selectedZone?.price ?? 3.0;
+        });
+      }
     }
   }
 

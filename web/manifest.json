@@ -1,11 +1,11 @@
 {
-    "name": "doctor_store",
-    "short_name": "doctor_store",
+    "name": "متجر الدكتور | Doctor Store",
+    "short_name": "متجر الدكتور",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "متجر الدكتور - بياضات وكهربائيات",
+    "background_color": "#FFFFFF",
+    "theme_color": "#0A2647",
+    "description": "متجر الدكتور | Doctor Store - بياضات، فرشات طبية، كهربائيات منزلية، وعروض يومية داخل الأردن.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
