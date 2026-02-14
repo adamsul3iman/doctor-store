@@ -1,0 +1,32 @@
+# Netlify Redirect Rules for Flutter Web Path URL Strategy
+# All routes redirect to index.html for client-side routing
+
+# Product pages
+/product/*    /index.html    200
+/p/*          /index.html    200
+
+# Category pages
+/category/*    /index.html    200
+
+# Admin pages
+/admin/*      /index.html    200
+
+# Other app pages
+/cart         /index.html    200
+/wishlist     /index.html    200
+/search       /index.html    200
+/profile      /index.html    200
+/orders       /index.html    200
+/login        /index.html    200
+/signup       /index.html    200
+/about        /index.html    200
+/contact      /index.html    200
+/privacy      /index.html    200
+/terms        /index.html    200
+/all_products /index.html    200
+/browse_all   /index.html    200
+/recently_viewed /index.html 200
+/reset-password /index.html  200
+
+# Catch-all - SPA fallback
+/*            /index.html    200

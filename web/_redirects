@@ -12,5 +12,3 @@ http://drstore.me/* https://drstore.me/:splat 301!
 /assets/* /assets/:splat 200
 /icons/* /icons/:splat 200
 
-# SPA fallback (GoRouter deep links)
-/* /index.html 200
