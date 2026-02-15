@@ -41,41 +41,39 @@ class _DiningSectionState extends State<DiningSection> {
     _woodProducts.clear();
 
     for (final p in widget.products) {
-      // نجمع أكبر قدر من المعلومات النصية لمساعدة الفلترة بالكلمات المفتاحية
+      // جمع كل النص للبحث فيه
       final fullText = (
         '${p.title} ${p.description} ${p.category} ${p.tags.join(' ')}'
       ).toLowerCase();
 
-      // تحديد أن المنتج فعلاً "طاولة سفرة" حتى لا ندخل منتجات أخرى
-      final isTable =
-          p.category == 'dining_table' ||
-          p.category == 'furniture' ||
-          fullText.contains('طاولة سفرة') ||
-          fullText.contains('طاولة سفره') ||
-          fullText.contains('طاولة طعام') ||
-          fullText.contains('طاولة اكل') ||
-          fullText.contains('سفرة') ||
-          fullText.contains('سفره') ||
-          fullText.contains('dining table') ||
-          fullText.contains('dining');
-      if (!isTable) continue;
+      // التحقق إذا كان المنتج طاولة سفرة
+      final isDiningTable = _isDiningTableProduct(p, fullText);
+      if (!isDiningTable) continue;
 
-      // فلترة حسب التصنيف المختار عند إضافة المنتج (category)
-      final isPorcelain = p.category == 'dining_table_porcelain' || 
-                          p.category == 'porcelain_dining_table';
-
-      final isWood = p.category == 'dining_table_wood' || 
-                     p.category == 'wooden_dining_table' ||
-                     p.category == 'dining_table' ||
-                     (!isPorcelain && isTable); // أي طاولة سفرة غير بورسلان
-
-      if (isPorcelain) {
+      // المنطق الصارم:
+      // - إذا فيه "بورسلان" → بورسلان مودرن
+      // - إذا فيه "خشب" → خشب كلاسيك
+      // - إذا ما فيه أي منهم → ما يظهر في أي تبويب
+      if (fullText.contains('بورسلان')) {
         _porcelainProducts.add(p);
-      } else if (isWood) {
+      } else if (fullText.contains('خشب')) {
         _woodProducts.add(p);
       }
-      // إذا لم يحتوي على أي من الكلمتين، لا يتم عرضه في أي من الفئتين
+      // ملاحظة: المنتجات بدون كلمة "بورسلان" أو "خشب" لا تُعرض هنا
     }
+  }
+
+  bool _isDiningTableProduct(Product p, String fullText) {
+    // التحقق من التصنيف أولاً
+    final category = p.category.toLowerCase();
+    if (category == 'dining_table' || category == 'furniture') return true;
+    
+    // التحقق من الكلمات المفتاحية
+    final keywords = [
+      'طاولة سفرة', 'طاولة سفره', 'طاولة طعام', 'طاولة اكل',
+      'سفرة', 'سفره', 'dining table', 'dining'
+    ];
+    return keywords.any((k) => fullText.contains(k));
   }
 
   @override

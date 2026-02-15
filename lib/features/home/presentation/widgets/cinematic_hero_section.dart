@@ -54,14 +54,23 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: 0);
+    
+    // ✅ تحسين: تعطيل Animations على Web للأداء الأفضل
+    final isWeb = kIsWeb;
     _floatingController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
-    )..repeat(reverse: true);
+    );
     _glowController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
+    );
+    
+    // ✅ تشغيل الأنيميشن فقط إذا لم يكن Web
+    if (!isWeb) {
+      _floatingController.repeat(reverse: true);
+      _glowController.repeat(reverse: true);
+    }
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startAutoPlay();

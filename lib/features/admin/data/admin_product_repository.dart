@@ -27,7 +27,8 @@ class AdminProductRepository {
     final sq = (searchQuery ?? '').trim();
     if (sq.isNotEmpty) {
       final escaped = sq.replaceAll(',', r'\\,');
-      q = q.or('title.ilike.%$escaped%,id.ilike.%$escaped%');
+      // ✅ إصلاح: البحث فقط في title لأن id من نوع UUID لا يمكن البحث فيه بـ ilike
+      q = q.ilike('title', '%$escaped%');
     }
 
     final cat = (categoryId ?? '').trim();

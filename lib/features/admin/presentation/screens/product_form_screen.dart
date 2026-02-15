@@ -2131,10 +2131,17 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             const Text("الصور والألوان",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const Divider(),
+            
+            // ✅ الصورة الرئيسية - أكبر وأوضح
+            const Text(
+              "الصورة الرئيسية:",
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 8),
             GestureDetector(
               onTap: () => _pickImage(true),
               child: Container(
-                height: 150,
+                height: 200,
                 width: double.infinity,
                 decoration: BoxDecoration(
                     color: Colors.grey[100],
@@ -2145,8 +2152,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                             Icon(Icons.add_a_photo,
-                                size: 40, color: Colors.grey),
-                            Text("الصورة الرئيسية")
+                                size: 48, color: Colors.grey),
+                            SizedBox(height: 8),
+                            Text("اضغط لإضافة صورة رئيسية",
+                                style: TextStyle(color: Colors.grey))
                           ])
                     : ClipRRect(
                         borderRadius: BorderRadius.circular(12),
@@ -2168,211 +2177,231 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                               )),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
+            
+            // ✅ معرض الصور - شبكة واضحة
             Row(
               children: [
                 const Expanded(
                   child: Text(
-                    "المعرض والألوان:",
-                    style: TextStyle(fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    "معرض الصور الإضافية:",
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                 ),
                 TextButton.icon(
                   onPressed: () => _pickImage(false),
-                  icon: const Icon(Icons.add_photo_alternate),
-                  label: const Text(
-                    "إضافة صورة",
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  icon: const Icon(Icons.add_photo_alternate, size: 20),
+                  label: Text(
+                    "إضافة (${_galleryImages.length})",
+                    style: const TextStyle(fontSize: 12),
                   ),
                 )
               ],
             ),
+            const SizedBox(height: 8),
+            
             if (_isPickingGalleryImages)
               const Padding(
                 padding: EdgeInsets.only(top: 10, bottom: 6),
                 child: LinearProgressIndicator(minHeight: 3),
               ),
+            
+            // ✅ شبكة الصور الجديدة - كل الصور مرئية
             if (_galleryImages.isNotEmpty)
-              ReorderableListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _galleryImages.length,
-                onReorder: _reorderGalleryImages,
-                itemBuilder: (context, index) {
-                  final img = _galleryImages[index];
-                  return Container(
-                    key: ValueKey(img.id),
-                    margin: const EdgeInsets.only(bottom: 10),
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
-                      borderRadius: BorderRadius.circular(8),
+              Container(
+                height: 240,
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Column(
+                  children: [
+                    // شريط التلميح
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.info_outline, size: 14, color: Colors.blue),
+                          SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              "اسحب الصور لتغيير الترتيب. اضغط على النجمة للأولوية.",
+                              style: TextStyle(fontSize: 10, color: Colors.blue),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: LayoutBuilder(
-                      builder: (context, c) {
-                        final isNarrow = c.maxWidth < 520;
-
-                        final leading = Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ReorderableDragStartListener(
-                              index: index,
-                              child: const Padding(
-                                padding: EdgeInsetsDirectional.only(end: 6),
-                                child: Icon(Icons.drag_handle, color: Colors.grey),
-                              ),
-                            ),
-                            SizedBox(
-                              width: 60,
-                              height: 60,
-                              child: img.localBytes != null
-                                  ? Image.memory(
-                                      img.localBytes!,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : AppNetworkImage(
-                                      url: img.serverUrl!,
-                                      variant: ImageVariant.thumbnail,
-                                      fit: BoxFit.cover,
-                                      placeholder: const ShimmerImagePlaceholder(),
-                                      errorWidget: const Icon(
-                                        Icons.image_not_supported_outlined,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                            ),
-                          ],
-                        );
-
-                        final colorEditor = Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: img.colorNameCtrl,
-                                onChanged: (v) {
-                                  img.colorName = v;
-                                  img.colorNameManuallyEdited = true;
-                                },
-                                decoration: const InputDecoration(
-                                  hintText: "اسم اللون",
-                                  isDense: true,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            GestureDetector(
-                              onTap: () => _showColorPicker(index),
-                              child: Container(
-                                width: 30,
-                                height: 30,
-                                decoration: BoxDecoration(
-                                  color: img.colorValue,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.grey),
-                                ),
-                              ),
-                            ),
-                          ],
-                        );
-
-                        final actions = Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Wrap(
-                              spacing: 10,
-                              runSpacing: 6,
-                              children: [
-                                IconButton(
-                                  tooltip: 'تعيين كأول صورة في المعرض',
-                                  icon: Icon(
-                                    Icons.star_outline,
-                                    color: index == 0
-                                        ? Colors.amber
-                                        : Colors.grey.withValues(alpha: 0.8),
-                                  ),
-                                  iconSize: 22,
-                                  visualDensity: VisualDensity.compact,
-                                  constraints: const BoxConstraints(
-                                    minWidth: 36,
-                                    minHeight: 36,
-                                  ),
-                                  padding: const EdgeInsets.all(6),
-                                  onPressed: () => _setGalleryImageAsFirst(index),
-                                ),
-                                IconButton(
-                                  tooltip: 'حذف',
-                                  icon: const Icon(
-                                    Icons.delete_outline,
-                                    color: Colors.red,
-                                  ),
-                                  iconSize: 22,
-                                  visualDensity: VisualDensity.compact,
-                                  constraints: const BoxConstraints(
-                                    minWidth: 36,
-                                    minHeight: 36,
-                                  ),
-                                  padding: const EdgeInsets.all(6),
-                                  onPressed: () {
-                                    setState(() {
-                                      final removed = _galleryImages.removeAt(index);
-                                      removed.dispose();
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                          ],
-                        );
-
-                        final editor = Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "اللون المرتبط:",
-                              style: TextStyle(fontSize: 10),
-                            ),
-                            const SizedBox(height: 4),
-                            colorEditor,
-                          ],
-                        );
-
-                        if (!isNarrow) {
-                          return Row(
-                            children: [
-                              leading,
-                              const SizedBox(width: 12),
-                              Expanded(child: editor),
-                              const SizedBox(width: 10),
-                              actions,
-                            ],
-                          );
-                        }
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                leading,
-                                const SizedBox(width: 10),
-                                const Spacer(),
-                                actions,
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            editor,
-                          ],
-                        );
-                      },
+                    // ✅ قائمة الصور الأفقية مع دعم السحب
+                    Expanded(
+                      child: _buildHorizontalGallery(),
                     ),
-                  );
-                },
+                  ],
+                ),
+              )
+            else
+              Container(
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: const Center(
+                  child: Text(
+                    "لا توجد صور إضافية. اضغط 'إضافة' لرفع صور.",
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                ),
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ✅ معرض الصور الأفقي - يعرض كل الصور مع دعم السحب
+  Widget _buildHorizontalGallery() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: _galleryImages.asMap().entries.map((entry) {
+          final index = entry.key;
+          final img = entry.value;
+          return _buildGalleryImageItem(img, index);
+        }).toList(),
+      ),
+    );
+  }
+
+  // ✅ عنصر صورة في المعرض - ديزاين محسّن
+  Widget _buildGalleryImageItem(_ImageWrapper img, int index) {
+    return Container(
+      width: 160,
+      margin: const EdgeInsets.only(right: 12),
+      child: Column(
+        children: [
+          // الصورة
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: index == 0 ? Colors.amber : Colors.grey[300]!,
+                  width: index == 0 ? 2 : 1,
+                ),
+              ),
+                child: ClipRRect(
+                borderRadius: BorderRadius.circular(7),
+                child: SizedBox.expand(
+                  child: img.localBytes != null
+                    ? Image.memory(
+                        img.localBytes!,
+                        fit: BoxFit.cover,
+                      )
+                    : AppNetworkImage(
+                        url: img.serverUrl!,
+                        variant: ImageVariant.thumbnail,
+                        fit: BoxFit.cover,
+                        placeholder: const ShimmerImagePlaceholder(),
+                        errorWidget: const Icon(
+                          Icons.image_not_supported_outlined,
+                          color: Colors.grey,
+                        ),
+                      ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // أدوات التحكم
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // سحب
+                ReorderableDragStartListener(
+                  index: index,
+                  child: const Icon(Icons.drag_handle, 
+                    color: Colors.grey, size: 20),
+                ),
+                // نجمة الأولوية
+                GestureDetector(
+                  onTap: () => _setGalleryImageAsFirst(index),
+                  child: Icon(
+                    index == 0 ? Icons.star : Icons.star_outline,
+                    color: index == 0 ? Colors.amber : Colors.grey,
+                    size: 20,
+                  ),
+                ),
+                // اختيار اللون
+                GestureDetector(
+                  onTap: () => _showColorPicker(index),
+                  child: Container(
+                    width: 18,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: img.colorValue,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.grey, width: 1),
+                    ),
+                  ),
+                ),
+                // حذف
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      final removed = _galleryImages.removeAt(index);
+                      removed.dispose();
+                    });
+                  },
+                  child: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.red,
+                    size: 20,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // حقل اسم اللون
+          const SizedBox(height: 4),
+          SizedBox(
+            height: 28,
+            child: TextField(
+              controller: img.colorNameCtrl,
+              onChanged: (v) {
+                img.colorName = v;
+                img.colorNameManuallyEdited = true;
+              },
+              style: const TextStyle(fontSize: 10),
+              textAlign: TextAlign.center,
+              decoration: InputDecoration(
+                hintText: "اسم اللون",
+                hintStyle: const TextStyle(fontSize: 9),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(4),
+                  borderSide: BorderSide(color: Colors.grey[300]!),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

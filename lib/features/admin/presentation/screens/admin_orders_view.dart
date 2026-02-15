@@ -98,6 +98,72 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
     }
   }
 
+  // ✅ تحسين: تخزين مؤقت للطلبات المفلترة
+  List<Map<String, dynamic>>? _cachedFilteredOrders;
+  String _lastFilterKey = '';
+
+  List<Map<String, dynamic>> _getFilteredOrders(List<Map<String, dynamic>> allOrders) {
+    // إنشاء مفتاح فريد للفلاتر الحالية
+    final filterKey = '$_statusFilter|$_dateFilter|$_searchQuery';
+    
+    // إذا لم تتغير الفلاتر، أعد النتائج المخزنة
+    if (filterKey == _lastFilterKey && _cachedFilteredOrders != null) {
+      return _cachedFilteredOrders!;
+    }
+
+    final now = DateTime.now();
+    
+    final filtered = allOrders.where((order) {
+      // 1) فلتر الحالة
+      final status = (order['status'] ?? 'new').toString();
+      if (_statusFilter != 'all' && status != _statusFilter) {
+        return false;
+      }
+
+      // 2) فلتر التاريخ - تحسين: استخدام parse مرة واحدة
+      if (_dateFilter != 'all') {
+        final rawDate = order['created_at'];
+        if (rawDate is! String) return false;
+        
+        final date = DateTime.tryParse(rawDate)?.toLocal();
+        if (date == null) return false;
+
+        final diff = now.difference(date);
+        switch (_dateFilter) {
+          case 'today':
+            if (now.year != date.year || now.month != date.month || now.day != date.day) {
+              return false;
+            }
+            break;
+          case '7d':
+            if (diff.inDays >= 7) return false;
+            break;
+          case '30d':
+            if (diff.inDays >= 30) return false;
+            break;
+        }
+      }
+
+      // 3) فلتر البحث - تحسين: toLowerCase مرة واحدة
+      if (_searchQuery.trim().isNotEmpty) {
+        final query = _searchQuery.trim().toLowerCase();
+        final name = (order['customer_name'] ?? '').toString().toLowerCase();
+        final phone = (order['customer_phone'] ?? '').toString();
+        if (!name.contains(query) && !phone.contains(query)) {
+          return false;
+        }
+      }
+
+      return true;
+    }).toList();
+
+    // تخزين النتائج
+    _cachedFilteredOrders = filtered;
+    _lastFilterKey = filterKey;
+    
+    return filtered;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -148,59 +214,8 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
 
           final allOrders = effectiveOrders;
 
-          final now = DateTime.now();
-
-          // فلترة بالحالة + التاريخ + الاسم/الهاتف
-          final filteredOrders = allOrders.where((order) {
-            // 1) فلتر الحالة
-            final status = (order['status'] ?? 'new').toString();
-            if (_statusFilter != 'all' && status != _statusFilter) {
-              return false;
-            }
-
-            // 2) فلتر التاريخ
-            if (_dateFilter != 'all') {
-              final rawDate = order['created_at'];
-              DateTime date;
-              if (rawDate is String) {
-                try {
-                  date = DateTime.parse(rawDate).toLocal();
-                } catch (_) {
-                  return false;
-                }
-              } else {
-                return false;
-              }
-
-              final diff = now.difference(date);
-              switch (_dateFilter) {
-                case 'today':
-                  final sameDay = now.year == date.year &&
-                      now.month == date.month &&
-                      now.day == date.day;
-                  if (!sameDay) return false;
-                  break;
-                case '7d':
-                  if (diff.inDays >= 7) return false;
-                  break;
-                case '30d':
-                  if (diff.inDays >= 30) return false;
-                  break;
-              }
-            }
-
-            // 3) فلتر البحث بالاسم أو الهاتف
-            if (_searchQuery.trim().isNotEmpty) {
-              final query = _searchQuery.trim();
-              final name = (order['customer_name'] ?? '').toString();
-              final phone = (order['customer_phone'] ?? '').toString();
-              if (!name.contains(query) && !phone.contains(query)) {
-                return false;
-              }
-            }
-
-            return true;
-          }).toList();
+          // ✅ استخدام الدالة المُحسّنة للفلترة مع التخزين المؤقت
+          final filteredOrders = _getFilteredOrders(allOrders);
 
           if (filteredOrders.isEmpty) {
             return Padding(

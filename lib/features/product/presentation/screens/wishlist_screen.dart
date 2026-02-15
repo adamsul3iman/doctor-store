@@ -8,7 +8,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:doctor_store/shared/utils/wishlist_manager.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_card.dart';
-import 'package:doctor_store/features/product/presentation/widgets/product_card_skeleton.dart';
 import 'package:doctor_store/features/cart/application/cart_manager.dart';
 import 'package:doctor_store/shared/services/analytics_service.dart';
 import 'package:doctor_store/shared/widgets/quick_nav_bar.dart';
@@ -22,6 +21,9 @@ class WishlistScreen extends ConsumerStatefulWidget {
 }
 
 class _WishlistScreenState extends ConsumerState<WishlistScreen> {
+  // ✅ تخزين مؤقت للمنتجات لتجنب وميض الواجهة
+  List<Product>? _cachedProducts;
+
   @override
   void initState() {
     super.initState();
@@ -40,6 +42,112 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
         .inFilter('id', ids);
 
     return data.map((e) => Product.fromJson(e)).toList();
+  }
+
+  // ✅ بناء شبكة المنتجات مع تحسين الأداء
+  Widget _buildProductsGrid(List<Product> products, int itemCount) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      sliver: SliverLayoutBuilder(
+        builder: (context, constraints) {
+          final crossAxisCount = ResponsiveLayout.gridCountForWidth(
+            constraints.crossAxisExtent,
+            desiredItemWidth: 120,
+            minCount: 3,
+            maxCount: 5,
+          );
+          final isCompact = crossAxisCount >= 3;
+          const spacing = 12.0;
+          final mainAxisExtent = ResponsiveLayout.productCardMainAxisExtent(
+            constraints.crossAxisExtent,
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: spacing,
+            isCompact: isCompact,
+          );
+
+          return SliverGrid(
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              mainAxisExtent: mainAxisExtent,
+              crossAxisSpacing: spacing,
+              mainAxisSpacing: spacing,
+            ),
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final product = products[index];
+                return Stack(
+                  children: [
+                    ProductCard(
+                      product: product,
+                      isCompact: isCompact,
+                    ),
+                    // زر إضافة سريع للسلة
+                    Positioned(
+                      bottom: 8,
+                      right: 8,
+                      child: GestureDetector(
+                        onTap: () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          ref.read(cartProvider.notifier).addItem(product);
+                          await AnalyticsService.instance.trackEvent('wishlist_add_to_cart');
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text("تمت إضافة المنتج إلى السلة 🛒"),
+                              duration: Duration(seconds: 1),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.95),
+                            borderRadius: BorderRadius.circular(999),
+                            boxShadow: const [
+                              BoxShadow(color: Colors.black12, blurRadius: 4),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.add_shopping_cart, size: 16, color: Color(0xFF0A2647)),
+                              SizedBox(width: 4),
+                              Text('للسلة', style: TextStyle(fontSize: 11)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    // زر حذف سريع
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: GestureDetector(
+                        onTap: () {
+                          ref.read(wishlistProvider.notifier).toggleWishlist(product.id);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("تم الحذف من المفضلة 💔"), duration: Duration(seconds: 1)),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            shape: BoxShape.circle,
+                            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                          ),
+                          child: const Icon(Icons.close, size: 16, color: Colors.grey),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+              childCount: products.length,
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -176,45 +284,21 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
               : FutureBuilder<List<Product>>(
                   future: _fetchWishlistProducts(favIds),
                   builder: (context, snapshot) {
+                    // ✅ تحسين: تخزين مؤقت للـ snapshot لتجنب وميض الواجهة
+                    if (snapshot.connectionState == ConnectionState.waiting && _cachedProducts != null) {
+                      return _buildProductsGrid(_cachedProducts!, favIds.length);
+                    }
+                    
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return SliverPadding(
-                        padding: const EdgeInsets.all(16),
-                        sliver: SliverLayoutBuilder(
-                          builder: (context, constraints) {
-                            final crossAxisCount = ResponsiveLayout.gridCountForWidth(
-                              constraints.crossAxisExtent,
-                              desiredItemWidth: 120,
-                              minCount: 3,
-                              maxCount: 5,
-                            );
-                            final isCompact = crossAxisCount >= 3;
-                            const spacing = 12.0;
-                            final mainAxisExtent = ResponsiveLayout.productCardMainAxisExtent(
-                              constraints.crossAxisExtent,
-                              crossAxisCount: crossAxisCount,
-                              crossAxisSpacing: spacing,
-                              isCompact: isCompact,
-                            );
-
-                            return SliverGrid(
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: crossAxisCount,
-                                mainAxisExtent: mainAxisExtent,
-                                crossAxisSpacing: spacing,
-                                mainAxisSpacing: spacing,
-                              ),
-                              delegate: SliverChildBuilderDelegate(
-                                (_, __) => const ProductCardSkeleton(),
-                                childCount: favIds.length,
-                              ),
-                            );
-                          },
+                      return const SliverPadding(
+                        padding: EdgeInsets.all(16),
+                        sliver: SliverToBoxAdapter(
+                          child: Center(child: CircularProgressIndicator()),
                         ),
                       );
                     }
 
                     if (snapshot.hasError) {
-                      // لا نعرض تفاصيل الخطأ للمستخدم، فقط نطبعها في الكونسول ونعطي رسالة لطيفة
                       debugPrint('Wishlist products load error: ${snapshot.error}');
                       return const SliverFillRemaining(
                         child: Center(child: Text("تعذر تحميل المفضلة الآن، حاول مرة أخرى لاحقاً")),
@@ -222,113 +306,13 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                     }
 
                     final products = snapshot.data ?? [];
+                    _cachedProducts = products; // ✅ تخزين مؤقت
 
                     if (products.isEmpty) {
-                      // حالة نادرة: الآيديات موجودة لكن المنتجات حذفت من السيرفر
                       return SliverFillRemaining(child: _buildEmptyState());
                     }
 
-                    return SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                      sliver: SliverLayoutBuilder(
-                        builder: (context, constraints) {
-                          final crossAxisCount = ResponsiveLayout.gridCountForWidth(
-                            constraints.crossAxisExtent,
-                            desiredItemWidth: 120,
-                            minCount: 3,
-                            maxCount: 5,
-                          );
-                          final isCompact = crossAxisCount >= 3;
-                          const spacing = 12.0;
-                          final mainAxisExtent = ResponsiveLayout.productCardMainAxisExtent(
-                            constraints.crossAxisExtent,
-                            crossAxisCount: crossAxisCount,
-                            crossAxisSpacing: spacing,
-                            isCompact: isCompact,
-                          );
-
-                          return SliverGrid(
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: crossAxisCount,
-                              mainAxisExtent: mainAxisExtent,
-                              crossAxisSpacing: spacing,
-                              mainAxisSpacing: spacing,
-                            ),
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                                return Stack(
-                                  children: [
-                                    ProductCard(
-                                      product: products[index],
-                                      isCompact: isCompact,
-                                    ),
-                                // زر إضافة سريع للسلة في الأسفل
-                                Positioned(
-                                  bottom: 8,
-                                  right: 8,
-                                  child: GestureDetector(
-                                    onTap: () async {
-                                      final messenger = ScaffoldMessenger.of(context);
-                                      ref.read(cartProvider.notifier).addItem(products[index]);
-                                      await AnalyticsService.instance.trackEvent('wishlist_add_to_cart');
-                                      messenger.showSnackBar(
-                                        const SnackBar(
-                                          content: Text("تمت إضافة المنتج إلى السلة 🛒"),
-                                          duration: Duration(seconds: 1),
-                                        ),
-                                      );
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.95),
-                                        borderRadius: BorderRadius.circular(999),
-                                        boxShadow: const [
-                                          BoxShadow(color: Colors.black12, blurRadius: 4),
-                                        ],
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: const [
-                                          Icon(Icons.add_shopping_cart, size: 16, color: Color(0xFF0A2647)),
-                                          SizedBox(width: 4),
-                                          Text('للسلة', style: TextStyle(fontSize: 11)),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                // زر حذف سريع
-                                Positioned(
-                                  top: 8,
-                                  left: 8,
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      ref.read(wishlistProvider.notifier).toggleWishlist(products[index].id);
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text("تم الحذف من المفضلة 💔"), duration: Duration(seconds: 1)),
-                                      );
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.all(6),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.9),
-                                        shape: BoxShape.circle,
-                                        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
-                                      ),
-                                      child: const Icon(Icons.close, size: 16, color: Colors.grey),
-                                    ),
-                                  ),
-                                ),
-                                  ],
-                                );
-                              },
-                              childCount: products.length,
-                            ),
-                          );
-                        },
-                      ),
-                    );
+                    return _buildProductsGrid(products, products.length);
                   },
                 ),
 

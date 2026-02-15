@@ -32,48 +32,65 @@ class ProductCardSkeleton extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // 2. مربعات مكان النصوص
             Expanded(
               flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // سطر طويل مكان العنوان
-                    Container(
-                      height: 14,
-                      width: double.infinity,
-                      color: baseColor,
-                    ),
-                    const SizedBox(height: 6),
-                    // سطر قصير مكان الفئة
-                    Container(
-                      height: 10,
-                      width: 70,
-                      color: baseColor,
-                    ),
-                    // سطر مكان السعر ودائرة مكان زر السلة
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final h = constraints.maxHeight;
+                  final pad = h < 60 ? 6.0 : 12.0;
+                  final contentH = (h - (pad * 2)).clamp(0.0, double.infinity);
+                  final titleH = (contentH * 0.26).clamp(6.0, 14.0);
+                  final categoryH = (contentH * 0.18).clamp(5.0, 10.0);
+                  final gap = (contentH * 0.08).clamp(1.0, 6.0);
+                  final iconSize = (contentH * 0.34).clamp(10.0, 20.0);
+
+                  return Padding(
+                    padding: EdgeInsets.all(pad),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Flexible(
-                          child: Container(height: 18, width: 45, color: baseColor),
-                        ),
                         Container(
-                          height: 20,
-                          width: 20,
-                          decoration: const BoxDecoration(
-                            color: baseColor,
-                            shape: BoxShape.circle,
+                          height: titleH,
+                          width: double.infinity,
+                          color: baseColor,
+                        ),
+                        SizedBox(height: gap),
+                        Container(
+                          height: categoryH,
+                          width: 70,
+                          color: baseColor,
+                        ),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.bottomLeft,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Flexible(
+                                  child: Container(
+                                    height: (contentH * 0.30).clamp(8.0, 18.0),
+                                    width: 45,
+                                    color: baseColor,
+                                  ),
+                                ),
+                                Container(
+                                  height: iconSize,
+                                  width: iconSize,
+                                  decoration: const BoxDecoration(
+                                    color: baseColor,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
           ],

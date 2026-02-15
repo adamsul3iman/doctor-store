@@ -30,17 +30,17 @@ RETURNS TRIGGER AS $$
 DECLARE
   v_is_duplicate BOOLEAN;
 BEGIN
-    -- Check if this is a duplicate visit within 30 minutes for same page
-    v_is_duplicate := has_recent_visit(
-      NEW.visitor_id,
-      NEW.page_url,
-      30
-    );
+    -- Only site_visits has visitor_id/page_url (avoid referencing fields that don't exist on other tables)
+    IF TG_TABLE_NAME = 'site_visits' THEN
+        -- Check if this is a duplicate visit within 30 minutes for same page
+        v_is_duplicate := has_recent_visit(
+          NEW.visitor_id,
+          NEW.page_url,
+          30
+        );
 
-    -- Only count if NOT a duplicate
-    IF NOT v_is_duplicate THEN
-        -- عند إضافة زيارة جديدة فريدة
-        IF TG_TABLE_NAME = 'site_visits' THEN
+        -- Only count if NOT a duplicate
+        IF NOT v_is_duplicate THEN
             INSERT INTO daily_analytics (date, total_visits, unique_visitors)
             VALUES (CURRENT_DATE, 1, 1)
             ON CONFLICT (date) DO UPDATE SET
@@ -50,12 +50,15 @@ BEGIN
     END IF;
     
     -- For events (orders), always count regardless of duplication
-    IF TG_TABLE_NAME = 'events' AND NEW.name = 'purchase' THEN
+    -- Note: Only check NEW.name when TG_TABLE_NAME is 'events'
+    IF TG_TABLE_NAME = 'events' THEN
+      IF NEW.name = 'purchase' THEN
         INSERT INTO daily_analytics (date, total_orders, total_revenue)
         VALUES (CURRENT_DATE, 1, COALESCE((NEW.props->>'revenue')::decimal, 0))
         ON CONFLICT (date) DO UPDATE SET
             total_orders = daily_analytics.total_orders + 1,
             total_revenue = daily_analytics.total_revenue + COALESCE((NEW.props->>'revenue')::decimal, 0);
+      END IF;
     END IF;
     
     -- For product views, always count (they have their own unique logic per product)

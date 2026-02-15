@@ -736,7 +736,7 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                 centerTitle: true,
                 iconTheme: const IconThemeData(color: Color(0xFF0A2647)),
                 bottom: PreferredSize(
-                  preferredSize: const Size.fromHeight(52),
+                  preferredSize: const Size.fromHeight(64), // زيادة الارتفاع لتجنب overflow
                   child: Material(
                     color: Colors.white,
                     elevation: 0,
@@ -747,23 +747,27 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                       unselectedLabelColor: Colors.grey[600],
                       labelStyle: const TextStyle(
                         fontWeight: FontWeight.w700,
+                        fontSize: 12, // تصغير الخط قليلاً
+                      ),
+                      unselectedLabelStyle: const TextStyle(
+                        fontSize: 12,
                       ),
                       tabs: const [
                         Tab(
-                          icon: Icon(Icons.chat_outlined, size: 18),
-                          text: 'التواصل وصاحب المتجر',
+                          icon: Icon(Icons.chat_outlined, size: 16),
+                          text: 'التواصل',
                         ),
                         Tab(
-                          icon: Icon(Icons.description_outlined, size: 18),
-                          text: 'الصفحات الثابتة',
+                          icon: Icon(Icons.description_outlined, size: 16),
+                          text: 'الصفحات',
                         ),
                         Tab(
-                          icon: Icon(Icons.search, size: 18),
-                          text: 'SEO الموقع',
+                          icon: Icon(Icons.search, size: 16),
+                          text: 'SEO',
                         ),
                         Tab(
-                          icon: Icon(Icons.home_outlined, size: 18),
-                          text: 'الصفحة الرئيسية',
+                          icon: Icon(Icons.home_outlined, size: 16),
+                          text: 'الرئيسية',
                         ),
                       ],
                     ),
@@ -773,6 +777,7 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
             ];
           },
           body: TabBarView(
+            physics: const NeverScrollableScrollPhysics(), // ✅ منع TabBarView من إنشاء ScrollPosition منفصلة
             children: [
               _buildContactAndOwnerTab(),
               _buildStaticPagesTab(),
