@@ -60,12 +60,14 @@ class _DiningSectionState extends State<DiningSection> {
           fullText.contains('dining');
       if (!isTable) continue;
 
-      // فلترة صارمة للبورسلان: يجب أن يحتوي على كلمة "بورسلان" بالعربية
-      final isPorcelain = fullText.contains('بورسلان');
+      // فلترة حسب التصنيف المختار عند إضافة المنتج (category)
+      final isPorcelain = p.category == 'dining_table_porcelain' || 
+                          p.category == 'porcelain_dining_table';
 
-      // فلترة الخشب: أي طاولة سفرة ما هي بورسلان تعتبر خشب (الافتراضي)
-      // هذا يضمن ظهور المنتجات حتى لو ما كتب فيها "خشب" صراحةً
-      final isWood = !isPorcelain;
+      final isWood = p.category == 'dining_table_wood' || 
+                     p.category == 'wooden_dining_table' ||
+                     p.category == 'dining_table' ||
+                     (!isPorcelain && isTable); // أي طاولة سفرة غير بورسلان
 
       if (isPorcelain) {
         _porcelainProducts.add(p);
