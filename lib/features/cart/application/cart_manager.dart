@@ -478,8 +478,9 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     );
 
     final url = Uri.parse("https://wa.me/$storePhone?text=${Uri.encodeComponent(msg)}");
+    LaunchMode mode = kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication;
     if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
+      await launchUrl(url, mode: mode);
       // عند نجاح الإطلاق يمكننا إفراغ السلة فوراً
       clearCart();
     } else {
@@ -622,8 +623,12 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     final url = Uri.parse(
       "https://wa.me/$cleanPhone?text=${Uri.encodeComponent(msg)}",
     );
+    
+    // For web, use platform-specific launch mode
+    LaunchMode mode = kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication;
+    
     if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
+      await launchUrl(url, mode: mode);
     } else {
       throw Exception('Cannot launch WhatsApp');
     }
@@ -761,8 +766,9 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     final url = Uri.parse(
       "https://wa.me/$cleanPhone?text=${Uri.encodeComponent(msg)}",
     );
+    LaunchMode mode = kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication;
     if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
+      await launchUrl(url, mode: mode);
     } else {
       throw Exception('Cannot launch WhatsApp');
     }

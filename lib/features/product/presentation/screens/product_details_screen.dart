@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/foundation.dart';
 
 // الموديلات والخدمات
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
@@ -98,6 +99,11 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
       'title': widget.product.title,
       'category': widget.product.category,
     });
+
+    AnalyticsService.instance.trackProductView(
+      productId: widget.product.id,
+      categoryId: widget.product.category,
+    );
     
     final Set<String> uniqueImages = {};
     uniqueImages.add(widget.product.originalImageUrl);
@@ -2270,8 +2276,10 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     final encoded = Uri.encodeComponent(buffer.toString());
     final url = Uri.parse('https://wa.me/$phone?text=$encoded');
 
+    LaunchMode mode = kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication;
+
     if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
+      await launchUrl(url, mode: mode);
     } else {
       if (!mounted) return;
       AppNotifier.showError(context, 'تعذر فتح الواتساب على هذا الجهاز.');
