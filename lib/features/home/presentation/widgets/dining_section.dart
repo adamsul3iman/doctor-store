@@ -63,8 +63,9 @@ class _DiningSectionState extends State<DiningSection> {
       // فلترة صارمة للبورسلان: يجب أن يحتوي على كلمة "بورسلان" بالعربية
       final isPorcelain = fullText.contains('بورسلان');
 
-      // فلترة صارمة للخشب: يجب أن يحتوي على كلمة "خشب" بالعربية
-      final isWood = fullText.contains('خشب');
+      // فلترة الخشب: أي طاولة سفرة ما هي بورسلان تعتبر خشب (الافتراضي)
+      // هذا يضمن ظهور المنتجات حتى لو ما كتب فيها "خشب" صراحةً
+      final isWood = !isPorcelain;
 
       if (isPorcelain) {
         _porcelainProducts.add(p);
