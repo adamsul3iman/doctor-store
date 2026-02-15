@@ -55,6 +55,35 @@ class AnalyticsService {
   // تتبع زيارات الموقع
   // ============================================
 
+  /// التحقق من وجود زيارة حديثة لنفس الصفحة خلال فترة زمنية
+  Future<bool> _hasRecentVisit(
+    String pageUrl, {
+    int windowMinutes = 30,
+  }) async {
+    try {
+      final client = _getClientOrNull();
+      if (client == null) return false;
+
+      final visitorId = getVisitorId();
+      final windowTime = DateTime.now().subtract(
+        Duration(minutes: windowMinutes),
+      );
+
+      final response = await client
+          .from('site_visits')
+          .select('id')
+          .eq('visitor_id', visitorId)
+          .eq('page_url', pageUrl)
+          .gt('session_start', windowTime.toIso8601String())
+          .limit(1);
+
+      return response.isNotEmpty;
+    } catch (e) {
+      // In case of error, allow the visit to be recorded
+      return false;
+    }
+  }
+
   Future<void> trackSiteVisit({
     required String pageUrl,
     String? referrer,
@@ -66,6 +95,13 @@ class AnalyticsService {
     try {
       final client = _getClientOrNull();
       if (client == null) return;
+
+      // التحقق من عدم وجود زيارة مكررة خلال 30 دقيقة
+      final isDuplicate = await _hasRecentVisit(pageUrl, windowMinutes: 30);
+      if (isDuplicate) {
+        // تجاهل الزيارة المكررة
+        return;
+      }
 
       final user = client.auth.currentUser;
       await client.from('site_visits').insert({
