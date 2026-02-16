@@ -13,12 +13,13 @@ import 'app/app.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // BUILD_VERSION: 2 - Force clean build for URL fix
   // 1. إعداد الويب - Path URL Strategy لإزالة الـ # من الروابط
   if (kIsWeb) {
     MetaSEO().config();
     // تفعيل Path URL Strategy لروابط نظيفة: drstore.me/product/name
     await SystemChannels.platform.invokeMethod<void>('SystemNavigator.setUrlStrategy', 'path');
-    debugPrint('URL Strategy set to path');
+    debugPrint('URL Strategy set to path v2');
   }
 
   // 2. تحميل ملف الإعدادات (مع تقليل الضوضاء في الإصدار النهائي)
