@@ -381,7 +381,16 @@
   </style>
 
 
-  <script src="flutter.js?v=2" defer></script>
+  <!-- Flutter Build Config - Required for flutter.js loader -->
+  <script>
+    window._flutter = window._flutter || {};
+    window._flutter.buildConfig = {
+      engineRevision: "unknown",
+      buildNumber: "1",
+      buildVersion: "1.0.0"
+    };
+  </script>
+  <script src="flutter.js?v=3" defer></script>
 
   <script>
     window.addEventListener('load', function () {
