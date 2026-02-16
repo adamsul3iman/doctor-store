@@ -32,7 +32,8 @@ import 'package:doctor_store/app/widgets/admin_guard.dart';
 /// يستخدم Path URL Strategy للويب لإزالة الـ # من الروابط
 /// مثال: drstore.me/product/product-name بدلاً من drstore.me/#/product/product-name
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/',
+  // استخدام الموقع الحالي من المتصفح للويب، أو '/' للأجهزة الأخرى
+  initialLocation: kIsWeb ? null : '/',
   // ✅ تفعيل تحديث URL في المتصفح (روابط نظيفة بدون #)
   routerNeglect: false,
   errorBuilder: (context, state) => const Scaffold(
