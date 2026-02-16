@@ -390,7 +390,13 @@
       buildVersion: "1.0.0"
     };
   </script>
-  <script src="flutter.js?v=3" defer></script>
+  <script>
+    // Force fresh load of flutter.js with timestamp
+    var script = document.createElement('script');
+    script.src = 'flutter.js?v=' + Date.now();
+    script.defer = true;
+    document.head.appendChild(script);
+  </script>
 
   <script>
     window.addEventListener('load', function () {
