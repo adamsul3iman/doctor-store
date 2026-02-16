@@ -1,4 +1,4 @@
-const CACHE_NAME = 'doctor-store-cache-v1';
+const CACHE_NAME = 'doctor-store-cache-v2';
 
 // Only cache essential static files
 const STATIC_ASSETS = [
