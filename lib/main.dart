@@ -17,7 +17,8 @@ Future<void> main() async {
   if (kIsWeb) {
     MetaSEO().config();
     // تفعيل Path URL Strategy لروابط نظيفة: drstore.me/product/name
-    SystemChannels.platform.invokeMethod<void>('SystemNavigator.setUrlStrategy', 'path');
+    await SystemChannels.platform.invokeMethod<void>('SystemNavigator.setUrlStrategy', 'path');
+    debugPrint('URL Strategy set to path');
   }
 
   // 2. تحميل ملف الإعدادات (مع تقليل الضوضاء في الإصدار النهائي)
