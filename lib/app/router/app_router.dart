@@ -33,8 +33,8 @@ import 'package:doctor_store/app/widgets/admin_guard.dart';
 /// مثال: drstore.me/product/product-name بدلاً من drstore.me/#/product/product-name
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
-  // استخدام Path URL Strategy للويب (إزالة # من الروابط)
-  routerNeglect: kIsWeb,
+  // ✅ تفعيل تحديث URL في المتصفح (روابط نظيفة بدون #)
+  routerNeglect: false,
   errorBuilder: (context, state) => const Scaffold(
     body: Center(child: Text('صفحة غير موجودة')),
   ),

@@ -64,6 +64,8 @@ class AppNetworkImage extends StatelessWidget {
       filterQuality: filterQuality,
       memCacheWidth: cacheSize.width,
       memCacheHeight: cacheSize.height,
+      maxHeightDiskCache: cacheSize.height,
+      maxWidthDiskCache: cacheSize.width,
       fadeInDuration: fadeInDuration,
       fadeOutDuration: fadeOutDuration,
       placeholder: (context, _) => placeholder ?? const ShimmerImagePlaceholder(),
