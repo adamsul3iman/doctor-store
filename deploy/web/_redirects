@@ -1,0 +1,14 @@
+# Force canonical domain (no www) + https
+http://www.drstore.me/* https://drstore.me/:splat 301!
+https://www.drstore.me/* https://drstore.me/:splat 301!
+http://drstore.me/* https://drstore.me/:splat 301!
+
+# Allow search engines to fetch these exact files
+/robots.txt /robots.txt 200
+/sitemap.xml /sitemap.xml 200
+/manifest.json /manifest.json 200
+
+# Ensure assets are served (Flutter web)
+/assets/* /assets/:splat 200
+/icons/* /icons/:splat 200
+
