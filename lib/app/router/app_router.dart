@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 
 import 'package:doctor_store/core/theme/app_theme.dart';
 import 'package:doctor_store/features/home/presentation/screens/home_screen_v2.dart';
@@ -36,7 +38,11 @@ final GoRouter appRouter = GoRouter(
   routerNeglect: false,
   // ضمان أن الـ deep link على الويب يبدأ من نفس مسار المتصفح حتى لو تم تقديم index.html عبر rewrite.
   initialLocation: kIsWeb
-      ? (Uri.base.path.isEmpty ? '/' : Uri.base.path) + (Uri.base.hasQuery ? '?${Uri.base.query}' : '')
+      ? (() {
+          final path = html.window.location.pathname ?? '/';
+          final query = html.window.location.search ?? '';
+          return path.isEmpty ? '/' : path + (query.isNotEmpty ? query : '');
+        })()
       : '/',
   errorBuilder: (context, state) => const Scaffold(
     body: Center(child: Text('صفحة غير موجودة')),
