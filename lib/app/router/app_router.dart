@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 
 import 'package:doctor_store/core/theme/app_theme.dart';
 import 'package:doctor_store/features/home/presentation/screens/home_screen_v2.dart';
@@ -33,6 +35,10 @@ import 'package:doctor_store/app/widgets/admin_guard.dart';
 final GoRouter appRouter = GoRouter(
   // ✅ تفعيل تحديث URL في المتصفح (روابط نظيفة بدون #)
   routerNeglect: false,
+  // اقرأ المسار الحالي من المتصفح مباشرة
+  initialLocation: html.window.location.pathname?.isEmpty == true 
+      ? '/' 
+      : html.window.location.pathname,
   errorBuilder: (context, state) => const Scaffold(
     body: Center(child: Text('صفحة غير موجودة')),
   ),
