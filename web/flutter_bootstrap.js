@@ -13,6 +13,15 @@
 (function() {
   'use strict';
 
+  // Required by flutter.js loader. Without this, FlutterLoader.load throws.
+  // Keep minimal values; engine/build details are not required for release loading.
+  window._flutter = window._flutter || {};
+  window._flutter.buildConfig = window._flutter.buildConfig || {
+    engineRevision: 'unknown',
+    buildNumber: '1',
+    buildVersion: '1.0.0',
+  };
+
   // Configuration
   const config = {
     // Base path for Flutter assets
@@ -141,8 +150,8 @@
       log('Flutter engine loaded');
       
       // Configure Flutter engine for WASM
-      if (window.flutterLoader) {
-        window.flutterLoader.loadEntrypoint({
+      if (window._flutter && window._flutter.loader) {
+        window._flutter.loader.loadEntrypoint({
           serviceWorker: {
             serviceWorkerVersion: null, // We handle this ourselves
           },
@@ -180,8 +189,8 @@
     script.async = true;
     
     script.onload = function() {
-      if (window.flutterLoader) {
-        window.flutterLoader.loadEntrypoint({
+      if (window._flutter && window._flutter.loader) {
+        window._flutter.loader.loadEntrypoint({
           onEntrypointLoaded: function(engineInitializer) {
             engineInitializer.initializeEngine().then(function(appRunner) {
               return appRunner.runApp();
