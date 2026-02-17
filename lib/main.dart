@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:meta_seo/meta_seo.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -18,8 +18,8 @@ Future<void> main() async {
   if (kIsWeb) {
     MetaSEO().config();
     // تفعيل Path URL Strategy لروابط نظيفة: drstore.me/product/name
-    await SystemChannels.platform.invokeMethod<void>('SystemNavigator.setUrlStrategy', 'path');
-    debugPrint('URL Strategy set to path v2');
+    usePathUrlStrategy();
+    debugPrint('URL Strategy set to path');
   }
 
   // 2. تحميل ملف الإعدادات (مع تقليل الضوضاء في الإصدار النهائي)
