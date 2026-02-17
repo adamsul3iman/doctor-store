@@ -381,32 +381,7 @@
   </style>
 
 
-  <!-- Flutter Build Config - Required for flutter.js loader -->
-  <script>
-    window._flutter = window._flutter || {};
-    window._flutter.buildConfig = {
-      engineRevision: "unknown",
-      buildNumber: "1",
-      buildVersion: "1.0.0"
-    };
-  </script>
-  <script src="flutter.js"></script>
-
-  <script>
-    window.addEventListener('load', function () {
-      if (window._flutter && window._flutter.loader) {
-        window._flutter.loader.loadEntrypoint({
-          onEntrypointLoaded: function (engineInitializer) {
-            engineInitializer.initializeEngine().then(function (appRunner) {
-              return appRunner.runApp();
-            });
-          }
-        });
-      } else {
-        console.error('[Flutter] flutter.js loaded but _flutter.loader is not available.');
-      }
-    });
-  </script>
+  <script src="flutter_bootstrap.js" async></script>
 
   <!-- Service Worker Registration -->
   <script>
@@ -416,13 +391,7 @@
           console.log('[SW] Skipped registration on localhost.');
           return;
         }
-        navigator.serviceWorker.register('/service-worker.js')
-          .then((registration) => {
-            console.log('[SW] Service Worker registered with scope:', registration.scope);
-          })
-          .catch((err) => {
-            console.log('[SW] Service Worker registration failed:', err);
-          });
+        return;
       });
     }
   </script>
