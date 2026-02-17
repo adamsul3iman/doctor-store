@@ -19,4 +19,11 @@ flutter pub get
 echo "Building for web..."
 flutter build web --release
 
+# Ensure PWA/static files are present in the build output (Vercel serves build/web)
+cp -f web/manifest.json build/web/manifest.json
+cp -f web/favicon.png build/web/favicon.png
+cp -f web/service-worker.js build/web/service-worker.js
+mkdir -p build/web/icons
+cp -f web/icons/* build/web/icons/ 2>/dev/null || true
+
 echo "Build complete!"
