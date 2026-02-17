@@ -37,7 +37,7 @@
       ]
     },
     {
-      "source": "/flutter_service_worker.js",
+      "source": "/service-worker.js",
       "headers": [
         {
           "key": "Cache-Control",
