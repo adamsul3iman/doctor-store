@@ -408,6 +408,9 @@
     window.addEventListener('load', function () {
       if (window._flutter && window._flutter.loader) {
         window._flutter.loader.loadEntrypoint({
+          serviceWorker: {
+            serviceWorkerVersion: null
+          },
           onEntrypointLoaded: function (engineInitializer) {
             engineInitializer.initializeEngine().then(function (appRunner) {
               return appRunner.runApp();
