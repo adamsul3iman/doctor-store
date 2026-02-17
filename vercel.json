@@ -2,13 +2,26 @@
   "buildCommand": "chmod +x build.sh && ./build.sh",
   "outputDirectory": "build/web",
   "installCommand": "",
-  "routes": [
+  "rewrites": [
     {
-      "handle": "filesystem"
+      "source": "/manifest.json",
+      "destination": "/manifest.json"
     },
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/flutter_service_worker.js",
+      "destination": "/flutter_service_worker.js"
+    },
+    {
+      "source": "/assets/(.*)",
+      "destination": "/assets/$1"
+    },
+    {
+      "source": "/(.*)\\.(wasm|css|png|jpg|jpeg|webp|svg|ico|js|json)",
+      "destination": "/$1.$2"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
