@@ -4,7 +4,7 @@
   "installCommand": "",
   "rewrites": [
     {
-      "source": "/((?!.*\\.).*)",
+      "source": "/((?!.*\\.(js|json|css|png|jpg|jpeg|webp|svg|ico|wasm|html|txt|xml)).*)",
       "destination": "/index.html"
     }
   ],
