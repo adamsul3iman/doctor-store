@@ -2,24 +2,42 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:meta_seo/meta_seo.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:timeago/timeago.dart' as timeago;
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 
 import 'app/app.dart';
 
 Future<void> main() async {
+  // 0. تفعيل Path URL Strategy فوراً - قبل ANYTHING else
+  // هذا يجب أن يكون أول سطر يتنفذ
+  if (kIsWeb) {
+    setUrlStrategy(PathUrlStrategy());
+  }
+  
   WidgetsFlutterBinding.ensureInitialized();
 
-  // BUILD_VERSION: 2 - Force clean build for URL fix
-  // 1. إعداد الويب - Path URL Strategy لإزالة الـ # من الروابط
+  // BUILD_VERSION: 5 - Direct PathUrlStrategy
   if (kIsWeb) {
     MetaSEO().config();
-    // تفعيل Path URL Strategy لروابط نظيفة: drstore.me/product/name
-    usePathUrlStrategy();
-    debugPrint('URL Strategy set to path');
+    debugPrint('URL Strategy set to PathUrlStrategy directly');
+  }
+
+  // 0. تنظيف Service Worker القديم إن وجد (غير blocking)
+  if (kIsWeb) {
+    // لا نستخدم await هنا حتى لا نؤخر تهيئة التطبيق
+    html.window.navigator.serviceWorker?.getRegistrations().then((regs) {
+      for (var reg in regs) {
+        reg.unregister();
+      }
+      debugPrint('Service Workers unregistered: ${regs.length}');
+    }).catchError((e) {
+      debugPrint('SW cleanup error: $e');
+    });
   }
 
   // 2. تحميل ملف الإعدادات (مع تقليل الضوضاء في الإصدار النهائي)
