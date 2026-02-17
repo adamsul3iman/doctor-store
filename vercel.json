@@ -2,10 +2,13 @@
   "buildCommand": "chmod +x build.sh && ./build.sh",
   "outputDirectory": "build/web",
   "installCommand": "",
-  "rewrites": [
+  "routes": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ],
   "headers": [
