@@ -81,5 +81,4 @@ flutter:
   # We will configure assets later if we need local images (like a logo)
   assets:
     - assets/images/
-    - assets/env.txt
     - web/icons/Icon-512.png
