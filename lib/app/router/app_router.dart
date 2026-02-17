@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:doctor_store/core/theme/app_theme.dart';
@@ -33,6 +34,10 @@ import 'package:doctor_store/app/widgets/admin_guard.dart';
 final GoRouter appRouter = GoRouter(
   // ✅ تفعيل تحديث URL في المتصفح (روابط نظيفة بدون #)
   routerNeglect: false,
+  // ضمان أن الـ deep link على الويب يبدأ من نفس مسار المتصفح حتى لو تم تقديم index.html عبر rewrite.
+  initialLocation: kIsWeb
+      ? (Uri.base.path.isEmpty ? '/' : Uri.base.path) + (Uri.base.hasQuery ? '?${Uri.base.query}' : '')
+      : '/',
   errorBuilder: (context, state) => const Scaffold(
     body: Center(child: Text('صفحة غير موجودة')),
   ),
