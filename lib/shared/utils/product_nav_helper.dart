@@ -1,8 +1,8 @@
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
-import 'package:doctor_store/shared/utils/link_share_helper.dart';
+import 'package:doctor_store/shared/utils/app_constants.dart';
 
-/// يبني مسار صفحة المنتج للاستخدام مع GoRouter.
-/// يستخدم صيغة /#/p/... للـ Hash URL Strategy
+/// يبني مسار صفحة المنتج للتنقل الداخلي مع GoRouter.
+/// يستخدم صيغة /p/... (بدون #، GoRouter يتعامل مع الـ # تلقائياً)
 String buildProductDetailsPath(Product product) {
   // استخدام slug إذا كان متوفراً
   var slug = product.slug;
@@ -17,7 +17,7 @@ String buildProductDetailsPath(Product product) {
     slug = product.id;
   }
   
-  return '/#/p/$slug';
+  return '/p/$slug';
 }
 
 /// ينشئ slug من اسم المنتج
@@ -29,8 +29,15 @@ String _generateSlugFromName(String name) {
     .replaceAll(RegExp(r'\s+'), '-'); // استبدال المسافات بـ -
 }
 
-/// يبني رابط كامل (مع الدومين) لصفحة المنتج للاستخدام في المشاركة / QR.
+/// يبني رابط كامل (مع الدومين والـ #) لصفحة المنتج للاستخدام في المشاركة / QR.
+/// يستخدم صيغة https://domain.com/#/p/slug للـ Hash URL Strategy
 String buildFullProductUrl(Product product) {
   final path = buildProductDetailsPath(product); // /p/slug
-  return buildFullUrl(path);
+  const base = AppConstants.webBaseUrl;
+  
+  if (base.isEmpty) {
+    return '/#$path';
+  }
+  
+  return '$base/#$path';
 }
