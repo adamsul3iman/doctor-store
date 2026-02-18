@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:meta_seo/meta_seo.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -13,18 +12,15 @@ import 'dart:html' as html;
 import 'app/app.dart';
 
 Future<void> main() async {
-  // 0. تفعيل Path URL Strategy فوراً - قبل ANYTHING else
-  // هذا يجب أن يكون أول سطر يتنفذ
-  if (kIsWeb) {
-    setUrlStrategy(PathUrlStrategy());
-  }
+  // Using default Hash URL Strategy for reliable deep links
+  // Hash URLs work reliably on all hosting platforms
   
   WidgetsFlutterBinding.ensureInitialized();
 
-  // BUILD_VERSION: 5 - Direct PathUrlStrategy
+  // BUILD_VERSION: 6 - Hash URL Strategy for reliable deep links
   if (kIsWeb) {
     MetaSEO().config();
-    debugPrint('URL Strategy set to PathUrlStrategy directly');
+    debugPrint('URL Strategy: Hash (default)');
   }
 
   // 0. تنظيف Service Worker القديم إن وجد (غير blocking)
