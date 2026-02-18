@@ -29,9 +29,9 @@ String _generateSlugFromName(String name) {
     .replaceAll(RegExp(r'\s+'), '-'); // استبدال المسافات بـ -
 }
 
-/// يبني رابط كامل (مع الدومين والـ #) لصفحة المنتج للاستخدام في المشاركة / QR.
-/// يستخدم صيغة https://domain.com/#/p/slug للـ Hash URL Strategy
+/// يبني رابط كامل (مع الدومين) لصفحة المنتج للاستخدام في المشاركة / QR.
+/// يستخدم صيغة https://domain.com/p/slug للـ Path URL Strategy (بدون #)
 String buildFullProductUrl(Product product) {
   final path = buildProductDetailsPath(product); // /p/slug
-  return buildFullUrl(path); // buildFullUrl يضيف # تلقائياً
+  return buildFullUrl(path);
 }

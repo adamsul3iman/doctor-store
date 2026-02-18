@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 
 import 'package:doctor_store/core/theme/app_theme.dart';
 import 'package:doctor_store/features/home/presentation/screens/home_screen_v2.dart';
@@ -26,17 +29,55 @@ import 'package:doctor_store/features/static/presentation/screens/terms_screen.d
 import 'package:doctor_store/features/static/presentation/screens/contact_screen.dart';
 import 'package:doctor_store/app/widgets/admin_guard.dart';
 
-/// تعريف الراوتر الرئيسي للتطبيق في ملف مستقل لسهولة الصيانة والتوسع
+// ================= Helper transition builders =================
+
+CustomTransitionPage _buildFadePage(GoRouterState state, Widget child) {
+  // إلغاء أي أنيميشن انتقال بين الصفحات على الويب (Instant Navigation)
+  return CustomTransitionPage(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
+    transitionDuration: Duration.zero,
+  );
+}
+
+CustomTransitionPage _buildSlideUpPage(GoRouterState state, Widget child) {
+  // نفس الشيء: لا نستخدم Slide/Fade، فقط نعيد الـ child فوراً
+  return CustomTransitionPage(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
+    transitionDuration: Duration.zero,
+  );
+}
+
+/// تعريف الراوتر الرئيسي للتطبيق
 /// 
-/// يستخدم Hash URL Strategy للويب (الافتراضي)
-/// مثال: drstore.me/#/p/product-slug
-final GoRouter appRouter = GoRouter(
-  // ✅ تفعيل تحديث URL في المتصفح
-  routerNeglect: false,
-  errorBuilder: (context, state) => const Scaffold(
-    body: Center(child: Text('صفحة غير موجودة')),
-  ),
-  routes: [
+/// يستخدم Path URL Strategy للويب (روابط نظيفة بدون #)
+/// مثال: drstore.me/p/product-slug
+/// 
+/// ملاحظة: يُنشأ Router بشكل lazy بعد setUrlStrategy()
+GoRouter get appRouter => _createAppRouter();
+
+GoRouter _createAppRouter() {
+  // قراءة المسار الأولي من المتصفح للـ Deep Links
+  String initialLocation = '/';
+  if (kIsWeb) {
+    final path = html.window.location.pathname ?? '/';
+    final query = html.window.location.search ?? '';
+    initialLocation = path + query;
+    if (initialLocation.isEmpty) initialLocation = '/';
+  }
+  
+  return GoRouter(
+    // ✅ تفعيل تحديث URL في المتصفح
+    routerNeglect: false,
+    // ✅ ضمان قراءة Deep Link من المتصفح
+    initialLocation: initialLocation,
+    errorBuilder: (context, state) => const Scaffold(
+      body: Center(child: Text('صفحة غير موجودة')),
+    ),
+    routes: [
     GoRoute(
       path: '/',
       pageBuilder: (context, state) => const NoTransitionPage(child: HomeScreenV2()),
@@ -235,26 +276,5 @@ final GoRouter appRouter = GoRouter(
       },
     ),
   ],
-);
-
-// ================= Helper transition builders =================
-
-CustomTransitionPage _buildFadePage(GoRouterState state, Widget child) {
-  // إلغاء أي أنيميشن انتقال بين الصفحات على الويب (Instant Navigation)
-  return CustomTransitionPage(
-    key: state.pageKey,
-    child: child,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
-    transitionDuration: Duration.zero,
-  );
-}
-
-CustomTransitionPage _buildSlideUpPage(GoRouterState state, Widget child) {
-  // نفس الشيء: لا نستخدم Slide/Fade، فقط نعيد الـ child فوراً
-  return CustomTransitionPage(
-    key: state.pageKey,
-    child: child,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
-    transitionDuration: Duration.zero,
   );
 }
