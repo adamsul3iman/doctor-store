@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
 
 import 'package:doctor_store/core/theme/app_theme.dart';
 import 'package:doctor_store/features/home/presentation/screens/home_screen_v2.dart';
@@ -52,32 +50,22 @@ CustomTransitionPage _buildSlideUpPage(GoRouterState state, Widget child) {
 }
 
 /// تعريف الراوتر الرئيسي للتطبيق
-/// 
+///
 /// يستخدم Path URL Strategy للويب (روابط نظيفة بدون #)
 /// مثال: drstore.me/p/product-slug
-/// 
-/// ملاحظة: يُنشأ Router بشكل lazy بعد setUrlStrategy()
-GoRouter get appRouter => _createAppRouter();
-
-GoRouter _createAppRouter() {
-  // قراءة المسار الأولي من المتصفح للـ Deep Links
-  String initialLocation = '/';
-  if (kIsWeb) {
-    final path = html.window.location.pathname ?? '/';
-    final query = html.window.location.search ?? '';
-    initialLocation = path + query;
-    if (initialLocation.isEmpty) initialLocation = '/';
-  }
-  
-  return GoRouter(
-    // ✅ تفعيل تحديث URL في المتصفح
-    routerNeglect: false,
-    // ✅ ضمان قراءة Deep Link من المتصفح
-    initialLocation: initialLocation,
-    errorBuilder: (context, state) => const Scaffold(
-      body: Center(child: Text('صفحة غير موجودة')),
-    ),
-    routes: [
+///
+/// ملاحظة: يجب أن يكون الراوتر Singleton (ثابت) حتى لا يُعاد إنشاؤه
+/// مع كل rebuild لـ MaterialApp.router، لأن ذلك قد يعيد المستخدم للصفحة الرئيسية.
+final GoRouter appRouter = GoRouter(
+  // ✅ تفعيل تحديث URL في المتصفح
+  routerNeglect: false,
+  // على الويب: اترك GoRouter يقرأ مسار المتصفح الحالي للـ deep links.
+  // على الموبايل/الديسكتوب: ابدأ من الرئيسية.
+  initialLocation: kIsWeb ? null : '/',
+  errorBuilder: (context, state) => const Scaffold(
+    body: Center(child: Text('صفحة غير موجودة')),
+  ),
+  routes: [
     GoRoute(
       path: '/',
       pageBuilder: (context, state) => const NoTransitionPage(child: HomeScreenV2()),
@@ -276,5 +264,4 @@ GoRouter _createAppRouter() {
       },
     ),
   ],
-  );
-}
+);
