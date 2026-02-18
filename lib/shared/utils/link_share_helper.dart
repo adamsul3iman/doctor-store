@@ -3,16 +3,16 @@ import 'package:share_plus/share_plus.dart';
 import 'app_constants.dart';
 
 /// Helper لبناء رابط كامل (Full URL) لأي صفحة داخل المتجر.
-/// يعتمد على الدومين الأساسي المعرّف في [AppConstants.webBaseUrl].
+/// يستخدم صيغة https://domain.com/#/path للـ Hash URL Strategy
 String buildFullUrl(String path) {
   final normalized = path.startsWith('/') ? path : '/$path';
   const base = AppConstants.webBaseUrl;
 
   if (base.isEmpty) {
-    return normalized;
+    return '/#$normalized';
   }
 
-  return '$base$normalized';
+  return '$base/#$normalized';
 }
 
 /// مشاركة صفحة عامة داخل المتجر (الرئيسية، السلة، قسم، صفحة كل المنتجات...)

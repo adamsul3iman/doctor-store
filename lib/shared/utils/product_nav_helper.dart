@@ -1,5 +1,5 @@
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
-import 'package:doctor_store/shared/utils/app_constants.dart';
+import 'package:doctor_store/shared/utils/link_share_helper.dart';
 
 /// يبني مسار صفحة المنتج للتنقل الداخلي مع GoRouter.
 /// يستخدم صيغة /p/... (بدون #، GoRouter يتعامل مع الـ # تلقائياً)
@@ -33,11 +33,5 @@ String _generateSlugFromName(String name) {
 /// يستخدم صيغة https://domain.com/#/p/slug للـ Hash URL Strategy
 String buildFullProductUrl(Product product) {
   final path = buildProductDetailsPath(product); // /p/slug
-  const base = AppConstants.webBaseUrl;
-  
-  if (base.isEmpty) {
-    return '/#$path';
-  }
-  
-  return '$base/#$path';
+  return buildFullUrl(path); // buildFullUrl يضيف # تلقائياً
 }
