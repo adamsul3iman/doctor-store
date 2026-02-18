@@ -2,7 +2,7 @@ import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/shared/utils/link_share_helper.dart';
 
 /// يبني مسار صفحة المنتج للاستخدام مع GoRouter.
-/// يستخدم دائماً صيغة /p/... للروابط النظيفة بدون query parameters
+/// يستخدم صيغة /#/p/... للـ Hash URL Strategy
 String buildProductDetailsPath(Product product) {
   // استخدام slug إذا كان متوفراً
   var slug = product.slug;
@@ -17,7 +17,7 @@ String buildProductDetailsPath(Product product) {
     slug = product.id;
   }
   
-  return '/p/$slug';
+  return '/#/p/$slug';
 }
 
 /// ينشئ slug من اسم المنتج
