@@ -1,17 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:go_router/go_router.dart';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 
 import 'package:doctor_store/core/theme/app_theme.dart';
 import 'package:doctor_store/app/router/app_router.dart';
 import 'package:doctor_store/shared/utils/supabase_auth_listener.dart';
 import 'package:doctor_store/shared/utils/app_scroll_behavior.dart';
 
-class DoctorStoreApp extends ConsumerWidget {
+class DoctorStoreApp extends ConsumerStatefulWidget {
   const DoctorStoreApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DoctorStoreApp> createState() => _DoctorStoreAppState();
+}
+
+class _DoctorStoreAppState extends ConsumerState<DoctorStoreApp> {
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // ✅ قراءة URL المتصفح وتهيئة الـ Router به
+    String initialLocation = '/';
+    if (kIsWeb) {
+      final path = html.window.location.pathname ?? '/';
+      final query = html.window.location.search ?? '';
+      initialLocation = path + query;
+      if (initialLocation.isEmpty) initialLocation = '/';
+      
+      debugPrint('🌐 Initial location from browser: $initialLocation');
+    }
+    
+    _router = createAppRouterWithLocation(initialLocation);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'متجر الدكتور - Doctor Store',
@@ -24,7 +53,7 @@ class DoctorStoreApp extends ConsumerWidget {
       ],
       supportedLocales: const [Locale('ar', 'AE')],
       locale: const Locale('ar', 'AE'),
-      routerConfig: appRouter,
+      routerConfig: _router,
       builder: (context, child) {
         return SupabaseAuthListener(
           child: child ?? const SizedBox.shrink(),
