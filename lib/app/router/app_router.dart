@@ -85,15 +85,41 @@ GoRouter get appRouter {
 }
 
 GoRouter _createAppRouter() {
+  // متغير لتتبع أول تحميل فقط
+  bool isFirstRedirect = true;
+  
   return GoRouter(
     // ✅ تفعيل تحديث URL في المتصفح
     routerNeglect: false,
-    // ✅ استخدام المسار المقروء من المتصفح
-    initialLocation: _initialLocation ?? '/',
+    // ابدأ من الرئيسية، ثم استخدم redirect للـ Deep Links
+    initialLocation: '/',
     debugLogDiagnostics: kDebugMode,
     errorBuilder: (context, state) => const Scaffold(
       body: Center(child: Text('صفحة غير موجودة')),
     ),
+    // ✅ redirect يُنفّذ مع كل تصفّح - نستخدمه للـ Deep Link في أول مرة
+    redirect: (context, state) {
+      if (!kIsWeb) return null;
+      
+      // في أول تحميل فقط، تحقق من URL المتصفح
+      if (isFirstRedirect) {
+        isFirstRedirect = false;
+        
+        final browserPath = html.window.location.pathname ?? '/';
+        final browserQuery = html.window.location.search ?? '';
+        final fullPath = browserPath + browserQuery;
+        
+        // إذا كان المسار الحالي مختلف عن الرئيسية، روح للمسار الصحيح
+        if (browserPath != '/' && browserPath.isNotEmpty) {
+          if (kDebugMode) {
+            debugPrint('🔄 Deep Link redirect: $fullPath');
+          }
+          return fullPath;
+        }
+      }
+      
+      return null; // لا redirect
+    },
     routes: [
     GoRoute(
       path: '/',
