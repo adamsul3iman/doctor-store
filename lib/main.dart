@@ -11,7 +11,6 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'dart:html' as html;
 
 import 'app/app.dart';
-import 'app/router/app_router.dart' show initAppRouter;
 
 Future<void> main() async {
   // ✅ استخدام Path URL Strategy قبل أي تهيئة أخرى
@@ -21,12 +20,7 @@ Future<void> main() async {
   
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ تهيئة Router بعد تهيئة Flutter (مهم جداً للـ Deep Links)
-  if (kIsWeb) {
-    initAppRouter();
-  }
-
-  // BUILD_VERSION: 8 - Path URL Strategy with proper init
+  // BUILD_VERSION: 9 - Path URL Strategy with redirect-based deep links
   if (kIsWeb) {
     MetaSEO().config();
     debugPrint('URL Strategy: Path (clean URLs without #)');
