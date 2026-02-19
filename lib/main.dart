@@ -11,25 +11,29 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'dart:html' as html;
 
 import 'app/app.dart';
+import 'app/router/app_router.dart' show initAppRouter;
 
 Future<void> main() async {
   // ✅ استخدام Path URL Strategy قبل أي تهيئة أخرى
-  // هذا يجعل الروابط نظيفة بدون #
   if (kIsWeb) {
     setUrlStrategy(PathUrlStrategy());
   }
   
   WidgetsFlutterBinding.ensureInitialized();
 
-  // BUILD_VERSION: 7 - Path URL Strategy for clean URLs
+  // ✅ تهيئة Router بعد تهيئة Flutter (مهم جداً للـ Deep Links)
+  if (kIsWeb) {
+    initAppRouter();
+  }
+
+  // BUILD_VERSION: 8 - Path URL Strategy with proper init
   if (kIsWeb) {
     MetaSEO().config();
     debugPrint('URL Strategy: Path (clean URLs without #)');
   }
 
-  // 0. تنظيف Service Worker القديم إن وجد (غير blocking)
+  // Service Worker cleanup
   if (kIsWeb) {
-    // لا نستخدم await هنا حتى لا نؤخر تهيئة التطبيق
     html.window.navigator.serviceWorker?.getRegistrations().then((regs) {
       for (var reg in regs) {
         reg.unregister();
@@ -40,18 +44,14 @@ Future<void> main() async {
     });
   }
 
-  // 2. تحميل ملف الإعدادات (مع تقليل الضوضاء في الإصدار النهائي)
+  // تحميل الإعدادات
   var envLoaded = false;
   try {
     await dotenv.load(fileName: "assets/env.txt");
     envLoaded = dotenv.isInitialized;
-    if (kDebugMode) {
-      debugPrint("Env Loaded");
-    }
+    if (kDebugMode) debugPrint("Env Loaded");
   } catch (e) {
-    if (kDebugMode) {
-      debugPrint("Env Error: $e");
-    }
+    if (kDebugMode) debugPrint("Env Error: $e");
   }
 
   String? safeEnv(String key) {
@@ -59,7 +59,7 @@ Future<void> main() async {
     return dotenv.maybeGet(key);
   }
 
-  // 3. تهيئة Supabase مع حماية أفضل للإعدادات
+  // تهيئة Supabase
   final supabaseUrl =
       safeEnv('SUPABASE_URL') ?? 'https://owgaklkhquntsqahmegt.supabase.co';
   final supabaseAnonKey = safeEnv('SUPABASE_ANON_KEY') ??

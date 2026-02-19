@@ -51,33 +51,46 @@ CustomTransitionPage _buildSlideUpPage(GoRouterState state, Widget child) {
   );
 }
 
-/// تعريف الراوتر الرئيسي للتطبيق
-///
-/// يستخدم Path URL Strategy للويب (روابط نظيفة بدون #)
-/// مثال: drstore.me/p/product-slug
-///
-/// ملاحظة: يُنشأ Router بشكل lazy بعد تهيئة Flutter لقراءة URL المتصفح بشكل صحيح
+// ================= Router Singleton =================
+
+GoRouter? _appRouterInstance;
+String? _initialLocation;
+
+/// تهيئة Router مع قراءة URL المتصفح
+/// يجب استدعاؤها بعد WidgetsFlutterBinding.ensureInitialized()
+void initAppRouter() {
+  if (!kIsWeb) return;
+  
+  // قراءة URL المتصفح مرة واحدة عند التهيئة
+  final path = html.window.location.pathname ?? '/';
+  final query = html.window.location.search ?? '';
+  _initialLocation = path + query;
+  if (_initialLocation!.isEmpty || _initialLocation == '/') {
+    _initialLocation = '/';
+  }
+  
+  if (kDebugMode) {
+    debugPrint('🌐 Deep Link detected: $_initialLocation');
+  }
+}
+
+/// Getter للـ Router - ينشئ Router مرة واحدة فقط
 GoRouter get appRouter {
-  return _createAppRouter();
+  if (_appRouterInstance != null) {
+    return _appRouterInstance!;
+  }
+  
+  _appRouterInstance = _createAppRouter();
+  return _appRouterInstance!;
 }
 
 GoRouter _createAppRouter() {
-  // قراءة المسار الأولي من المتصفح وقت التشغيل (وليس وقت تحميل الملف)
-  String initialLocation = '/';
-  if (kIsWeb) {
-    final path = html.window.location.pathname ?? '/';
-    final query = html.window.location.search ?? '';
-    initialLocation = path + query;
-    if (initialLocation.isEmpty || initialLocation == '/') {
-      initialLocation = '/';
-    }
-  }
-
   return GoRouter(
     // ✅ تفعيل تحديث URL في المتصفح
     routerNeglect: false,
-    // ✅ قراءة Deep Link من المتصفح وقت التشغيل
-    initialLocation: initialLocation,
+    // ✅ استخدام المسار المقروء من المتصفح
+    initialLocation: _initialLocation ?? '/',
+    debugLogDiagnostics: kDebugMode,
     errorBuilder: (context, state) => const Scaffold(
       body: Center(child: Text('صفحة غير موجودة')),
     ),
