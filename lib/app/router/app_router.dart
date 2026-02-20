@@ -51,10 +51,23 @@ CustomTransitionPage _buildSlideUpPage(GoRouterState state, Widget child) {
   );
 }
 
-// ================= Router Singleton =================
+// ================= Router Singleton & Factory =================
 
 GoRouter? _appRouterInstance;
 String? _initialLocation;
+
+/// إنشاء Router بمسار أولي محدد (للـ Deep Links)
+GoRouter createAppRouterWithLocation(String initialLocation) {
+  return GoRouter(
+    routerNeglect: false,
+    initialLocation: initialLocation,
+    debugLogDiagnostics: kDebugMode,
+    errorBuilder: (context, state) => const Scaffold(
+      body: Center(child: Text('صفحة غير موجودة')),
+    ),
+    routes: _buildRoutes(),
+  );
+}
 
 /// تهيئة Router مع قراءة URL المتصفح
 /// يجب استدعاؤها بعد WidgetsFlutterBinding.ensureInitialized()
@@ -85,40 +98,30 @@ GoRouter get appRouter {
 }
 
 GoRouter _createAppRouter() {
-  // متغير لتتبع أول تحميل فقط  
-  bool isFirstNavigation = true;
+  // ✅ قراءة URL المتصفح باستخدام Uri.base (الطريقة المضمونة)
+  String initialLocation = '/';
+  if (kIsWeb) {
+    // Uri.base يقرأ URL الحالي من المتصفح
+    initialLocation = Uri.base.path;
+    if (initialLocation.isEmpty) initialLocation = '/';
+    
+    debugPrint('🌐 Deep Link URL: ${Uri.base}');
+    debugPrint('🌐 Path: $initialLocation');
+  }
   
   return GoRouter(
-    // ✅ تفعيل تحديث URL في المتصفح
     routerNeglect: false,
-    // لا نحدد initialLocation - دع GoRouter يقرأها من المتصفح تلقائياً
+    initialLocation: initialLocation,
     debugLogDiagnostics: kDebugMode,
     errorBuilder: (context, state) => const Scaffold(
       body: Center(child: Text('صفحة غير موجودة')),
     ),
-    observers: [
-      // Observer للتتبع (يمكن إضافته لاحقاً للـ debugging)
-    ],
-    redirect: (context, state) {
-      if (!kIsWeb) return null;
-      
-      if (isFirstNavigation) {
-        isFirstNavigation = false;
-        final currentPath = state.uri.path;
-        final browserPath = html.window.location.pathname ?? '/';
-        
-        debugPrint('🔍 First navigation: current=$currentPath, browser=$browserPath');
-        
-        // إذا كان المسار مختلف، استخدم مسار المتصفح
-        if (browserPath != currentPath && browserPath.isNotEmpty) {
-          debugPrint('🔄 Redirecting to browser path: $browserPath');
-          return browserPath;
-        }
-      }
-      
-      return null;
-    },
-    routes: [
+    routes: _buildRoutes(),
+  );
+}
+
+List<RouteBase> _buildRoutes() {
+  return [
     GoRoute(
       path: '/',
       pageBuilder: (context, state) => const NoTransitionPage(child: HomeScreenV2()),
@@ -316,6 +319,5 @@ GoRouter _createAppRouter() {
         return _buildFadePage(state, AdminGuard(child: child));
       },
     ),
-  ],
-  );
+  ];
 }
