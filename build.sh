@@ -15,9 +15,9 @@ flutter config --enable-web
 echo "Getting dependencies..."
 flutter pub get
 
-# Build for web
-echo "Building for web..."
-flutter build web --release
+# Build for web with HTML renderer (smaller bundle, faster loading)
+echo "Building for web with HTML renderer..."
+flutter build web --release --web-renderer html
 
 # Ensure PWA/static files are present in the build output (Vercel serves build/web)
 cp -f web/manifest.json build/web/manifest.json

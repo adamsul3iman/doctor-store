@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:go_router/go_router.dart';
 
 import '../widgets/dashboard/stats_card.dart';
@@ -154,7 +154,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
                   children: [
                     Text(
                       '$greeting 👋',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -163,7 +163,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
                     const SizedBox(height: 8),
                     Text(
                       'إليك نظرة سريعة على أداء متجرك اليوم',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 14,
                         color: Colors.white70,
                       ),
@@ -213,7 +213,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
                   Expanded(
                     child: Text(
                       'لديك ${stats.newOrdersCount} طلب جديد يحتاج إلى معالجة!',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
@@ -348,7 +348,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
                 const SizedBox(width: 8),
                 Text(
                   'تحليلات سريعة',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF0A2647),
@@ -439,7 +439,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
               children: [
                 Text(
                   value,
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF0A2647),
@@ -448,7 +448,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
                 const SizedBox(height: 4),
                 Text(
                   title,
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 11,
                     color: Colors.grey[600],
                   ),
@@ -489,7 +489,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
                     const SizedBox(width: 8),
                     Text(
                       'المنتجات الأكثر مبيعاً',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF0A2647),
@@ -501,7 +501,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
                   onPressed: () => context.push('/all_products'),
                   child: Text(
                     'عرض الكل',
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 12,
                       color: const Color(0xFF0A2647),
                     ),
@@ -516,7 +516,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
                   padding: const EdgeInsets.all(24),
                   child: Text(
                     'لا توجد بيانات مبيعات بعد',
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey[600],
                     ),
@@ -580,7 +580,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
           child: Center(
             child: Text(
               '#$rank',
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -595,7 +595,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
             children: [
               Text(
                 name,
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF0A2647),
@@ -608,7 +608,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
                   const SizedBox(width: 4),
                   Text(
                     sales,
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],
                     ),
@@ -623,7 +623,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
           children: [
             Text(
               revenue,
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF4CAF50),
@@ -638,7 +638,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
               ),
               child: Text(
                 'أفضل $rank',
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   color: color,

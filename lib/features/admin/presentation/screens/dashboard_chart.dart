@@ -1,6 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 
 class SalesChart extends StatelessWidget {
   final List<Map<String, dynamic>> salesData;
@@ -17,7 +17,7 @@ class SalesChart extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Text("لا توجد مبيعات هذا الأسبوع", style: GoogleFonts.almarai(color: Colors.grey)),
+        child: Text("لا توجد مبيعات هذا الأسبوع", style: TextStyle(color: Colors.grey)),
       );
     }
 
@@ -41,7 +41,7 @@ class SalesChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("📊 أداء المبيعات (آخر 7 أيام)", style: GoogleFonts.almarai(fontWeight: FontWeight.bold, fontSize: 16)),
+          Text("📊 أداء المبيعات (آخر 7 أيام)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 20),
           Expanded(
             child: LineChart(

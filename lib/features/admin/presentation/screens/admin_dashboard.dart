@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -177,7 +177,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text('لوحة التحكم', style: GoogleFonts.almarai(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text('لوحة التحكم', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         centerTitle: true,
         backgroundColor: const Color(0xFF0A2647),
         actions: [
@@ -209,7 +209,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text(_menuItems[_selectedIndex].title, style: GoogleFonts.almarai(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text(_menuItems[_selectedIndex].title, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         centerTitle: true,
         backgroundColor: const Color(0xFF0A2647),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -254,7 +254,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         padding: const EdgeInsets.fromLTRB(16, 18, 16, 8),
         child: Text(
           title,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             color: Colors.white.withValues(alpha: 0.7),
             fontWeight: FontWeight.w700,
             fontSize: 12,
@@ -275,7 +275,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         title: _isExtended || isDrawer
             ? Text(
                 item.title,
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                   color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.9),
                   fontSize: 14,
@@ -305,7 +305,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     Expanded(
                       child: Text(
                         'متجر الدكتور',
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
                           fontSize: 16,
@@ -367,7 +367,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 title: (_isExtended || isDrawer)
                     ? Text(
                         'تسجيل الخروج',
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           color: Colors.red.shade200,
                           fontWeight: FontWeight.w800,
                         ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import '../../../../shared/services/analytics_service.dart';
 import '../widgets/live_users_widget.dart';
 
@@ -55,7 +55,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
       appBar: AppBar(
         title: Text(
           'الإحصائيات والتحليلات',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: const Color(0xFF0A2647),
@@ -195,7 +195,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                 fit: BoxFit.scaleDown,
                 child: Text(
                   stat['value'] as String,
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF0A2647),
@@ -205,7 +205,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
               const SizedBox(height: 2),
               Text(
                 stat['title'] as String,
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 10,
                   color: Colors.grey[600],
                 ),
@@ -238,7 +238,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
         children: [
           Text(
             title,
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF0A2647),
@@ -256,7 +256,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
       return Center(
         child: Text(
           'لا توجد بيانات متاحة',
-          style: GoogleFonts.almarai(color: Colors.grey),
+          style: TextStyle(color: Colors.grey),
         ),
       );
     }
@@ -297,7 +297,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                   children: [
                     Text(
                       product['title'] ?? 'منتج بدون اسم',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF0A2647),
@@ -308,7 +308,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                     const SizedBox(height: 4),
                     Text(
                       product['category_name'] ?? 'بدون تصنيف',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
                       ),
@@ -326,7 +326,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                 ),
                 child: Text(
                   '${product['views'] ?? 0} مشاهدة',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF0A2647),
@@ -345,7 +345,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
       return Center(
         child: Text(
           'لا توجد بيانات متاحة',
-          style: GoogleFonts.almarai(color: Colors.grey),
+          style: TextStyle(color: Colors.grey),
         ),
       );
     }
@@ -364,7 +364,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                 width: 60,
                 child: Text(
                   formattedDate,
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF0A2647),
@@ -397,7 +397,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                       Center(
                         child: Text(
                           '${day['visits'] ?? 0}',
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
@@ -413,7 +413,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
               const SizedBox(width: 8),
               Text(
                 '${day['orders'] ?? 0} طلب',
-                style: GoogleFonts.almarai(fontSize: 11, color: Colors.grey[600]),
+                style: TextStyle(fontSize: 11, color: Colors.grey[600]),
               ),
             ],
           ),
@@ -449,7 +449,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Text(
             label,
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 14,
               color: Colors.grey[700],
             ),
@@ -459,7 +459,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Text(
             value,
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: const Color(0xFF0A2647),

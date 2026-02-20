@@ -19,7 +19,7 @@ dependencies:
   go_router: ^17.0.1
   
   # --- UI & UX ---
-  google_fonts: ^6.2.1
+  # google_fonts: ^6.2.1  # ⚠️ REMOVED - uses system fonts instead
   font_awesome_flutter: ^10.7.0
   cached_network_image: ^3.4.0
   flutter_cache_manager: ^3.3.0
