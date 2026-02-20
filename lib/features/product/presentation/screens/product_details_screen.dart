@@ -25,12 +25,15 @@ import 'package:doctor_store/features/product/presentation/widgets/product_searc
 
 // الويدجت (Widgets)
 import '../widgets/similar_products_section.dart';
-import '../widgets/product_poster_dialog.dart';
+// import '../widgets/product_poster_dialog.dart'; // يُحمل بشكل مؤجل عند الحاجة
 import '../widgets/reviews_section.dart';
 import '../widgets/smart_description.dart';
 import '../widgets/quick_checkout_sheet.dart';
 import '../widgets/product_bottom_bar.dart';
 import 'package:doctor_store/shared/widgets/app_footer.dart';
+
+// تحميل مؤجل للـ ProductPosterDialog لتقليل حجم البندل
+import '../widgets/product_poster_dialog.dart' deferred as poster;
 
 class ProductDetailsScreen extends ConsumerStatefulWidget {
   final Product product;
@@ -455,6 +458,17 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     );
   }
 
+  Future<void> _showPosterDialog() async {
+    // تحميل مؤجل للـ ProductPosterDialog لتقليل حجم البندل الأساسي
+    await poster.loadLibrary();
+    if (!mounted) return;
+    
+    showDialog(
+      context: context,
+      builder: (_) => poster.ProductPosterDialog(product: widget.product),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final liveProductAsync =
@@ -518,10 +532,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                 context: context,
                 delegate: ProductSearchDelegate(),
               ),
-              onShareTap: () => showDialog(
-                context: context,
-                builder: (_) => ProductPosterDialog(product: widget.product),
-              ),
+              onShareTap: () => _showPosterDialog(),
               iconColor: Colors.white,
             ),
             flexibleSpace: FlexibleSpaceBar(
