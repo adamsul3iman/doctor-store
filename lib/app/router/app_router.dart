@@ -19,15 +19,17 @@ import 'package:doctor_store/features/product/presentation/screens/all_products_
 import 'package:doctor_store/features/product/presentation/screens/category_screen.dart';
 import 'package:doctor_store/features/browse/presentation/screens/browse_all_screen.dart';
 import 'package:doctor_store/features/product/presentation/screens/product_details_wrapper.dart';
-import 'package:doctor_store/features/admin/presentation/screens/admin_dashboard.dart';
-import 'package:doctor_store/features/admin/presentation/screens/product_form_screen.dart';
-import 'package:doctor_store/features/admin/presentation/screens/admin_product_edit_wrapper.dart';
+// مسارات الإدارة تُحمل بشكل مؤجل (deferred) - لا نستوردها هنا
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/features/static/presentation/screens/about_screen.dart';
 import 'package:doctor_store/features/static/presentation/screens/privacy_screen.dart';
 import 'package:doctor_store/features/static/presentation/screens/terms_screen.dart';
 import 'package:doctor_store/features/static/presentation/screens/contact_screen.dart';
 import 'package:doctor_store/app/widgets/admin_guard.dart';
+
+// مسارات الإدارة - تُحمل بشكل مؤجل لتقليل حجم البندل الأساسي
+// ignore: avoid_dynamic_calls
+final Map<String, dynamic> _adminRoutes = {};
 
 // ================= Helper transition builders =================
 
@@ -46,6 +48,33 @@ CustomTransitionPage _buildSlideUpPage(GoRouterState state, Widget child) {
   return CustomTransitionPage(
     key: state.pageKey,
     child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
+    transitionDuration: Duration.zero,
+  );
+}
+
+/// بناء صفحة إدارة مع تحميل مؤجل (deferred loading)
+/// هذا يُقلل حجم البندل الأساسي بشكل كبير
+CustomTransitionPage _buildDeferredAdminPage(
+  GoRouterState state,
+  Future<Widget> Function() loader,
+) {
+  return CustomTransitionPage(
+    key: state.pageKey,
+    child: FutureBuilder<Widget>(
+      future: loader(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+          return AdminGuard(child: snapshot.data!);
+        }
+        // Loading state
+        return const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      },
+    ),
     transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
     transitionDuration: Duration.zero,
   );
@@ -282,44 +311,58 @@ List<RouteBase> _buildRoutes() {
         );
       },
     ),
-    // مسارات الإدارة
+    // مسارات الإدارة - تُحمل بشكل مؤجل (deferred loading)
     GoRoute(
       path: '/admin/dashboard',
-      pageBuilder: (context, state) => _buildFadePage(
+      pageBuilder: (context, state) => _buildDeferredAdminPage(
         state,
-        const AdminGuard(child: AdminDashboard()),
+        () async {
+          final module = await Future.wait([
+            import('package:doctor_store/features/admin/presentation/screens/admin_dashboard.dart' as deferred,
+              loadLibrary: () => deferred.loadLibrary()),
+          ]);
+          return deferred.AdminDashboard();
+        },
       ),
     ),
     GoRoute(
       path: '/admin/add',
-      pageBuilder: (context, state) => _buildFadePage(
+      pageBuilder: (context, state) => _buildDeferredAdminPage(
         state,
-        const AdminGuard(child: ProductFormScreen()),
+        () async {
+          final module = await Future.wait([
+            import('package:doctor_store/features/admin/presentation/screens/product_form_screen.dart' as deferred,
+              loadLibrary: () => deferred.loadLibrary()),
+          ]);
+          return deferred.ProductFormScreen();
+        },
       ),
     ),
     GoRoute(
       path: '/admin/edit',
-      pageBuilder: (context, state) {
-        final extra = state.extra;
-        final id = state.uri.queryParameters['id'];
-
-        Widget child;
-        if (extra is Product) {
-          // حالة التعديل من داخل لوحة الأدمن بدون Refresh
-          child = ProductFormScreen(
-            extra: extra,
-            productToEdit: extra,
-          );
-        } else if (id != null && id.isNotEmpty) {
-          // حالة فتح رابط مباشر /admin/edit?id=PRODUCT_ID أو بعد Refresh على هذه الصفحة
-          child = AdminProductEditWrapper(productId: id);
-        } else {
-          // حالة إنشاء منتج جديد (بدون id ولا extra)
-          child = const ProductFormScreen();
-        }
-
-        return _buildFadePage(state, AdminGuard(child: child));
-      },
+      pageBuilder: (context, state) => _buildDeferredAdminPage(
+        state,
+        () async {
+          final module = await Future.wait([
+            import('package:doctor_store/features/admin/presentation/screens/product_form_screen.dart' as deferred,
+              loadLibrary: () => deferred.loadLibrary()),
+            import('package:doctor_store/features/admin/presentation/screens/admin_product_edit_wrapper.dart' as deferred2,
+              loadLibrary: () => deferred2.loadLibrary()),
+          ]);
+          final extra = state.extra;
+          final id = state.uri.queryParameters['id'];
+          
+          if (extra is Product) {
+            return deferred.ProductFormScreen(
+              extra: extra,
+              productToEdit: extra,
+            );
+          } else if (id != null && id.isNotEmpty) {
+            return deferred2.AdminProductEditWrapper(productId: id);
+          }
+          return deferred.ProductFormScreen();
+        },
+      ),
     ),
   ];
 }
