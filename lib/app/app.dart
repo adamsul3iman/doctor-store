@@ -33,7 +33,9 @@ class _DoctorStoreAppState extends ConsumerState<DoctorStoreApp> {
       initialLocation = path + query;
       if (initialLocation.isEmpty) initialLocation = '/';
       
-      debugPrint('🌐 Initial location from browser: $initialLocation');
+      // استخدام print بدلاً من debugPrint للإنتاج
+      // ignore: avoid_print
+      print('🌐 Initial location from browser: $initialLocation');
     }
     
     _router = createAppRouterWithLocation(initialLocation);

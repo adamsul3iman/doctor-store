@@ -105,8 +105,10 @@ GoRouter _createAppRouter() {
     initialLocation = Uri.base.path;
     if (initialLocation.isEmpty) initialLocation = '/';
     
-    debugPrint('🌐 Deep Link URL: ${Uri.base}');
-    debugPrint('🌐 Path: $initialLocation');
+    // ignore: avoid_print
+    print('🌐 Deep Link URL: ${Uri.base}');
+    // ignore: avoid_print
+    print('🌐 Path: $initialLocation');
   }
   
   return GoRouter(
