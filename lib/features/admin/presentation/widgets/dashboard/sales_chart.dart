@@ -31,7 +31,7 @@ class SalesChart extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       'المبيعات - آخر 7 أيام',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF0A2647),
@@ -60,7 +60,7 @@ class SalesChart extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           '$trend%',
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -110,7 +110,7 @@ class SalesChart extends StatelessWidget {
                         getTitlesWidget: (value, meta) {
                           return Text(
                             '${(value / 1000).toInt()}k',
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 10,
                               color: Colors.grey[600],
                             ),
@@ -131,7 +131,7 @@ class SalesChart extends StatelessWidget {
                               padding: const EdgeInsets.only(top: 8.0),
                               child: Text(
                                 DateFormat('E', 'ar').format(date),
-                                style: GoogleFonts.almarai(
+                                style: TextStyle(
                                   fontSize: 10,
                                   color: Colors.grey[600],
                                 ),
@@ -194,7 +194,7 @@ class SalesChart extends StatelessWidget {
                         return touchedSpots.map((spot) {
                           return LineTooltipItem(
                             '${spot.y.toStringAsFixed(0)} د.أ',
-                            GoogleFonts.almarai(
+                            TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 12,

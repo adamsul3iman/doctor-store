@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../data/services/admin_dashboard_service.dart';
 
@@ -29,7 +29,7 @@ class RecentActivitiesList extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       'آخر النشاطات',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF0A2647),
@@ -41,7 +41,7 @@ class RecentActivitiesList extends StatelessWidget {
                   onPressed: () {},
                   child: Text(
                     'عرض الكل',
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 12,
                       color: const Color(0xFF0A2647),
                     ),
@@ -105,7 +105,7 @@ class _ActivityItem extends StatelessWidget {
             children: [
               Text(
                 activity.title,
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF0A2647),
@@ -114,7 +114,7 @@ class _ActivityItem extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 activity.subtitle,
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey[600],
                 ),
@@ -125,7 +125,7 @@ class _ActivityItem extends StatelessWidget {
         const SizedBox(width: 12),
         Text(
           timeago.format(activity.time, locale: 'ar'),
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 11,
             color: Colors.grey[500],
           ),

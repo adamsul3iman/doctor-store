@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 
 class QuickActionsGrid extends StatelessWidget {
   final Function(String action) onActionTap;
@@ -41,7 +41,7 @@ class QuickActionsGrid extends StatelessWidget {
                 const SizedBox(width: 12),
                 Text(
                   'إجراءات سريعة',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF0A2647),
@@ -146,7 +146,7 @@ class _QuickActionButton extends StatelessWidget {
                   child: Text(
                     action.title,
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 10.5,
                       fontWeight: FontWeight.bold,
                       color: const Color(0xFF0A2647),
