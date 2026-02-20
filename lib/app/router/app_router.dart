@@ -19,7 +19,6 @@ import 'package:doctor_store/features/product/presentation/screens/all_products_
 import 'package:doctor_store/features/product/presentation/screens/category_screen.dart';
 import 'package:doctor_store/features/browse/presentation/screens/browse_all_screen.dart';
 import 'package:doctor_store/features/product/presentation/screens/product_details_wrapper.dart';
-// مسارات الإدارة تُحمل بشكل مؤجل (deferred) - لا نستوردها هنا
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/features/static/presentation/screens/about_screen.dart';
 import 'package:doctor_store/features/static/presentation/screens/privacy_screen.dart';
@@ -27,9 +26,10 @@ import 'package:doctor_store/features/static/presentation/screens/terms_screen.d
 import 'package:doctor_store/features/static/presentation/screens/contact_screen.dart';
 import 'package:doctor_store/app/widgets/admin_guard.dart';
 
-// مسارات الإدارة - تُحمل بشكل مؤجل لتقليل حجم البندل الأساسي
-// ignore: avoid_dynamic_calls
-final Map<String, dynamic> _adminRoutes = {};
+// مسارات الإدارة - تُستورد بشكل مؤجل (deferred loading)
+import 'package:doctor_store/features/admin/presentation/screens/admin_dashboard.dart' deferred as admin_dashboard;
+import 'package:doctor_store/features/admin/presentation/screens/product_form_screen.dart' deferred as admin_product;
+import 'package:doctor_store/features/admin/presentation/screens/admin_product_edit_wrapper.dart' deferred as admin_edit;
 
 // ================= Helper transition builders =================
 
@@ -317,11 +317,8 @@ List<RouteBase> _buildRoutes() {
       pageBuilder: (context, state) => _buildDeferredAdminPage(
         state,
         () async {
-          final module = await Future.wait([
-            import('package:doctor_store/features/admin/presentation/screens/admin_dashboard.dart' as deferred,
-              loadLibrary: () => deferred.loadLibrary()),
-          ]);
-          return deferred.AdminDashboard();
+          await admin_dashboard.loadLibrary();
+          return admin_dashboard.AdminDashboard();
         },
       ),
     ),
@@ -330,11 +327,8 @@ List<RouteBase> _buildRoutes() {
       pageBuilder: (context, state) => _buildDeferredAdminPage(
         state,
         () async {
-          final module = await Future.wait([
-            import('package:doctor_store/features/admin/presentation/screens/product_form_screen.dart' as deferred,
-              loadLibrary: () => deferred.loadLibrary()),
-          ]);
-          return deferred.ProductFormScreen();
+          await admin_product.loadLibrary();
+          return admin_product.ProductFormScreen();
         },
       ),
     ),
@@ -343,24 +337,21 @@ List<RouteBase> _buildRoutes() {
       pageBuilder: (context, state) => _buildDeferredAdminPage(
         state,
         () async {
-          final module = await Future.wait([
-            import('package:doctor_store/features/admin/presentation/screens/product_form_screen.dart' as deferred,
-              loadLibrary: () => deferred.loadLibrary()),
-            import('package:doctor_store/features/admin/presentation/screens/admin_product_edit_wrapper.dart' as deferred2,
-              loadLibrary: () => deferred2.loadLibrary()),
-          ]);
           final extra = state.extra;
           final id = state.uri.queryParameters['id'];
           
           if (extra is Product) {
-            return deferred.ProductFormScreen(
+            await admin_product.loadLibrary();
+            return admin_product.ProductFormScreen(
               extra: extra,
               productToEdit: extra,
             );
           } else if (id != null && id.isNotEmpty) {
-            return deferred2.AdminProductEditWrapper(productId: id);
+            await admin_edit.loadLibrary();
+            return admin_edit.AdminProductEditWrapper(productId: id);
           }
-          return deferred.ProductFormScreen();
+          await admin_product.loadLibrary();
+          return admin_product.ProductFormScreen();
         },
       ),
     ),
