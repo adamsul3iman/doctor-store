@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 
 import 'package:doctor_store/features/product/presentation/widgets/reviews_section.dart';
 
@@ -12,7 +12,7 @@ void main() {
     Widget wrapWithMaterial(Widget child) {
       return MaterialApp(
         theme: ThemeData(
-          textTheme: GoogleFonts.almaraiTextTheme(),
+          textTheme: ThemeData.light().textTheme,
         ),
         home: Scaffold(body: child),
       );
@@ -128,7 +128,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(
-            textTheme: GoogleFonts.almaraiTextTheme(),
+            textTheme: ThemeData.light().textTheme,
           ),
           home: Scaffold(
             body: SingleChildScrollView(

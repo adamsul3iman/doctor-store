@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 
 import 'package:doctor_store/features/orders/presentation/screens/orders_screen.dart';
 
@@ -14,7 +14,7 @@ class TestOrdersScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       theme: ThemeData(
-        textTheme: GoogleFonts.almaraiTextTheme(),
+        textTheme: ThemeData.light().textTheme,
       ),
       home: Scaffold(
         body: _OrdersList(orders: orders),
@@ -39,7 +39,7 @@ class _OrdersList extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               'لا توجد طلبات سابقة',
-              style: GoogleFonts.almarai(fontSize: 18, color: Colors.grey),
+              style: TextStyle(fontSize: 18, color: Colors.grey),
             ),
           ],
         ),
