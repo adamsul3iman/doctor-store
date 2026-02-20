@@ -1,41 +1,31 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:meta_seo/meta_seo.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:timeago/timeago.dart' as timeago;
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
 
 import 'app/app.dart';
+import 'package:doctor_store/shared/utils/seo_manager.dart';
+import 'package:doctor_store/shared/utils/web_bootstrap.dart';
 
 Future<void> main() async {
-  // ✅ استخدام Path URL Strategy قبل أي تهيئة أخرى
+  // ✅ Web-only bootstrap (guarded via conditional imports)
   if (kIsWeb) {
-    setUrlStrategy(PathUrlStrategy());
+    setupUrlStrategy();
   }
   
   WidgetsFlutterBinding.ensureInitialized();
 
   // BUILD_VERSION: 9 - Path URL Strategy with redirect-based deep links
   if (kIsWeb) {
-    MetaSEO().config();
-    debugPrint('URL Strategy: Path (clean URLs without #)');
+    SeoManager.init();
   }
 
   // Service Worker cleanup
   if (kIsWeb) {
-    html.window.navigator.serviceWorker?.getRegistrations().then((regs) {
-      for (var reg in regs) {
-        reg.unregister();
-      }
-      debugPrint('Service Workers unregistered: ${regs.length}');
-    }).catchError((e) {
-      debugPrint('SW cleanup error: $e');
-    });
+    await cleanupServiceWorkers();
   }
 
   // تحميل الإعدادات

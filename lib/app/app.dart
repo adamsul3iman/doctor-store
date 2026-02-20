@@ -3,8 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
 
 import 'package:doctor_store/core/theme/app_theme.dart';
 import 'package:doctor_store/app/router/app_router.dart';
@@ -28,9 +26,7 @@ class _DoctorStoreAppState extends ConsumerState<DoctorStoreApp> {
     // ✅ قراءة URL المتصفح وتهيئة الـ Router به
     String initialLocation = '/';
     if (kIsWeb) {
-      final path = html.window.location.pathname ?? '/';
-      final query = html.window.location.search ?? '';
-      initialLocation = path + query;
+      initialLocation = Uri.base.path + (Uri.base.hasQuery ? '?${Uri.base.query}' : '');
       if (initialLocation.isEmpty) initialLocation = '/';
       
       // استخدام print بدلاً من debugPrint للإنتاج
