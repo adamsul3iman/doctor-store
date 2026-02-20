@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:doctor_store/features/auth/presentation/widgets/welcome_dialog.dart';
 
 class TopPromoBanner extends StatefulWidget {
@@ -61,11 +60,11 @@ class _TopPromoBannerState extends State<TopPromoBanner> {
                 children: [
                   Text(
                     "انضم لعائلة الدكتور واحصل على الميزات!",
-                    style: GoogleFonts.almarai(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                   Text(
                     "سجل بريدك لحفظ المفضلة ومتابعة الطلبات",
-                    style: GoogleFonts.almarai(color: Colors.white70, fontSize: 10),
+                    style: TextStyle(color: Colors.white70, fontSize: 10),
                   ),
                 ],
               ),
@@ -83,7 +82,7 @@ class _TopPromoBannerState extends State<TopPromoBanner> {
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: Text("سجل الآن", style: GoogleFonts.almarai(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF0A2647))),
+              child: Text("سجل الآن", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF0A2647))),
             ),
 
             const SizedBox(width: 8),

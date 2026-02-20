@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class FreeShippingProgressBar extends StatelessWidget {
   final double currentTotal;
@@ -61,7 +60,7 @@ class FreeShippingProgressBar extends StatelessWidget {
                   hasAchieved
                       ? 'مبروك! حصلت على شحن مجاني'
                       : 'باقي ${remaining.toStringAsFixed(0)} دينار للحصول على شحن مجاني',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: hasAchieved
@@ -146,7 +145,7 @@ class FreeShippingProgressBar extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'أضف منتجات بقيمة ${remaining.toStringAsFixed(0)} دينار لتوفير تكلفة الشحن',
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 11,
                 color: Colors.grey[600],
               ),

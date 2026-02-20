@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:doctor_store/features/cart/application/cart_manager.dart';
 import 'package:doctor_store/features/wishlist/application/wishlist_manager.dart';
 import 'package:doctor_store/shared/widgets/app_network_image.dart';
@@ -27,7 +27,7 @@ class WishlistScreen extends ConsumerWidget {
         ),
         title: Text(
           'المفضلة',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             color: const Color(0xFF0A2647),
             fontWeight: FontWeight.bold,
             fontSize: 18,
@@ -43,18 +43,18 @@ class WishlistScreen extends ConsumerWidget {
                   builder: (context) => AlertDialog(
                     title: Text(
                       'مسح المفضلة',
-                      style: GoogleFonts.almarai(fontWeight: FontWeight.bold),
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     content: Text(
                       'هل أنت متأكد من مسح جميع المنتجات من المفضلة؟',
-                      style: GoogleFonts.almarai(),
+                      style: TextStyle(),
                     ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
                         child: Text(
                           'إلغاء',
-                          style: GoogleFonts.almarai(color: Colors.grey),
+                          style: TextStyle(color: Colors.grey),
                         ),
                       ),
                       TextButton(
@@ -64,7 +64,7 @@ class WishlistScreen extends ConsumerWidget {
                         },
                         child: Text(
                           'مسح',
-                          style: GoogleFonts.almarai(color: Colors.red),
+                          style: TextStyle(color: Colors.red),
                         ),
                       ),
                     ],
@@ -73,7 +73,7 @@ class WishlistScreen extends ConsumerWidget {
               },
               child: Text(
                 'مسح الكل',
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   color: Colors.red,
                   fontSize: 12,
                 ),
@@ -100,7 +100,7 @@ class WishlistScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(
             'المفضلة فارغة',
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: const Color(0xFF0A2647),
@@ -109,7 +109,7 @@ class WishlistScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           Text(
             'أضف منتجاتك المفضلة هنا',
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 14,
               color: Colors.grey[600],
             ),
@@ -128,7 +128,7 @@ class WishlistScreen extends ConsumerWidget {
             icon: const Icon(Icons.shopping_bag_outlined),
             label: Text(
               'تصفح المنتجات',
-              style: GoogleFonts.almarai(fontWeight: FontWeight.bold),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -171,7 +171,7 @@ class WishlistScreen extends ConsumerWidget {
                   SnackBar(
                     content: Text(
                       'تم نقل المنتج إلى السلة',
-                      style: GoogleFonts.almarai(),
+                      style: TextStyle(),
                     ),
                     backgroundColor: const Color(0xFF0A2647),
                     duration: const Duration(seconds: 2),
@@ -272,7 +272,7 @@ class _WishlistItemCard extends StatelessWidget {
                       product.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF0A2647),
@@ -285,7 +285,7 @@ class _WishlistItemCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             '${product.price.toStringAsFixed(2)} د.أ',
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: const Color(0xFFD4AF37),
@@ -313,7 +313,7 @@ class _WishlistItemCard extends StatelessWidget {
                         icon: const Icon(Icons.shopping_cart_outlined, size: 16),
                         label: Text(
                           'أضف للسلة',
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                           ),

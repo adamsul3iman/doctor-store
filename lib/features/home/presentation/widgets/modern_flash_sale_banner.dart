@@ -4,7 +4,6 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/shared/services/supabase_service.dart';
@@ -87,7 +86,7 @@ class _ModernFlashSaleBannerState extends ConsumerState<ModernFlashSaleBanner>
           children: [
             Text(
               'تسوق الآن',
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w900,
                 color: const Color(0xFF0A2647),
@@ -238,7 +237,7 @@ class _ModernFlashSaleBannerState extends ConsumerState<ModernFlashSaleBanner>
                                       maxLines: 1,
                                       minFontSize: isDesktop ? 20 : 16,
                                       overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.almarai(
+                                      style: TextStyle(
                                         fontSize: isDesktop ? 28 : 20,
                                         fontWeight: FontWeight.w900,
                                         color: Colors.white,
@@ -250,7 +249,7 @@ class _ModernFlashSaleBannerState extends ConsumerState<ModernFlashSaleBanner>
                                       headerSubtitle,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.almarai(
+                                      style: TextStyle(
                                         fontSize: isDesktop ? 16 : 13,
                                         fontWeight: FontWeight.w600,
                                         color: Colors.white.withValues(alpha: 0.90),
@@ -262,7 +261,7 @@ class _ModernFlashSaleBannerState extends ConsumerState<ModernFlashSaleBanner>
                                         children: [
                                           Text(
                                             '$discountPercent%',
-                                            style: GoogleFonts.almarai(
+                                            style: TextStyle(
                                               fontSize: isDesktop ? 48 : 32,
                                               fontWeight: FontWeight.w900,
                                               color: Colors.white,
@@ -272,7 +271,7 @@ class _ModernFlashSaleBannerState extends ConsumerState<ModernFlashSaleBanner>
                                           const SizedBox(width: 8),
                                           Text(
                                             'خصم',
-                                            style: GoogleFonts.almarai(
+                                            style: TextStyle(
                                               fontSize: isDesktop ? 20 : 14,
                                               fontWeight: FontWeight.w800,
                                               color: Colors.white.withValues(alpha: 0.95),
@@ -287,7 +286,7 @@ class _ModernFlashSaleBannerState extends ConsumerState<ModernFlashSaleBanner>
                                         maxLines: 2,
                                         minFontSize: 12,
                                         overflow: TextOverflow.ellipsis,
-                                        style: GoogleFonts.almarai(
+                                        style: TextStyle(
                                           fontSize: isDesktop ? 16 : 13,
                                           fontWeight: FontWeight.w700,
                                           color: Colors.white,
@@ -491,7 +490,7 @@ class _TimeBox extends StatelessWidget {
       children: [
         Text(
           value.toString().padLeft(2, '0'),
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: isDesktop ? 16 : 13,
             fontWeight: FontWeight.w900,
             color: Colors.white,
@@ -500,7 +499,7 @@ class _TimeBox extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           label,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: isDesktop ? 10 : 8,
             fontWeight: FontWeight.w700,
             color: Colors.white.withValues(alpha: 0.80),

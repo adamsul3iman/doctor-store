@@ -1,5 +1,4 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_card.dart';
 
@@ -105,7 +104,7 @@ class _DiningSectionState extends State<DiningSection> {
                   children: [
                     Text(
                       'اختر جو منزلك',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                         color: Colors.brown.shade900,
@@ -114,7 +113,7 @@ class _DiningSectionState extends State<DiningSection> {
                     const SizedBox(height: 4),
                     Text(
                       'طاولات سفرة خشبية أو بورسلان لتناسب أسلوب بيتك.',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 12,
                         color: const Color(0xFF374151),
                       ),
@@ -168,7 +167,7 @@ class _DiningSectionState extends State<DiningSection> {
                         child: Text(
                           'خشب كلاسيك (${_woodProducts.length})',
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: _isPorcelain
@@ -198,7 +197,7 @@ class _DiningSectionState extends State<DiningSection> {
                         child: Text(
                           'بورسلان مودرن (${_porcelainProducts.length})',
                           textAlign: TextAlign.center,
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: _isPorcelain
@@ -226,7 +225,7 @@ class _DiningSectionState extends State<DiningSection> {
                     ? 'اختر من طاولات السفرة البورسلان بتصاميم حديثة وجودة عالية.'
                     : 'اختر من طاولات السفرة الخشبية الكلاسيكية بأجواء دافئة.',
                 key: ValueKey(_isPorcelain),
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 12,
                   color: const Color(0xFF374151),
                 ),
@@ -242,7 +241,7 @@ class _DiningSectionState extends State<DiningSection> {
                 ? Center(
                     child: Text(
                       'لا توجد طاولات متاحة في هذا التصنيف حالياً.',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey.shade600,
                       ),

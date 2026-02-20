@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle // ⚠️ ADDED for styling
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:doctor_store/shared/services/analytics_service.dart';
 
@@ -331,7 +331,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                           setState(() => _searchQuery = value),
                       textInputAction: TextInputAction.search,
                       textAlignVertical: TextAlignVertical.center,
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 13,
                         color: const Color(0xFF0A2647),
                       ),
@@ -339,7 +339,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                       decoration: InputDecoration(
                         hintText:
                             'ابحث داخل هذا القسم عن منتج أو نوع قماش أو لون...',
-                        hintStyle: GoogleFonts.almarai(
+                        hintStyle: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade500,
                         ),
@@ -406,7 +406,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                           const SizedBox(width: 6),
                           Text(
 'ترتيب حسب: $_currentSortLabel',
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: const Color(0xFF0A2647),
@@ -440,7 +440,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                                   },
                                   selectedColor: widget.themeColor,
                                   backgroundColor: Colors.grey.shade100,
-                                  labelStyle: GoogleFonts.almarai(
+                                  labelStyle: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                     color: _selectedSubCategoryId == null
@@ -480,7 +480,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                                       backgroundColor:
                                           widget.themeColor.withValues(
                                               alpha: 0.05),
-                                      labelStyle: GoogleFonts.almarai(
+                                      labelStyle: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                         color: _selectedSubCategoryId == s.id
@@ -568,7 +568,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
               children: [
                 Text(
                   widget.categoryName,
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                     color: const Color(0xFF0A2647),
@@ -577,7 +577,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                 const SizedBox(height: 4),
                 Text(
                   tagline,
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey.shade700,
                     height: 1.5,
@@ -592,7 +592,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
             children: [
               Text(
                 countLabel,
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF0A2647),
@@ -601,7 +601,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
               const SizedBox(height: 4),
               Text(
                 hasFilter ? 'مع تطبيق فلاتر مخصصة' : 'يمكنك استخدام الفلاتر بالأعلى',
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey.shade600,
                 ),
@@ -659,7 +659,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                           children: [
                             Text(
                               'الفرز والفلترة',
-                              style: GoogleFonts.almarai(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
                                 color: const Color(0xFF0A2647),
@@ -674,7 +674,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                         const SizedBox(height: 12),
                         Text(
                           'الترتيب',
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                           ),
@@ -706,7 +706,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                         const SizedBox(height: 16),
                         Text(
                           'الفلاتر',
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                           ),
@@ -737,7 +737,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                           const SizedBox(height: 16),
                           Text(
                             'الفئات الفرعية',
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
                             ),
@@ -785,7 +785,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                               },
                               child: Text(
                                 'مسح الكل',
-                                style: GoogleFonts.almarai(
+                                style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.redAccent,
                                 ),
@@ -812,7 +812,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                               },
                               child: Text(
                                 hasAnyFilter ? 'تطبيق الفلاتر' : 'إغلاق',
-                                style: GoogleFonts.almarai(fontSize: 13),
+                                style: TextStyle(fontSize: 13),
                               ),
                             ),
                           ],

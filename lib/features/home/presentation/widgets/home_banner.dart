@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
@@ -191,12 +190,10 @@ class _HomeBannerState extends State<HomeBanner> {
                     if (banner['title'] != null && banner['title'].toString().isNotEmpty)
                       Text(
                         banner['title'],
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.w900, // خط عريض جداً
-                          height: 1.2,
-                          shadows: [const Shadow(blurRadius: 10, color: Colors.black45, offset: Offset(0, 2))],
                         ),
                       ),
                     
@@ -205,7 +202,7 @@ class _HomeBannerState extends State<HomeBanner> {
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           banner['subtitle'],
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.9),
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -226,7 +223,7 @@ class _HomeBannerState extends State<HomeBanner> {
                         ),
                         child: Text(
                           banner['button_text'] ?? 'تسوق الآن',
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             color: Colors.black,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,

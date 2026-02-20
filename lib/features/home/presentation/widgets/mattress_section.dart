@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
@@ -62,7 +61,7 @@ class MattressSection extends StatelessWidget {
                 children: [
                   Text(
                     'فرشات طبية مريحة',
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
@@ -71,7 +70,7 @@ class MattressSection extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     'طبقات دعم متعددة لراحة ظهرك ونوم أعمق.',
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 12,
                     ),
@@ -151,7 +150,7 @@ class _MattressHeroCard extends StatelessWidget {
                             product.title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontWeight: FontWeight.w900,
                               fontSize: 15,
                               height: 1.15,
@@ -161,7 +160,7 @@ class _MattressHeroCard extends StatelessWidget {
                           const SizedBox(height: 6),
                           Text(
                             'مقاسات متعددة · دعم فِقري',
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 11,
                               color: Colors.grey[600],
                             ),
@@ -179,7 +178,7 @@ class _MattressHeroCard extends StatelessWidget {
                       ),
                       child: Text(
                         _buildMattressPriceLabel(product),
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w900,
                           color: theme.colorScheme.secondary,
@@ -306,7 +305,7 @@ class _MattressCard extends StatelessWidget {
                         product.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 13,
                           height: 1.2,
@@ -316,7 +315,7 @@ class _MattressCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text(
                         _buildMattressPriceLabel(product),
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
                           color: theme.colorScheme.secondary,
@@ -325,7 +324,7 @@ class _MattressCard extends StatelessWidget {
                       const SizedBox(height: 6),
                       Text(
                         'مقاسات متعددة · دعم فِقري',
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           fontSize: 10,
                           color: Colors.grey[500],
                         ),

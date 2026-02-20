@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -52,7 +52,7 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
           isHome: false,
           centerWidget: Text(
             'تصفح المتجر',
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -87,12 +87,12 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
                   ),
                 ),
               ),
-              labelStyle: GoogleFonts.almarai(
+              labelStyle: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
               ),
-              unselectedLabelStyle: GoogleFonts.almarai(
+              unselectedLabelStyle: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
               ),
@@ -105,7 +105,7 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
                     children: [
                       const Icon(Icons.grid_view_rounded, size: 18),
                       const SizedBox(width: 8),
-                      Text('الأقسام', style: GoogleFonts.almarai()),
+                      Text('الأقسام', style: TextStyle()),
                     ],
                   ),
                 ),
@@ -115,7 +115,7 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
                     children: [
                       const Icon(Icons.shopping_bag_outlined, size: 18),
                       const SizedBox(width: 8),
-                      Text('جميع المنتجات', style: GoogleFonts.almarai()),
+                      Text('جميع المنتجات', style: TextStyle()),
                     ],
                   ),
                 ),
@@ -181,7 +181,7 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
                         children: [
                           Text(
                             'اكتشف منتجاتنا',
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -190,7 +190,7 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
                           const SizedBox(height: 4),
                           Text(
                             'تصفح ${categories.length} قسم متنوع',
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 13,
                               color: Colors.white70,
                             ),
@@ -288,7 +288,7 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
             Text(
               category.name,
               textAlign: TextAlign.center,
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: const Color(0xFF0A2647),
@@ -336,7 +336,7 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
                     const SizedBox(width: 8),
                     Text(
                       'الترتيب:',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF0A2647),
@@ -368,7 +368,7 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   'عرض ${sortedProducts.length} منتج',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 13,
                     color: Colors.grey[600],
                     fontWeight: FontWeight.w600,
@@ -412,7 +412,7 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
       child: FilterChip(
         label: Text(
           label,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
             color: isSelected ? Colors.white : const Color(0xFF0A2647),
@@ -522,7 +522,7 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
                       ),
                       child: Text(
                         '-$discountPercent%',
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -550,7 +550,7 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
                           const SizedBox(width: 2),
                           Text(
                             'فلاش',
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -572,7 +572,7 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
                     // اسم المنتج
                     Text(
                       product.title,
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF0A2647),
@@ -591,7 +591,7 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
                           const SizedBox(width: 4),
                           Text(
                             product.ratingAverage.toStringAsFixed(1),
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: Colors.grey[700],
@@ -600,7 +600,7 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
                           const SizedBox(width: 4),
                           Text(
                             '(${product.ratingCount})',
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 11,
                               color: Colors.grey[500],
                             ),
@@ -613,7 +613,7 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
                       children: [
                         Text(
                           '${product.price.toStringAsFixed(0)} دينار',
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: const Color(0xFF0A2647),
@@ -623,7 +623,7 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
                         if (hasDiscount)
                           Text(
                             '${product.oldPrice!.toStringAsFixed(0)} دينار',
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey,
                               decoration: TextDecoration.lineThrough,

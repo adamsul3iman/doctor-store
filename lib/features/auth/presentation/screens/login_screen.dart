@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/TextStyle'; // ⚠️ REMOVED for smaller bundle // ⚠️ ADDED for TextStyle
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:doctor_store/shared/widgets/constrained_dialog.dart';
@@ -128,7 +128,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 ),
                 title: Text(
                   'استعادة كلمة المرور',
-                  style: GoogleFonts.almarai(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -420,7 +420,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     ),
                     child: Text(
                       _formError!,
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         color: AppTheme.error,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,

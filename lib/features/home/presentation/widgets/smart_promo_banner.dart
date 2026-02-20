@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:doctor_store/features/auth/application/user_data_manager.dart';
 import 'package:doctor_store/shared/utils/wishlist_manager.dart';
@@ -71,7 +70,7 @@ class SmartHeader extends ConsumerWidget {
                     children: [
                       Text(
                         user.isGuest ? "أهلاً بك زائرنا" : "مرحباً، ${user.name.split(' ')[0]}", // نأخذ الاسم الأول فقط
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                           color: const Color(0xFF0A2647),
@@ -79,7 +78,7 @@ class SmartHeader extends ConsumerWidget {
                       ),
                       Text(
                         user.isGuest ? "سجل الدخول للمزيد" : "عرض حسابي",
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           fontSize: 10,
                           color: Colors.grey[600],
                         ),

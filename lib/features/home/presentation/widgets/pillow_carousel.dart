@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 
@@ -46,7 +45,7 @@ class PillowCarousel extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     'وسائد لنوم أحلى',
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                       color: const Color(0xFF0A2647),
@@ -56,7 +55,7 @@ class PillowCarousel extends StatelessWidget {
               ),
               Text(
                 'سحب سريع',
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey[600],
                 ),
@@ -132,7 +131,7 @@ class _PillowCard extends StatelessWidget {
                           product.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             fontWeight: FontWeight.w700,
                             fontSize: 12,
                             height: 1.2,

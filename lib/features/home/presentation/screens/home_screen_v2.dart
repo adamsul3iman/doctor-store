@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:go_router/go_router.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -288,7 +288,7 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
                     const SizedBox(width: 8),
                     Text(
                       "إتمام الطلب",
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 14,
                         color: Colors.white,
@@ -818,7 +818,7 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
               Expanded(
                 child: Text(
                   'اكتمل تسجيلك تقريباً! أضِف اسمك ورقم هاتفك لتسريع التواصل والتوصيل.',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -845,7 +845,7 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
                 ),
                 child: Text(
                   'إكمال البيانات',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
@@ -892,7 +892,7 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
               Expanded(
                 child: Text(
                   'ابحث عن منتج، قسم أو عرض...',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[600],
                     fontWeight: FontWeight.w500,
@@ -947,7 +947,7 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
                 Expanded(
                   child: Text(
                     title,
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                       color: const Color(0xFF0A2647),
@@ -970,7 +970,7 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
               ),
               label: Text(
                 actionText,
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: const Color(0xFF0A2647),
@@ -1125,7 +1125,7 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
                   maxLines: 1,
                   minFontSize: 18,
                   overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     color: Colors.pinkAccent,
@@ -1255,7 +1255,7 @@ class _CategoryTileFromDB extends StatelessWidget {
               minFontSize: 10,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
                 color: const Color(0xFF0A2647),
@@ -1269,7 +1269,7 @@ class _CategoryTileFromDB extends StatelessWidget {
               minFontSize: 8,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 9,
                 color: Colors.grey[600],
                 fontWeight: FontWeight.w500,
@@ -1373,7 +1373,7 @@ class _QuickCategoryTile extends StatelessWidget {
               minFontSize: 10,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
                 color: const Color(0xFF0A2647),
@@ -1387,7 +1387,7 @@ class _QuickCategoryTile extends StatelessWidget {
               minFontSize: 8,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 9,
                 color: Colors.grey[600],
                 fontWeight: FontWeight.w500,
@@ -1446,7 +1446,7 @@ class _GuestSignupBannerV2 extends StatelessWidget
             Expanded(
               child: Text(
                 'أنشئ حساباً مجانياً لحفظ مفضلتك وتتبع طلباتك بسهولة.',
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   color: Colors.white,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -1473,7 +1473,7 @@ class _GuestSignupBannerV2 extends StatelessWidget
               ),
               child: Text(
                 'إنشاء حساب',
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                 ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle 
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -80,7 +80,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       appBar: AppBar(
         title: Text(
           'إعادة تعيين كلمة المرور',
-          style: GoogleFonts.almarai(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: Center(
@@ -94,7 +94,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               children: [
                 Text(
                   'أدخل كلمة مرور جديدة لحسابك ثم اضغط حفظ.',
-                  style: GoogleFonts.almarai(fontSize: 14),
+                  style: TextStyle(fontSize: 14),
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
@@ -136,7 +136,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   const SizedBox(height: 12),
                   Text(
                     _errorMessage!,
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       color: Colors.red,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -159,7 +159,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           )
                         : Text(
                             'حفظ كلمة المرور',
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                             ),
                           ),

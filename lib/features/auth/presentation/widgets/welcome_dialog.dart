@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:doctor_store/shared/widgets/constrained_dialog.dart';
 
@@ -110,7 +110,7 @@ class _WelcomeDialogState extends ConsumerState<WelcomeDialog> {
             
             Text(
               "احفظ مفضلتك للأبد!", 
-              style: GoogleFonts.almarai(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             

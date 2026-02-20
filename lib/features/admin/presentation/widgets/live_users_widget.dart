@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import '../../../../shared/services/analytics_service.dart';
 
 /// Widget لعرض عدد المتصلين الآن (Live Users Counter)
@@ -99,7 +99,7 @@ class _LiveUsersWidgetState extends State<LiveUsersWidget> {
               const SizedBox(width: 8),
               Text(
                 'متواجدون الآن',
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: Colors.white.withValues(alpha: 0.9),
@@ -135,7 +135,7 @@ class _LiveUsersWidgetState extends State<LiveUsersWidget> {
                   children: [
                     Text(
                       '$_onlineUsers',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -146,7 +146,7 @@ class _LiveUsersWidgetState extends State<LiveUsersWidget> {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
                         'زائر',
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           fontSize: 14,
                           color: Colors.white.withValues(alpha: 0.8),
                         ),
@@ -173,7 +173,7 @@ class _LiveUsersWidgetState extends State<LiveUsersWidget> {
                 const SizedBox(width: 6),
                 Text(
                   'آخر 5 دقائق',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 12,
                     color: Colors.white.withValues(alpha: 0.8),
                   ),
@@ -258,7 +258,7 @@ class _LiveUsersBadgeState extends State<LiveUsersBadge> {
             const SizedBox(width: 6),
             Text(
               '$_onlineUsers متصل',
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF4CAF50),

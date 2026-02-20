@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:intl/intl.dart'; // لتنسيق التاريخ
 import 'package:doctor_store/core/theme/app_theme.dart';
 import 'package:doctor_store/shared/widgets/quick_nav_bar.dart';
@@ -82,7 +82,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
                 children: [
                   Icon(Icons.shopping_bag_outlined, size: 80, color: Colors.grey[300]),
                   const SizedBox(height: 20),
-                  Text("لا توجد طلبات سابقة", style: GoogleFonts.almarai(fontSize: 18, color: Colors.grey)),
+                  Text("لا توجد طلبات سابقة", style: TextStyle(fontSize: 18, color: Colors.grey)),
                 ],
               ),
             );

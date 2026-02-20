@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -38,7 +38,7 @@ class ProductSearchDelegate extends SearchDelegate {
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       ),
       textTheme: TextTheme(
-        titleLarge: GoogleFonts.almarai(
+        titleLarge: TextStyle(
           color: Colors.white,
           fontSize: 18,
           fontWeight: FontWeight.normal,
@@ -141,7 +141,7 @@ class ProductSearchDelegate extends SearchDelegate {
                       children: [
                         Text(
                           'ابحث عن منتجك المفضل',
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             color: Colors.white,
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
@@ -150,7 +150,7 @@ class ProductSearchDelegate extends SearchDelegate {
                         const SizedBox(height: 4),
                         Text(
                           'اكتب اسم المنتج، النوع، أو استخدم كلمات مثل: فرشات، طاولات، مخدات...',
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.85),
                             fontSize: 11,
                           ),
@@ -172,7 +172,7 @@ class ProductSearchDelegate extends SearchDelegate {
                 const SizedBox(width: 8),
                 Text(
                   "الأكثر بحثاً",
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: const Color(0xFF0A2647)),
@@ -192,7 +192,7 @@ class ProductSearchDelegate extends SearchDelegate {
                 avatar: Icon(tag['icon'] as IconData, size: 16, color: const Color(0xFF0A2647)),
                 label: Text(
                   tag['label'] as String,
-                  style: GoogleFonts.almarai(color: const Color(0xFF0A2647), fontWeight: FontWeight.w600),
+                  style: TextStyle(color: const Color(0xFF0A2647), fontWeight: FontWeight.w600),
                 ),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 onPressed: () {
@@ -212,7 +212,7 @@ class ProductSearchDelegate extends SearchDelegate {
                   const SizedBox(width: 8),
                   Text(
                     "آخر ما بحثت عنه",
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.grey[800],
@@ -228,7 +228,7 @@ class ProductSearchDelegate extends SearchDelegate {
                   return InputChip(
                   label: Text(
                     q,
-                    style: GoogleFonts.almarai(fontSize: 13),
+                    style: TextStyle(fontSize: 13),
                   ),
                   backgroundColor: Colors.white,
                   onPressed: () {
@@ -279,7 +279,7 @@ class ProductSearchDelegate extends SearchDelegate {
                 children: [
                   const Icon(Icons.wifi_off, size: 60, color: Colors.redAccent),
                   const SizedBox(height: 10),
-                  Text("تعذر تحميل نتائج البحث، تأكد من اتصالك بالإنترنت", style: GoogleFonts.almarai()),
+                  Text("تعذر تحميل نتائج البحث، تأكد من اتصالك بالإنترنت", style: TextStyle()),
                 ],
               ),
             );
@@ -331,7 +331,7 @@ class ProductSearchDelegate extends SearchDelegate {
                     Expanded(
                       child: Text(
                         'لم نجد نتائج مطابقة تماماً، لكن قد تعجبك هذه المنتجات:',
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: Colors.blue.shade900,
@@ -386,7 +386,7 @@ class ProductSearchDelegate extends SearchDelegate {
                 Center(
                   child: Text(
                     'تصفح الأقسام لاكتشاف منتجاتنا',
-                    style: GoogleFonts.almarai(color: Colors.grey),
+                    style: TextStyle(color: Colors.grey),
                   ),
                 ),
             ],

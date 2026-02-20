@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:doctor_store/features/auth/application/user_data_manager.dart';
@@ -135,7 +135,7 @@ class _EmailOtpSheetState extends ConsumerState<EmailOtpSheet> {
           const SizedBox(height: 20),
           Text(
             'تحقق من بريدك الإلكتروني',
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w800,
               color: const Color(0xFF0A2647),
@@ -145,7 +145,7 @@ class _EmailOtpSheetState extends ConsumerState<EmailOtpSheet> {
           Text(
             'أرسلنا رمز تحقق مكوَّن من 6 أرقام إلى: ${widget.email}\nالرجاء إدخاله أدناه لإكمال إنشاء الحساب.',
             style:
-                GoogleFonts.almarai(fontSize: 13, color: Colors.grey[700]),
+                TextStyle(fontSize: 13, color: Colors.grey[700]),
           ),
           const SizedBox(height: 18),
           TextField(
@@ -155,7 +155,7 @@ class _EmailOtpSheetState extends ConsumerState<EmailOtpSheet> {
             decoration: InputDecoration(
               counterText: '',
               hintText: '••••••',
-              hintStyle: GoogleFonts.chakraPetch(
+              hintStyle: TextStyle(
                   letterSpacing: 8,
                   fontSize: 22,
                   color: Colors.grey[400]),
@@ -170,14 +170,14 @@ class _EmailOtpSheetState extends ConsumerState<EmailOtpSheet> {
                   const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
             ),
             textAlign: TextAlign.center,
-            style: GoogleFonts.chakraPetch(
+            style: TextStyle(
                 fontSize: 24, letterSpacing: 10, fontWeight: FontWeight.bold),
           ),
           if (_errorMessage != null) ...[
             const SizedBox(height: 8),
             Text(
               _errorMessage!,
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                   color: Colors.red.shade700,
                   fontSize: 12,
                   fontWeight: FontWeight.w600),
@@ -203,7 +203,7 @@ class _EmailOtpSheetState extends ConsumerState<EmailOtpSheet> {
                           color: Colors.white, strokeWidth: 2),
                     )
                   : Text('تأكيد الكود',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 16)),
             ),
           ),
@@ -212,7 +212,7 @@ class _EmailOtpSheetState extends ConsumerState<EmailOtpSheet> {
             child: TextButton(
               onPressed: _isLoading ? null : _resendCode,
               child: Text('لم يصلك الكود؟ أعد الإرسال',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                       color: const Color(0xFF0A2647),
                       fontWeight: FontWeight.bold)),
             ),

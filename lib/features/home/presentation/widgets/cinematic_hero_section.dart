@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:shimmer/shimmer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -275,7 +275,7 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
                             const SizedBox(width: 6),
                             Text(
                               'عرض خاص',
-                              style: GoogleFonts.almarai(
+                              style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -320,7 +320,7 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
                           opacity: isActive ? 1.0 : 0.0,
                           child: Text(
                             banner.title,
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 28,
                               fontWeight: FontWeight.w900,
                               color: Colors.white,
@@ -346,7 +346,7 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
                             banner.subtitle,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 14,
                               color: Colors.white.withValues(alpha: 0.9),
                               height: 1.5,
@@ -387,7 +387,7 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
                                 icon: const Icon(Icons.arrow_forward_rounded, size: 18),
                                 label: Text(
                                   banner.buttonText.isNotEmpty ? banner.buttonText : 'اكتشف المزيد',
-                                  style: GoogleFonts.almarai(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
                                   ),
@@ -463,7 +463,7 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
                   Text(
                     'أفضل مستلزمات المنزل',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -480,7 +480,7 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
                   Text(
                     'جودة عالية، أسعار مميزة، توصيل سريع',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 14,
                       color: Colors.white70,
                     ),
@@ -499,7 +499,7 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
                     icon: const Icon(Icons.explore, size: 20),
                     label: Text(
                       'تصفح المنتجات',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),

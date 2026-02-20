@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/features/recently_viewed/application/recently_viewed_manager.dart';
 import 'package:doctor_store/shared/widgets/app_network_image.dart';
@@ -24,7 +24,7 @@ class RecentlyViewedScreen extends ConsumerWidget {
         centerTitle: true,
         title: Text(
           'شاهدتها مؤخراً',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -38,18 +38,18 @@ class RecentlyViewedScreen extends ConsumerWidget {
                   builder: (context) => AlertDialog(
                     title: Text(
                       'مسح السجل',
-                      style: GoogleFonts.almarai(fontWeight: FontWeight.bold),
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     content: Text(
                       'هل تريد مسح جميع المنتجات المعروضة مؤخراً؟',
-                      style: GoogleFonts.almarai(),
+                      style: TextStyle(),
                     ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
                         child: Text(
                           'إلغاء',
-                          style: GoogleFonts.almarai(),
+                          style: TextStyle(),
                         ),
                       ),
                       TextButton(
@@ -59,7 +59,7 @@ class RecentlyViewedScreen extends ConsumerWidget {
                         },
                         child: Text(
                           'مسح',
-                          style: GoogleFonts.almarai(color: Colors.red),
+                          style: TextStyle(color: Colors.red),
                         ),
                       ),
                     ],
@@ -68,7 +68,7 @@ class RecentlyViewedScreen extends ConsumerWidget {
               },
               child: Text(
                 'مسح الكل',
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   color: Colors.white70,
                   fontSize: 12,
                 ),
@@ -95,7 +95,7 @@ class RecentlyViewedScreen extends ConsumerWidget {
           const SizedBox(height: 16),
           Text(
             'لم تشاهد أي منتجات بعد',
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Colors.grey[600],
@@ -104,7 +104,7 @@ class RecentlyViewedScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           Text(
             'تصفح منتجاتنا لتظهر هنا',
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 14,
               color: Colors.grey[500],
             ),
@@ -122,7 +122,7 @@ class RecentlyViewedScreen extends ConsumerWidget {
             ),
             child: Text(
               'تصفح المنتجات',
-              style: GoogleFonts.almarai(fontWeight: FontWeight.bold),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -138,7 +138,7 @@ class RecentlyViewedScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             child: Text(
               '${products.length} منتج',
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
               ),
@@ -271,7 +271,7 @@ class _RecentlyViewedItemCard extends StatelessWidget {
                     product.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       height: 1.3,
@@ -280,7 +280,7 @@ class _RecentlyViewedItemCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     '${product.price.toStringAsFixed(0)} د.أ',
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: const Color(0xFF0A2647),

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 // تأكد من أن مسارات الاستيراد هذه صحيحة في مشروعك
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
@@ -131,14 +130,14 @@ class _ProductSearchBottomSheetState
                       textInputAction: TextInputAction.search,
                       onChanged: _onQueryChanged,
                       onSubmitted: (_) => _triggerSearch(),
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,
                       ),
                       decoration: InputDecoration(
                         hintText: 'عن ماذا تبحث؟',
-                        hintStyle: GoogleFonts.almarai(
+                        hintStyle: TextStyle(
                           color: Colors.grey.shade500,
                           fontSize: 13,
                         ),
@@ -162,7 +161,7 @@ class _ProductSearchBottomSheetState
                                     alignment: Alignment.center,
                                     child: Text(
                                       'بحث',
-                                      style: GoogleFonts.almarai(
+                                      style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
@@ -331,7 +330,7 @@ class _ProductSearchBottomSheetState
             const SizedBox(width: 6),
             Text(
               label,
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: isActive ? Colors.white : Colors.grey.shade800,
@@ -362,7 +361,7 @@ class _ProductSearchBottomSheetState
         ),
         child: Text(
           label,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             color: isSelected ? Colors.white : Colors.grey.shade700,
@@ -383,12 +382,12 @@ class _ProductSearchBottomSheetState
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('أحدث عمليات البحث',
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                         fontSize: 14, fontWeight: FontWeight.bold)),
                 TextButton(
                   onPressed: () => setState(() => _recentSearches.clear()),
                   child: Text('مسح',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                           fontSize: 12, color: Colors.redAccent)),
                 ),
               ],
@@ -417,7 +416,7 @@ class _ProductSearchBottomSheetState
                         const Icon(Icons.history, size: 14, color: Colors.grey),
                         const SizedBox(width: 6),
                         Text(text,
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                                 fontSize: 12, color: Colors.black87)),
                       ],
                     ),
@@ -428,7 +427,7 @@ class _ProductSearchBottomSheetState
             const SizedBox(height: 24),
           ],
           Text('رائج الآن 🔥',
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                   fontSize: 14, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           Wrap(
@@ -448,7 +447,7 @@ class _ProductSearchBottomSheetState
                     size: 16, color: const Color(0xFF0A2647)),
                 label: Text(
                   tag['label'] as String,
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                       fontSize: 12, fontWeight: FontWeight.w600),
                 ),
                 onPressed: () {
@@ -473,12 +472,12 @@ class _ProductSearchBottomSheetState
           const SizedBox(height: 16),
           Text(
             'لا توجد نتائج لـ "$_query"',
-            style: GoogleFonts.almarai(
+            style: TextStyle(
                 fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black54),
           ),
           Text(
             'حاول البحث بكلمة أخرى أو تصفح الأقسام',
-            style: GoogleFonts.almarai(fontSize: 13, color: Colors.grey),
+            style: TextStyle(fontSize: 13, color: Colors.grey),
           ),
         ],
       ),
@@ -525,7 +524,7 @@ class _ProductSearchBottomSheetState
         children: [
           const Icon(Icons.wifi_off_rounded, size: 50, color: Colors.redAccent),
           const SizedBox(height: 10),
-          Text('خطأ في الاتصال', style: GoogleFonts.almarai()),
+          Text('خطأ في الاتصال', style: TextStyle()),
         ],
       ),
     );
@@ -592,7 +591,7 @@ class _ProductSearchBottomSheetState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('ترتيب النتائج حسب',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                       fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               _buildSortOption('relevant', 'الأكثر صلة'),
@@ -608,7 +607,7 @@ class _ProductSearchBottomSheetState
 
   Widget _buildSortOption(String key, String label) {
     return ListTile(
-      title: Text(label, style: GoogleFonts.almarai()),
+      title: Text(label, style: TextStyle()),
       trailing:
           _sortBy == key ? const Icon(Icons.check, color: Color(0xFF0A2647)) : null,
       onTap: () {
@@ -670,7 +669,7 @@ class _ProductSearchBottomSheetState
                           children: [
                             Text(
                               'تصفية النتائج',
-                              style: GoogleFonts.almarai(
+                              style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
                                 color: const Color(0xFF0A2647),
@@ -679,7 +678,7 @@ class _ProductSearchBottomSheetState
                             const SizedBox(height: 4),
                             Text(
                               'حدد المعايير المناسبة للبحث',
-                              style: GoogleFonts.almarai(
+                              style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[600],
                               ),
@@ -697,7 +696,7 @@ class _ProductSearchBottomSheetState
                     // Quick Filters Section
                     Text(
                       'خيارات سريعة',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: Colors.grey[800],
@@ -738,7 +737,7 @@ class _ProductSearchBottomSheetState
                         const SizedBox(width: 8),
                         Text(
                           'نطاق السعر',
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: Colors.grey[800],
@@ -767,7 +766,7 @@ class _ProductSearchBottomSheetState
                           ),
                           child: Text(
                             'د.أ',
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: Colors.grey[700],
@@ -791,7 +790,7 @@ class _ProductSearchBottomSheetState
                     // Quick Price Presets
                     Text(
                       'نطاقات سريعة',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
                       ),
@@ -829,7 +828,7 @@ class _ProductSearchBottomSheetState
                             icon: const Icon(Icons.check, size: 20),
                             label: Text(
                               'تطبيق التصفية',
-                              style: GoogleFonts.almarai(
+                              style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -866,7 +865,7 @@ class _ProductSearchBottomSheetState
                             ),
                             child: Text(
                               'مسح',
-                              style: GoogleFonts.almarai(
+                              style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -917,7 +916,7 @@ class _ProductSearchBottomSheetState
             const SizedBox(width: 8),
             Text(
               label,
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 color: isSelected ? color : Colors.grey[700],
@@ -940,7 +939,7 @@ class _ProductSearchBottomSheetState
       children: [
         Text(
           label,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 11,
             color: Colors.grey[600],
           ),
@@ -950,14 +949,14 @@ class _ProductSearchBottomSheetState
           keyboardType: TextInputType.number,
           controller: TextEditingController(text: value),
           onChanged: onChanged,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
             color: const Color(0xFF0A2647),
           ),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: GoogleFonts.almarai(
+            hintStyle: TextStyle(
               color: Colors.grey[400],
               fontSize: 14,
             ),
@@ -1006,7 +1005,7 @@ class _ProductSearchBottomSheetState
         ),
         child: Text(
           label,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
             color: isSelected ? Colors.white : Colors.grey[700],

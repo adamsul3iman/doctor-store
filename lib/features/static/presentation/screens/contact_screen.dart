@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -49,7 +49,7 @@ class ContactScreen extends ConsumerWidget {
                 : 'اتصل بنا',
             orElse: () => 'اتصل بنا',
           ),
-          style: GoogleFonts.almarai(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -134,7 +134,7 @@ class _DefaultContactIntro extends StatelessWidget {
       children: [
         Text(
           'يسعدنا تواصلك معنا',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
             color: const Color(0xFF0A2647),
@@ -143,7 +143,7 @@ class _DefaultContactIntro extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'فريق متجر الدكتور جاهز للرد على استفساراتك، مساعدتك في اختيار المنتج المناسب، ومتابعة طلباتك.',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 14,
             height: 1.7,
             color: Colors.grey[800],
@@ -170,7 +170,7 @@ class _DynamicContactIntro extends StatelessWidget {
       children: [
         Text(
           title,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
             color: const Color(0xFF0A2647),
@@ -179,7 +179,7 @@ class _DynamicContactIntro extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           content,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 14,
             height: 1.7,
             color: Colors.grey[800],
@@ -211,7 +211,7 @@ Widget _contactTile({required IconData icon, required String label, required Str
               children: [
                 Text(
                   label,
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF0A2647),
@@ -220,7 +220,7 @@ Widget _contactTile({required IconData icon, required String label, required Str
                 const SizedBox(height: 4),
                 Text(
                   value,
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[700],
                     height: 1.4,

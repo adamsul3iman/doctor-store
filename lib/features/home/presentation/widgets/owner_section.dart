@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:doctor_store/shared/utils/settings_provider.dart';
@@ -92,7 +91,7 @@ class OwnerSection extends ConsumerWidget {
                       const SizedBox(height: 12),
                       Text(
                         'نحن لا نبيع فرشات جاهزة فقط.. نحن نصنع نومك!',
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: const Color(0xFF0A2647),

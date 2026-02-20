@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:doctor_store/core/theme/app_theme.dart';
@@ -52,7 +52,7 @@ class ProductBottomBar extends StatelessWidget {
                 children: [
                   Text(
                     "ملخص طلبك",
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey.shade600,
                       fontWeight: FontWeight.w600,
@@ -62,7 +62,7 @@ class ProductBottomBar extends StatelessWidget {
                   Text(
                     // مثال: "1 حبة • 160.0 د.أ"
                     "$quantity $unitLabel • ${price.toStringAsFixed(1)} د.أ",
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
                       color: primaryColor,
@@ -71,7 +71,7 @@ class ProductBottomBar extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     "إتمام الطلب عبر واتساب والدفع عند الاستلام",
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 10,
                       color: Colors.grey.shade600,
                     ),
@@ -157,7 +157,7 @@ class ProductBottomBar extends StatelessWidget {
                             const SizedBox(width: 6),
                             Text(
                               "اطلب عبر واتساب",
-                              style: GoogleFonts.almarai(
+                              style: TextStyle(
                                 fontWeight: FontWeight.w800,
                                 fontSize: 13,
                               ),

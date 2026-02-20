@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:doctor_store/shared/utils/wishlist_manager.dart';
@@ -174,7 +174,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
               titlePadding: const EdgeInsets.only(bottom: 16),
               title: Text(
                 "قائمتي المفضلة",
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                   color: Colors.white,
@@ -242,7 +242,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                         children: [
                           Text(
                             "لديك ${favIds.length} منتجات مميزة",
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               color: Colors.grey[800],
                               fontWeight: FontWeight.bold,
                               fontSize: 14
@@ -250,7 +250,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                           ),
                           Text(
                             "اضغط على أي منتج لعرض التفاصيل، أو استخدم زر \"للسلة\" للإضافة المباشرة.",
-                            style: GoogleFonts.almarai(fontSize: 11, color: Colors.grey[600]),
+                            style: TextStyle(fontSize: 11, color: Colors.grey[600]),
                           ),
                         ],
                       ),
@@ -377,13 +377,13 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
           const SizedBox(height: 20),
           Text(
             "قائمتك فارغة حالياً",
-            style: GoogleFonts.almarai(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF0A2647)),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF0A2647)),
           ),
           const SizedBox(height: 10),
           Text(
             "اضغط على القلب ❤️ لحفظ المنتجات التي تعجبك هنا",
             textAlign: TextAlign.center,
-            style: GoogleFonts.almarai(fontSize: 14, color: Colors.grey),
+            style: TextStyle(fontSize: 14, color: Colors.grey),
           ),
           const SizedBox(height: 30),
         ElevatedButton(

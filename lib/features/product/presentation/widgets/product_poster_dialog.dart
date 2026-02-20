@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/shared/utils/product_nav_helper.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
@@ -150,13 +150,13 @@ class _ProductPosterDialogState extends State<ProductPosterDialog> {
                               children: [
                                 Text(
                                   "متجر الدكتور 🩺",
-                                  style: GoogleFonts.almarai(
+                                  style: TextStyle(
                                       fontSize: 12, color: Colors.grey),
                                 ),
                                 const SizedBox(height: 5),
                                 Text(
                                   widget.product.title,
-                                  style: GoogleFonts.almarai(
+                                  style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold),
                                   maxLines: 2,

@@ -7,7 +7,7 @@ import 'package:doctor_store/features/cart/application/cart_manager.dart';
 import 'package:doctor_store/shared/utils/product_nav_helper.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
 import 'package:doctor_store/shared/widgets/image_shimmer_placeholder.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/googleFonts'; // ⚠️ REMOVED for smaller bundle
 import 'package:doctor_store/shared/utils/responsive_layout.dart';
 import 'package:doctor_store/shared/widgets/app_network_image.dart';
 import 'package:doctor_store/features/product/presentation/providers/products_provider.dart';
@@ -156,7 +156,7 @@ class _InlineSimilarProductsStripState extends ConsumerState<InlineSimilarProduc
       children: [
         Text(
           'منتجات مقترحة لك',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
           ),
@@ -211,7 +211,7 @@ class _InlineSimilarProductsStripState extends ConsumerState<InlineSimilarProduc
                               '${product.price.toStringAsFixed(0)} د.أ',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.almarai(
+                              style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                               ),

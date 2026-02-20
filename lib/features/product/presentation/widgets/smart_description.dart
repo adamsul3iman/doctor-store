@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 
 class SmartDescription extends StatefulWidget {
   final String description;
@@ -69,7 +69,7 @@ class _SmartDescriptionState extends State<SmartDescription> with SingleTickerPr
                     children: [
                       Text(
                         isExpanded ? "عرض تفاصيل أقل" : "قراءة باقي التفاصيل",
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           color: const Color(0xFF0A2647),
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
@@ -107,12 +107,12 @@ class _SmartDescriptionState extends State<SmartDescription> with SingleTickerPr
               const SizedBox(width: 8),
               Text(
                 "${parts[0].trim()}: ",
-                style: GoogleFonts.almarai(fontWeight: FontWeight.bold, color: Colors.grey[800]),
+                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[800]),
               ),
               Expanded(
                 child: Text(
                   parts[1].trim(),
-                  style: GoogleFonts.almarai(color: Colors.black87),
+                  style: TextStyle(color: Colors.black87),
                 ),
               ),
             ],
@@ -137,7 +137,7 @@ class _SmartDescriptionState extends State<SmartDescription> with SingleTickerPr
         ),
         child: Text(
           line,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w800,
             color: const Color(0xFF0A2647),
@@ -167,7 +167,7 @@ class _SmartDescriptionState extends State<SmartDescription> with SingleTickerPr
             Expanded(
               child: Text(
                 content,
-                style: GoogleFonts.almarai(fontSize: 14, height: 1.6, color: Colors.black87),
+                style: TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
               ),
             ),
           ],
@@ -180,7 +180,7 @@ class _SmartDescriptionState extends State<SmartDescription> with SingleTickerPr
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         line,
-        style: GoogleFonts.almarai(
+        style: TextStyle(
           fontSize: 14,
           height: 1.8, // تباعد أسطر ممتاز للقراءة
           color: Colors.grey[700],

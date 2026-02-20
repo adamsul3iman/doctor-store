@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/features/cart/application/cart_manager.dart';
@@ -99,7 +99,7 @@ class ModernProductCard extends ConsumerWidget {
                       // العنوان فقط
                       AutoSizeText(
                         product.title,
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: isCompact ? 12 : 14,
                           height: 1.3,
@@ -163,7 +163,7 @@ class ModernProductCard extends ConsumerWidget {
                                     SnackBar(
                                       content: Text(
                                         "تمت الإضافة للسلة",
-                                        style: GoogleFonts.almarai(),
+                                        style: TextStyle(),
                                       ),
                                       duration: const Duration(milliseconds: 1500),
                                       backgroundColor: const Color(0xFF0A2647),

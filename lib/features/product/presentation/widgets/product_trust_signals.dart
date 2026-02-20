@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 
@@ -102,7 +102,7 @@ class ProductTrustSignals extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
               color: primaryDark,
@@ -151,7 +151,7 @@ class ProductTrustSignals extends StatelessWidget {
             children: [
               Text(
                 'لماذا تختار متجر الدكتور؟',
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 14,
                   color: primaryDark,
@@ -200,7 +200,7 @@ class _TrustItem extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           title,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontWeight: FontWeight.w800,
             fontSize: 12,
             color: primaryDark,
@@ -211,7 +211,7 @@ class _TrustItem extends StatelessWidget {
           width: 90,
           child: Text(
             subtitle,
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 10,
               color: Colors.grey.shade600,
             ),

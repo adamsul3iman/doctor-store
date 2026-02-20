@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
@@ -224,7 +224,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
               children: [
                 Text(
                   'كل مجموعات النوم في مكان واحد',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                     color: Colors.white,
@@ -233,7 +233,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
                 const SizedBox(height: 6),
                 Text(
                   'تصفح $total منتجاً عبر $activeCategoriesCount فئة مختلفة من تشكيلتنا – مع فلاتر ذكية للوصول لما يناسبك بسرعة.',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 12,
                     height: 1.6,
                     color: Colors.white70,
@@ -260,7 +260,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
                     const SizedBox(width: 4),
                     Text(
                       'فرز حسب: $sortLabel',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 11,
                         color: Colors.white,
                       ),
@@ -302,7 +302,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
           const SizedBox(width: 4),
           Text(
             label,
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 10,
               color: Colors.white,
             ),
@@ -347,7 +347,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
       icon: const Icon(Icons.tune_rounded, size: 18, color: Color(0xFF0A2647)),
       label: Text(
         currentLabel,
-        style: GoogleFonts.almarai(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
           color: const Color(0xFF0A2647),
@@ -378,7 +378,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
                 ),
                 title: Text(
                   label,
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight:
                         selected ? FontWeight.w700 : FontWeight.w500,
@@ -411,7 +411,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
                     ),
                     Text(
                       'ترتيب المنتجات',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
@@ -446,7 +446,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
                         },
                         child: Text(
                           'تطبيق الترتيب',
-                          style: GoogleFonts.almarai(fontSize: 13),
+                          style: TextStyle(fontSize: 13),
                         ),
                       ),
                     ),
@@ -505,7 +505,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
             onSelected: (_) => setState(() => _selectedCategoryId = null),
             selectedColor: const Color(0xFF0A2647),
             backgroundColor: Colors.grey.shade100,
-            labelStyle: GoogleFonts.almarai(
+            labelStyle: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: _selectedCategoryId == null
@@ -530,7 +530,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
                 onSelected: (_) => setState(() => _selectedCategoryId = id),
                 selectedColor: color,
                 backgroundColor: color.withValues(alpha: 0.08),
-                labelStyle: GoogleFonts.almarai(
+                labelStyle: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: isSelected ? Colors.white : const Color(0xFF0A2647),
@@ -559,7 +559,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
               const SizedBox(height: 16),
               Text(
                 "لا توجد منتجات متاحة حالياً",
-                style: GoogleFonts.almarai(color: Colors.grey, fontSize: 16),
+                style: TextStyle(color: Colors.grey, fontSize: 16),
               ),
             ],
           ),
@@ -608,7 +608,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
           child: Center(
             child: Text(
               "لم يتم العثور على منتجات ضمن الفئات الحالية.",
-              style: GoogleFonts.almarai(color: Colors.grey[600], fontSize: 14),
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
             ),
           ),
         ),
@@ -660,7 +660,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
           children: [
             Text(
               "حدث خطأ بسيط أثناء تحميل المنتجات.",
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 color: Colors.redAccent,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -670,7 +670,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
             const SizedBox(height: 8),
             Text(
               "تأكد من اتصالك بالإنترنت ثم حاول مرة أخرى.",
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 color: Colors.grey,
                 fontSize: 12,
               ),
@@ -786,7 +786,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
                         children: [
                           Text(
                             title,
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
                               color: primaryTitleColor,
@@ -797,7 +797,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
                           const SizedBox(height: 2),
                           Text(
                             subtitle,
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 11,
                               color: subtitleColor,
                             ),
@@ -819,7 +819,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
                   children: [
                     Text(
                       'عرض الكل',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: primaryTitleColor,

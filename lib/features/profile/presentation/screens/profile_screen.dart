@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -26,7 +26,7 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text("حسابي", style: GoogleFonts.almarai(fontWeight: FontWeight.bold)),
+        title: Text("حسابي", style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
@@ -195,13 +195,13 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 20),
             Text(
               "أنت تتصفح كزائر",
-              style: GoogleFonts.almarai(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Text(
               "يمكنك الطلب كضيف بسهولة، لكن إنشاء حساب يساعدك على تتبع طلباتك وحفظ العناوين والمفضلة.",
               textAlign: TextAlign.center,
-              style: GoogleFonts.almarai(fontSize: 13, color: Colors.black54, height: 1.5),
+              style: TextStyle(fontSize: 13, color: Colors.black54, height: 1.5),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
@@ -231,7 +231,7 @@ class ProfileScreen extends ConsumerWidget {
                 cartItems.isNotEmpty
                     ? "إكمال الطلب كضيف بدون إنشاء حساب"
                     : "تصفح المنتجات كضيف بدون إنشاء حساب",
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF0A2647),
                 ),
@@ -332,7 +332,7 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 Text(
                   displayName,
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -381,7 +381,7 @@ class ProfileScreen extends ConsumerWidget {
                                       'عميل متجر الدكتور',
                                       overflow: TextOverflow.ellipsis,
                                       softWrap: false,
-                                      style: GoogleFonts.almarai(
+                                      style: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
                                         color: Colors.white,
@@ -439,7 +439,7 @@ class ProfileScreen extends ConsumerWidget {
               children: [
                 Text(
                   'اكتمال ملفك الشخصي: $percentText',
-                  style: GoogleFonts.almarai(fontWeight: FontWeight.bold, fontSize: 13),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                 ),
                 const SizedBox(height: 6),
                 LinearProgressIndicator(
@@ -496,7 +496,7 @@ class ProfileScreen extends ConsumerWidget {
         children: [
           Text(
             'جاهز تكمل طلبك؟',
-            style: GoogleFonts.almarai(fontWeight: FontWeight.bold, fontSize: 14),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           ),
           const SizedBox(height: 8),
           if (wishlistIds.isNotEmpty)
@@ -506,7 +506,7 @@ class ProfileScreen extends ConsumerWidget {
               leading: const Icon(Icons.favorite, color: Colors.redAccent),
               title: Text(
                 'لديك ${wishlistIds.length} منتج في المفضلة',
-                style: GoogleFonts.almarai(fontSize: 13, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
               ),
               subtitle: const Text('راجع مفضلتك واضف المنتجات للسلة بخطوة واحدة', style: TextStyle(fontSize: 11)),
               trailing: TextButton(
@@ -524,7 +524,7 @@ class ProfileScreen extends ConsumerWidget {
               leading: const Icon(Icons.shopping_cart, color: Color(0xFF0A2647)),
               title: Text(
                 'سلتك جاهزة ب${cartItems.length} منتج',
-                style: GoogleFonts.almarai(fontSize: 13, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
               ),
               subtitle: const Text('انتقل للسلة وأكمل الطلب عبر واتساب خلال دقيقة', style: TextStyle(fontSize: 11)),
               trailing: TextButton(
@@ -576,7 +576,7 @@ class ProfileScreen extends ConsumerWidget {
                   children: [
                     Text(
                       title,
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontWeight: FontWeight.w600, 
                         fontSize: 14, 
                         color: isDestructive ? Colors.red[700] : Colors.black87,
@@ -635,7 +635,7 @@ class ProfileScreen extends ConsumerWidget {
           const SizedBox(width: 8),
           Text(
             title,
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: color ?? const Color(0xFF0A2647),
@@ -783,7 +783,7 @@ class ProfileScreen extends ConsumerWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               title: Text(
                 'تعديل البريد الإلكتروني',
-                style: GoogleFonts.almarai(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -901,7 +901,7 @@ class ProfileScreen extends ConsumerWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               title: Text(
                 'تغيير كلمة المرور',
-                style: GoogleFonts.almarai(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1037,7 +1037,7 @@ class ProfileScreen extends ConsumerWidget {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
               title: Text(
                 'حذف الحساب نهائياً',
-                style: GoogleFonts.almarai(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1147,7 +1147,7 @@ class ProfileScreen extends ConsumerWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         title: Text(
           'تأكيد تسجيل الخروج',
-          style: GoogleFonts.almarai(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         content: const Text('هل أنت متأكد أنك تريد تسجيل الخروج من متجر الدكتور؟'),
         actions: [

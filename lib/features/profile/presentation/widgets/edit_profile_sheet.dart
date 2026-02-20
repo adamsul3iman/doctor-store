@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:doctor_store/features/auth/application/user_data_manager.dart';
 
 class EditProfileSheet extends ConsumerStatefulWidget {
@@ -67,7 +67,7 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
           children: [
             Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)))),
             const SizedBox(height: 20),
-            Text("تعديل بياناتي", style: GoogleFonts.almarai(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text("تعديل بياناتي", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             
             _buildField(_nameCtrl, "الاسم الكامل", Icons.person),

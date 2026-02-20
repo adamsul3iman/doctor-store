@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:doctor_store/shared/widgets/app_footer.dart';
 import 'package:doctor_store/shared/widgets/quick_nav_bar.dart';
 import 'package:doctor_store/shared/utils/static_page_provider.dart';
@@ -44,7 +44,7 @@ class AboutScreen extends ConsumerWidget {
                 : 'من نحن',
             orElse: () => 'من نحن',
           ),
-          style: GoogleFonts.almarai(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -86,7 +86,7 @@ class _DefaultAboutContent extends StatelessWidget {
       children: [
         Text(
           'متجر الدكتور للنوم والراحة',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
             color: const Color(0xFF0A2647),
@@ -95,7 +95,7 @@ class _DefaultAboutContent extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           'تسوقنا أونلاين عبر موقعنا الرسمي drstore.me أو من خلال قنواتنا المعتمدة.',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 13,
             height: 1.6,
             color: Colors.grey[700],
@@ -104,7 +104,7 @@ class _DefaultAboutContent extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           'متجر متخصص في حلول النوم المريحة والعملية، من الفرشات الطبية عالية الجودة، إلى المفارش والوسائد والإكسسوارات التي ترتقي بتجربة نومك اليومية.',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 14,
             height: 1.7,
             color: Colors.grey[800],
@@ -113,7 +113,7 @@ class _DefaultAboutContent extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           'رسالتنا',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
             color: const Color(0xFF0A2647),
@@ -122,7 +122,7 @@ class _DefaultAboutContent extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'أن نقدّم لعملائنا نومًا أعمق وحياةً أرقى عبر منتجات مختارة بعناية وخدمة ما بعد البيع مبنية على الثقة والشفافية.',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 14,
             height: 1.7,
             color: Colors.grey[800],
@@ -131,7 +131,7 @@ class _DefaultAboutContent extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           'لماذا متجر الدكتور؟',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
             color: const Color(0xFF0A2647),
@@ -143,7 +143,7 @@ class _DefaultAboutContent extends StatelessWidget {
           '• منتجات أصلية بعناية خاصة وجودة عالية.\n'
           '• تجربة شراء سلسة عبر الواتساب أو الموقع.\n'
           '• متابعة وخدمة ما بعد البيع لضمان رضاك التام.',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 14,
             height: 1.7,
             color: Colors.grey[800],
@@ -170,7 +170,7 @@ class _DynamicStaticAboutContent extends StatelessWidget {
       children: [
         Text(
           title,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w800,
             color: const Color(0xFF0A2647),
@@ -179,7 +179,7 @@ class _DynamicStaticAboutContent extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           content,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 14,
             height: 1.7,
             color: Colors.grey[800],

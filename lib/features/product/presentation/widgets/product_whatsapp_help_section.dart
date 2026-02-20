@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -48,7 +48,7 @@ class ProductWhatsappHelpSection extends StatelessWidget {
         children: [
           Text(
             'تحتاج مساعدة قبل الشراء؟',
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 14,
               color: primaryDark,
@@ -57,7 +57,7 @@ class ProductWhatsappHelpSection extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'فريق خدمة العملاء جاهز لمساعدتك في اختيار المقاس واللون الأنسب لك قبل تأكيد الطلب.',
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 12,
               color: Colors.grey.shade800,
               height: 1.5,
@@ -79,7 +79,7 @@ class ProductWhatsappHelpSection extends StatelessWidget {
               icon: const FaIcon(FontAwesomeIcons.whatsapp, size: 18),
               label: Text(
                 'اسألنا عن هذا المنتج عبر واتساب',
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
                 ),

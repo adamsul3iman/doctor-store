@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/features/home/presentation/widgets/dining_section.dart';
@@ -62,7 +61,7 @@ class DiningTableSection extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                           color: const Color(0xFF5D4037),
@@ -71,7 +70,7 @@ class DiningTableSection extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           fontSize: 12,
                           color: Colors.brown.shade600,
                         ),

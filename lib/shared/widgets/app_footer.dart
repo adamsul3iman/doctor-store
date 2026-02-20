@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
 
@@ -70,7 +69,7 @@ class AppFooter extends ConsumerWidget {
                     children: [
                       Text(
                         '© $year متجر الدكتور. جميع الحقوق محفوظة.',
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           color: Colors.white70,
                           fontSize: 11,
                         ),
@@ -80,7 +79,7 @@ class AppFooter extends ConsumerWidget {
                           settings.ownerName.isNotEmpty
                               ? 'بإدارة: ${settings.ownerName}'
                               : 'راحة وجودة تختارها بنفسك.',
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             color: Colors.white54,
                             fontSize: 11,
                           ),
@@ -120,7 +119,7 @@ class AppFooter extends ConsumerWidget {
               children: [
                 Text(
                   'متجر الدكتور',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
@@ -129,7 +128,7 @@ class AppFooter extends ConsumerWidget {
                 const SizedBox(height: 2),
                 Text(
                   'نوم أفخم.. حياة أرقى',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     color: Colors.white70,
                     fontSize: 11,
                   ),
@@ -141,7 +140,7 @@ class AppFooter extends ConsumerWidget {
         const SizedBox(height: 12),
         Text(
           'نوفر لك حلول نوم وراحة متكاملة، من الفرشات الطبية حتى أدق تفاصيل غرفة النوم، بجودة عالية وتجربة تسوّق سلسة.',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             color: Colors.white70,
             fontSize: 12,
             height: 1.6,
@@ -168,7 +167,7 @@ class AppFooter extends ConsumerWidget {
       children: [
         Text(
           'المتجر',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             color: Colors.white,
             fontSize: 14,
             fontWeight: FontWeight.w700,
@@ -200,7 +199,7 @@ class AppFooter extends ConsumerWidget {
       children: [
         Text(
           'تسوّق سريع',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             color: Colors.white,
             fontSize: 14,
             fontWeight: FontWeight.w700,
@@ -231,7 +230,7 @@ class AppFooter extends ConsumerWidget {
       children: [
         Text(
           'النشرة البريدية',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             color: Colors.white,
             fontSize: 14,
             fontWeight: FontWeight.w700,
@@ -240,7 +239,7 @@ class AppFooter extends ConsumerWidget {
         const SizedBox(height: 8),
         Text(
           'اشترك ليصلك جديد العروض والمنتجات المميّزة أولاً بأول.',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             color: Colors.white70,
             fontSize: 11,
           ),
@@ -252,10 +251,10 @@ class AppFooter extends ConsumerWidget {
               child: TextField(
                 controller: controller,
                 keyboardType: TextInputType.emailAddress,
-                style: GoogleFonts.almarai(color: Colors.white, fontSize: 12),
+                style: TextStyle(color: Colors.white, fontSize: 12),
                 decoration: InputDecoration(
                   hintText: 'أدخل بريدك الإلكتروني',
-                  hintStyle: GoogleFonts.almarai(color: Colors.white54, fontSize: 11),
+                  hintStyle: TextStyle(color: Colors.white54, fontSize: 11),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.06),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -295,7 +294,7 @@ class AppFooter extends ConsumerWidget {
                 ),
                 child: Text(
                   'اشترك',
-                  style: GoogleFonts.almarai(fontWeight: FontWeight.bold, fontSize: 12),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                 ),
               ),
             ),
@@ -304,7 +303,7 @@ class AppFooter extends ConsumerWidget {
         const SizedBox(height: 10),
         Text(
           'لن نزعجك بالرسائل، نرسل لك فقط ما يستحق.',
-          style: GoogleFonts.almarai(color: Colors.white38, fontSize: 10),
+          style: TextStyle(color: Colors.white38, fontSize: 10),
         ),
       ],
     );
@@ -354,7 +353,7 @@ class _FooterLink extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 2.0),
           child: Text(
             label,
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               color: Colors.white70,
               fontSize: 12,
             ),

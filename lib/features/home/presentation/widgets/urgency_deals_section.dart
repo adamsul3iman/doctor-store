@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
@@ -107,7 +106,7 @@ class _UrgencyDealsSectionState extends ConsumerState<UrgencyDealsSection> {
                     Flexible(
                       child: Text(
                         'عروض محدودة - لا تفوتك الفرصة!',
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -125,7 +124,7 @@ class _UrgencyDealsSectionState extends ConsumerState<UrgencyDealsSection> {
                   children: [
                     Text(
                       'ينتهي العرض خلال:',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 13,
                         color: Colors.white.withValues(alpha: 0.9),
                       ),
@@ -179,7 +178,7 @@ class _UrgencyDealsSectionState extends ConsumerState<UrgencyDealsSection> {
           ),
           child: Text(
             value.toString().padLeft(2, '0'),
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.white,
@@ -189,7 +188,7 @@ class _UrgencyDealsSectionState extends ConsumerState<UrgencyDealsSection> {
         const SizedBox(height: 4),
         Text(
           label,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 10,
             color: Colors.white.withValues(alpha: 0.8),
           ),
@@ -203,7 +202,7 @@ class _UrgencyDealsSectionState extends ConsumerState<UrgencyDealsSection> {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Text(
         ':',
-        style: GoogleFonts.almarai(
+        style: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
           color: Colors.white,
@@ -297,7 +296,7 @@ class _UrgencyDealsSectionState extends ConsumerState<UrgencyDealsSection> {
                 children: [
                   Text(
                     product.title,
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: const Color(0xFF0A2647),

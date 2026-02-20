@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -141,7 +141,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                     child: const Icon(Icons.rate_review_outlined, color: Color(0xFF0A2647), size: 30),
                   ),
                   const SizedBox(height: 15),
-                  Text("رأيك يهمنا! ✨", style: GoogleFonts.almarai(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text("رأيك يهمنا! ✨", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   Text(
                     "نود سماع تجربتك. يرجى كتابة اسمك وبريدك الإلكتروني لتوثيق التقييم.",
@@ -224,7 +224,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text("كيف كانت تجربتك يا $userName؟", style: GoogleFonts.almarai(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text("كيف كانت تجربتك يا $userName؟", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             RatingBar.builder(
               initialRating: 0,
@@ -295,7 +295,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
         const Divider(height: 40),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text("تقييمات العملاء", style: GoogleFonts.almarai(fontSize: 20, fontWeight: FontWeight.bold)),
+          child: Text("تقييمات العملاء", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         ),
         
         const SizedBox(height: 20),
@@ -314,7 +314,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                   children: [
                     Text(
                       widget.averageRating.toStringAsFixed(1),
-                      style: GoogleFonts.almarai(fontSize: 45, fontWeight: FontWeight.bold, color: const Color(0xFF0A2647)),
+                      style: TextStyle(fontSize: 45, fontWeight: FontWeight.bold, color: const Color(0xFF0A2647)),
                     ),
                     RatingBarIndicator(
                       rating: widget.averageRating,
@@ -453,7 +453,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
               onSelected: (_) => setState(() => _sortMode = id),
               selectedColor: const Color(0xFF0A2647),
               backgroundColor: Colors.grey.shade100,
-              labelStyle: GoogleFonts.almarai(
+              labelStyle: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: isSelected ? Colors.white : const Color(0xFF0A2647),
@@ -486,7 +486,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                   children: [
                     Text(
                       'كل التقييمات',
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
                       ),
@@ -551,7 +551,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
               icon: const Icon(Icons.open_in_full),
               label: Text(
                 'عرض كل التقييمات',
-                style: GoogleFonts.almarai(fontWeight: FontWeight.w700),
+                style: TextStyle(fontWeight: FontWeight.w700),
               ),
               style: TextButton.styleFrom(
                 foregroundColor: const Color(0xFF0A2647),
@@ -690,7 +690,7 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                       children: [
                         Text(
                           'رد الإدارة',
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                             color: const Color(0xFF1E88E5),

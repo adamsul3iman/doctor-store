@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:doctor_store/shared/utils/categories_provider.dart';
@@ -72,7 +71,7 @@ class ModernCategorySection extends ConsumerWidget {
                           maxLines: 1,
                           minFontSize: 14,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: const Color(0xFF0A2647),
@@ -85,7 +84,7 @@ class ModernCategorySection extends ConsumerWidget {
                             maxLines: 1,
                             minFontSize: 9,
                             overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 11,
                               color: Colors.grey[600],
                             ),
@@ -105,7 +104,7 @@ class ModernCategorySection extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: Row(
                     children: [
-                      Text("الكل", style: GoogleFonts.almarai(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.bold)),
+                      Text("الكل", style: TextStyle(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.bold)),
                       const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey),
                     ],
                   ),
@@ -258,7 +257,7 @@ class ModernCategorySection extends ConsumerWidget {
                     maxLines: 2,
                     minFontSize: 10,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
@@ -271,7 +270,7 @@ class ModernCategorySection extends ConsumerWidget {
                     maxLines: 1,
                     minFontSize: 8,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       color: Colors.white70,
                       fontSize: 9,
                     ),
@@ -310,9 +309,9 @@ class ModernCategorySection extends ConsumerWidget {
               child: const Icon(Icons.grid_view_rounded, color: Color(0xFF0A2647)),
             ),
             const SizedBox(height: 12),
-            Text("عرض الكل", style: GoogleFonts.almarai(color: const Color(0xFF0A2647), fontWeight: FontWeight.bold, fontSize: 14)),
+            Text("عرض الكل", style: TextStyle(color: const Color(0xFF0A2647), fontWeight: FontWeight.bold, fontSize: 14)),
             const SizedBox(height: 4),
-            Text("تصفح الجميع", style: GoogleFonts.almarai(color: Colors.grey, fontSize: 10)),
+            Text("تصفح الجميع", style: TextStyle(color: Colors.grey, fontSize: 10)),
           ],
         ),
       ),

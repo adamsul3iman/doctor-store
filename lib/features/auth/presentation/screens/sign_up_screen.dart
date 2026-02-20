@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle // ⚠️ ADDED for styling
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:doctor_store/core/theme/app_theme.dart';
@@ -373,7 +373,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     ),
                     child: Text(
                       _formError!,
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         color: AppTheme.error,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,

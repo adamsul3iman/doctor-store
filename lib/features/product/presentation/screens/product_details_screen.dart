@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:go_router/go_router.dart';
@@ -219,7 +219,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                                   const SizedBox(width: 8),
                                   Text(
                                     'اختر اللون والمقاس',
-                                    style: GoogleFonts.almarai(
+                                    style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w800,
                                     ),
@@ -284,7 +284,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                                   ),
                                   child: Text(
                                     'متابعة',
-                                    style: GoogleFonts.almarai(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -602,7 +602,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                                         ),
                                         child: Text(
                                           "منتج مختار بعناية",
-                                          style: GoogleFonts.almarai(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 11),
+                                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 11),
                                         ),
                                       ),
                                     ),
@@ -683,7 +683,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                       maxLines: 1,
                       minFontSize: 12,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 16,
                         color: _primaryDark,
@@ -710,7 +710,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                       maxLines: 1,
                       minFontSize: 12,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 16,
                         color: _primaryDark,
@@ -754,7 +754,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                                 maxLines: 1,
                                 minFontSize: 14,
                                 overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.almarai(
+                                style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w800,
                                   color: _primaryDark,
@@ -766,7 +766,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                         const SizedBox(height: 4),
                         Text(
                           "منتجات مختارة من نفس القسم لتكملة أناقة غرفتك.",
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey.shade600,
                           ),
@@ -822,7 +822,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                     ),
                     child: Text(
                       "منتج مميز",
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         color: _accentOrange,
                         fontWeight: FontWeight.bold,
                         fontSize: 11,
@@ -840,7 +840,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                     ),
                     child: Text(
                       "منتج جديد",
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         color: Colors.blue.shade700,
                         fontWeight: FontWeight.w600,
                         fontSize: 11,
@@ -869,7 +869,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
           maxLines: 3,
           minFontSize: 12,
           overflow: TextOverflow.ellipsis,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w800,
             height: 1.4,
@@ -888,7 +888,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
               const SizedBox(width: 4),
               Text(
                 widget.product.ratingAverage.toStringAsFixed(1),
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
                   color: _primaryDark,
@@ -897,7 +897,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
               const SizedBox(width: 4),
               Text(
                 "(${widget.product.ratingCount} تقييم)",
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey.shade600,
                 ),
@@ -907,7 +907,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
         else
           Text(
             "منتج جديد – كن أول من يجرّبه",
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 11,
               color: Colors.grey.shade600,
               fontWeight: FontWeight.w500,
@@ -928,7 +928,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
               const SizedBox(width: 4),
               Text(
                 '$count مشاهدة',
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey.shade700,
                   fontWeight: FontWeight.w500,
@@ -965,7 +965,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
             icon: const Icon(Icons.shopping_basket_outlined, size: 18),
             label: Text(
               'شراء أكثر من لون أو مقاس في نفس الطلب',
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: _primaryDark,
@@ -998,7 +998,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
           const SizedBox(height: 14),
           Text(
             widget.product.shortDescription!,
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 14,
               height: 1.6,
               color: Colors.grey.shade800,
@@ -1027,7 +1027,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
             children: [
               Text(
                 'اللون:',
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                   color: _primaryDark,
@@ -1097,7 +1097,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                   padding: const EdgeInsetsDirectional.only(start: 6.0),
                   child: Text(
                     _selectedColor!,
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: Colors.grey.shade700,
@@ -1114,7 +1114,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
               children: [
                 Text(
                   'المقاس:',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: _primaryDark,
@@ -1147,7 +1147,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                             ),
                             child: Text(
                               s,
-                              style: GoogleFonts.almarai(
+                              style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                                 color: isSelected ? Colors.white : _primaryDark,
@@ -1195,7 +1195,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                 const SizedBox(width: 4),
                 Text(
                   widget.product.ratingAverage.toStringAsFixed(1),
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
                     color: _primaryDark,
@@ -1204,7 +1204,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                 const SizedBox(width: 4),
                 Text(
                   "(${widget.product.ratingCount} تقييم)",
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 11,
                     color: Colors.grey.shade600,
                   ),
@@ -1218,7 +1218,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
             children: [
               Text(
                 "$_currentTotal",
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
                   color:
@@ -1228,7 +1228,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
               const SizedBox(width: 2),
               Text(
                 "د.أ",
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                   color: Colors.grey.shade700,
@@ -1279,7 +1279,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                   isMattress
                       ? "تجربة مريحة وضمان استبدال للعيوب"
                       : "ضمان جودة واستبدال للعيوب المصنعية",
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 10,
                     color: Colors.green.shade800,
                     fontWeight: FontWeight.w600,
@@ -1336,7 +1336,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
             const SizedBox(width: 6),
             Text(
               name,
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 color: visuals.color,
@@ -1380,7 +1380,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
       children: [
         Text(
           "عروض التوفير الحصرية",
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontWeight: FontWeight.w800,
             fontSize: 18,
             color: _primaryDark,
@@ -1419,7 +1419,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                     children: [
                       Text(
                         "${tier.quantity} قطع",
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           color: isSelected ? Colors.white70 : Colors.black54,
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -1428,7 +1428,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                       const SizedBox(height: 4),
                       Text(
                         "${tier.price} د.أ",
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           color: isSelected ? Colors.white : _primaryDark,
                           fontWeight: FontWeight.w900,
                           fontSize: 18,
@@ -1502,7 +1502,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
           children: [
             Text(
               title,
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 18,
                 color: _primaryDark,
@@ -1518,13 +1518,13 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                 ),
                 child: Text(
                   _selectedColor!,
-                  style: GoogleFonts.almarai(fontSize: 12, color: Colors.grey.shade800, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade800, fontWeight: FontWeight.w600),
                 ),
               ),
             if (selectedValue == null)
               Text(
                 " * (مطلوب)",
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   color: Colors.redAccent,
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
@@ -1537,7 +1537,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
             padding: const EdgeInsets.only(top: 4.0),
             child: Text(
               "اضغط على اللون لاستعراض صورته والاختيار",
-              style: GoogleFonts.almarai(fontSize: 11, color: Colors.grey.shade600),
+              style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
             ),
           ),
         const SizedBox(height: 14),
@@ -1611,7 +1611,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           fontSize: 11,
                           color: isSelected ? _primaryDark : Colors.grey.shade700,
                           fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
@@ -1653,7 +1653,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                   ),
                   child: Text(
                     optionStr,
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       color: isSelected ? Colors.white : _primaryDark,
                       fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                       fontSize: 14,
@@ -1692,7 +1692,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
           children: [
             Text(
               "الكمية المطلوبة ($unitLabel)",
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 15,
                 color: _primaryDark,
@@ -1722,7 +1722,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
                       "$_quantity",
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                         color: _primaryDark,
@@ -1754,7 +1754,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
               stock > 0
                   ? "المتوفر في المخزون لهذا الاختيار: $stock $unitLabel"
                   : "هذا الاختيار غير متوفر حالياً في المخزون",
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 12,
                 color: stock > 0 ? Colors.green.shade700 : Colors.red.shade700,
                 fontWeight: FontWeight.w600,
@@ -1880,7 +1880,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
             children: [
               Text(
                 "لماذا تختار متجر الدكتور؟",
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 14,
                   color: _primaryDark,
@@ -1903,7 +1903,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
         const SizedBox(height: 8),
         Text(
           title,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontWeight: FontWeight.w800,
             fontSize: 12,
             color: _primaryDark,
@@ -1914,7 +1914,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
           width: 90,
           child: Text(
             subtitle,
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 10,
               color: Colors.grey.shade600,
             ),
@@ -1974,7 +1974,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
               const SizedBox(width: 6),
               Text(
                 'سلة هذا المنتج',
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 13,
                   color: _primaryDark,
@@ -1991,7 +1991,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                   ),
                   child: Text(
                     '${_orderLines.length} اختيار',
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: _primaryDark,
@@ -2003,7 +2003,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
           const SizedBox(height: 6),
           Text(
             'يمكنك هنا إضافة أكثر من لون أو مقاس لنفس المنتج ضمن نفس الطلب قبل الإضافة للسلة أو الطلب السريع.',
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 11,
               color: Colors.grey.shade700,
               height: 1.5,
@@ -2055,7 +2055,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
               icon: const Icon(Icons.add_circle_outline, size: 18),
               label: Text(
                 'إضافة هذا الاختيار إلى طلب هذا المنتج',
-                style: GoogleFonts.almarai(fontSize: 11),
+                style: TextStyle(fontSize: 11),
               ),
             ),
           ),
@@ -2074,7 +2074,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
               children: [
                 Text(
                   'إجمالي سلة هذا المنتج:',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: Colors.grey.shade800,
@@ -2082,7 +2082,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                 ),
                 Text(
                   '$_orderLinesTotalQuantity ${widget.product.pricingUnitLabel} • ${_orderLinesTotalPrice.toStringAsFixed(1)} د.أ',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                     color: _primaryDark,
@@ -2095,7 +2095,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                 padding: const EdgeInsets.only(top: 4.0),
                 child: Text(
                   'ملاحظة: عند الإضافة للسلة أو الطلب السريع سيتم استخدام كل هذه الاختيارات معاً.',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 10,
                     color: Colors.grey.shade600,
                   ),
@@ -2130,7 +2130,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                       const SizedBox(width: 4),
                       Text(
                         line.color!,
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -2143,7 +2143,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                       const SizedBox(width: 4),
                       Text(
                         line.size!,
-                        style: GoogleFonts.almarai(
+                        style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -2154,7 +2154,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                 const SizedBox(height: 4),
                 Text(
                   '${line.quantity} ${widget.product.pricingUnitLabel} • ${(line.unitPrice * line.quantity).toStringAsFixed(1)} د.أ',
-                  style: GoogleFonts.almarai(
+                  style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: _primaryDark,
@@ -2208,7 +2208,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
         children: [
           Text(
             "تحتاج مساعدة قبل الشراء؟",
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 14,
               color: _primaryDark,
@@ -2217,7 +2217,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
           const SizedBox(height: 6),
           Text(
             "فريق خدمة العملاء جاهز لمساعدتك في اختيار المقاس واللون الأنسب لك قبل تأكيد الطلب.",
-            style: GoogleFonts.almarai(
+            style: TextStyle(
               fontSize: 12,
               color: Colors.grey.shade800,
               height: 1.5,
@@ -2239,7 +2239,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
               icon: const FaIcon(FontAwesomeIcons.whatsapp, size: 18),
               label: Text(
                 "اسألنا عن هذا المنتج عبر واتساب",
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
                 ),
@@ -2392,7 +2392,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                             children: [
                               Text(
         "${current + 1}",
-        style: GoogleFonts.almarai(
+        style: TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.w800,
           fontSize: 12,
@@ -2401,7 +2401,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
       ),
       Text(
         " / ${_displayImages.length}",
-        style: GoogleFonts.almarai(
+        style: TextStyle(
           color: Colors.white.withValues(alpha: 0.8),
           fontWeight: FontWeight.w500,
           fontSize: 11,

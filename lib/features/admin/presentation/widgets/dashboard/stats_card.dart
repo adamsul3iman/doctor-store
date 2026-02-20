@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 
 /// بطاقة إحصائية جميلة مع gradients وأيقونات
 class StatsCard extends StatelessWidget {
@@ -54,7 +54,7 @@ class StatsCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       title,
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: Colors.white.withValues(alpha: 0.95),
@@ -85,7 +85,7 @@ class StatsCard extends StatelessWidget {
               // القيمة الرئيسية
               Text(
                 value,
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -101,7 +101,7 @@ class StatsCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       subtitle,
-                      style: GoogleFonts.almarai(
+                      style: TextStyle(
                         fontSize: 12,
                         color: Colors.white.withValues(alpha: 0.85),
                         fontWeight: FontWeight.w500,
@@ -145,7 +145,7 @@ class StatsCard extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             trend!,
-                            style: GoogleFonts.almarai(
+                            style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,

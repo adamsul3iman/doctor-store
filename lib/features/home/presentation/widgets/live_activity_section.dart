@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -131,7 +130,7 @@ class _LiveActivitySectionState extends ConsumerState<LiveActivitySection> {
               const SizedBox(width: 8),
               Text(
                 'نشاط حي - الطلبات الأخيرة',
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFF0A2647),
@@ -237,7 +236,7 @@ class _LiveActivitySectionState extends ConsumerState<LiveActivitySection> {
                         ),
                         child: Text(
                           'نشاط جديد',
-                          style: GoogleFonts.almarai(
+                          style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -249,7 +248,7 @@ class _LiveActivitySectionState extends ConsumerState<LiveActivitySection> {
                   const SizedBox(height: 4),
                   Text(
                     _generateActivity(),
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 12,
                       color: const Color(0xFF0A2647),
                     ),
@@ -259,7 +258,7 @@ class _LiveActivitySectionState extends ConsumerState<LiveActivitySection> {
                   const SizedBox(height: 4),
                   Text(
                     product.title,
-                    style: GoogleFonts.almarai(
+                    style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                       color: const Color(0xFF0A2647),
@@ -282,7 +281,7 @@ class _LiveActivitySectionState extends ConsumerState<LiveActivitySection> {
               ),
               child: Text(
                 '${product.price.toStringAsFixed(0)} د.أ',
-                style: GoogleFonts.almarai(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFF0A2647),

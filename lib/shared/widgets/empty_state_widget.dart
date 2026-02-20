@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class EmptyStateWidget extends StatelessWidget {
   final IconData icon;
@@ -37,7 +36,7 @@ class EmptyStateWidget extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 20, 
                 fontWeight: FontWeight.bold, 
                 color: const Color(0xFF0A2647)
@@ -47,7 +46,7 @@ class EmptyStateWidget extends StatelessWidget {
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: GoogleFonts.almarai(
+              style: TextStyle(
                 fontSize: 14, 
                 color: Colors.grey[500],
                 height: 1.5,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:doctor_store/shared/widgets/app_footer.dart';
 import 'package:doctor_store/shared/widgets/quick_nav_bar.dart';
 import 'package:doctor_store/shared/utils/static_page_provider.dart';
@@ -44,7 +44,7 @@ class PrivacyScreen extends ConsumerWidget {
                 : 'سياسة الخصوصية',
             orElse: () => 'سياسة الخصوصية',
           ),
-          style: GoogleFonts.almarai(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -86,7 +86,7 @@ class _DefaultPrivacyContent extends StatelessWidget {
       children: [
         Text(
           'حماية بياناتك أولوية لدينا',
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
             color: const Color(0xFF0A2647),
@@ -95,12 +95,12 @@ class _DefaultPrivacyContent extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           'نلتزم في متجر الدكتور بالحفاظ على خصوصية معلوماتك الشخصية واستخدامها فقط للأغراض المرتبطة بتجربة تسوّقك وخدمتك بالشكل الأمثل.',
-          style: GoogleFonts.almarai(fontSize: 14, height: 1.7, color: Colors.grey[800]),
+          style: TextStyle(fontSize: 14, height: 1.7, color: Colors.grey[800]),
         ),
         const SizedBox(height: 8),
         Text(
           'تُطبَّق هذه السياسة على استخدامك لموقعنا الإلكتروني drstore.me وأي قنوات رقمية رسمية تابعة للمتجر.',
-          style: GoogleFonts.almarai(fontSize: 13, height: 1.7, color: Colors.grey[800]),
+          style: TextStyle(fontSize: 13, height: 1.7, color: Colors.grey[800]),
         ),
         const SizedBox(height: 16),
         _sectionTitle('المعلومات التي نقوم بجمعها'),
@@ -140,7 +140,7 @@ class _DynamicStaticPageContent extends StatelessWidget {
       children: [
         Text(
           title,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
             color: const Color(0xFF0A2647),
@@ -149,7 +149,7 @@ class _DynamicStaticPageContent extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           content,
-          style: GoogleFonts.almarai(
+          style: TextStyle(
             fontSize: 14,
             height: 1.7,
             color: Colors.grey[800],
@@ -163,7 +163,7 @@ class _DynamicStaticPageContent extends StatelessWidget {
 Widget _sectionTitle(String text) {
   return Text(
     text,
-    style: GoogleFonts.almarai(
+    style: TextStyle(
       fontSize: 15,
       fontWeight: FontWeight.w700,
       color: const Color(0xFF0A2647),
@@ -174,7 +174,7 @@ Widget _sectionTitle(String text) {
 Widget _sectionBody(String text) {
   return Text(
     text,
-    style: GoogleFonts.almarai(
+    style: TextStyle(
       fontSize: 14,
       height: 1.7,
       color: Colors.grey[800],
