@@ -93,5 +93,96 @@ class SeoManager {
     _meta.twitterTitle(twitterTitle: product.title);
     _meta.twitterDescription(twitterDescription: desc.isNotEmpty ? desc : "الجودة والراحة الطبية بين يديك.");
     _meta.twitterImage(twitterImage: product.imageUrl);
+
+    // 4. إضافة Product Schema (JSON-LD) لـ Google Rich Snippets
+    _injectProductSchema(product, desc);
+  }
+
+  /// إضافة بيانات المنظمة (Structured Data) للمنتج
+  static void _injectProductSchema(Product product, String description) {
+    if (!kIsWeb) return;
+
+    // إزالة أي script سابق للمنتج
+    final existingScripts = html.document.querySelectorAll('script[data-type="product-schema"]');
+    for (final script in existingScripts) {
+      script.remove();
+    }
+
+    // بناء بيانات JSON-LD للمنتج
+    final schemaData = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      'name': product.title,
+      'image': product.imageUrl,
+      'description': description.isNotEmpty ? description : product.description,
+      'brand': {
+        '@type': 'Brand',
+        'name': 'متجر الدكتور'
+      },
+      'offers': {
+        '@type': 'Offer',
+        'url': 'https://drstore.me/product/${product.slug ?? product.id}',
+        'priceCurrency': 'JOD',
+        'price': product.price.toStringAsFixed(2),
+        'availability': product.isActive ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        'itemCondition': 'https://schema.org/NewCondition',
+        'seller': {
+          '@type': 'Organization',
+          'name': 'متجر الدكتور | Doctor Store'
+        }
+      },
+      'aggregateRating': product.ratingCount > 0 ? {
+        '@type': 'AggregateRating',
+        'ratingValue': product.ratingAverage.toStringAsFixed(1),
+        'reviewCount': product.ratingCount.toString()
+      } : null,
+      'category': product.categoryArabic,
+    };
+
+    // إنشاء عنصر script جديد
+    final scriptElement = html.document.createElement('script');
+    scriptElement.setAttribute('type', 'application/ld+json');
+    scriptElement.setAttribute('data-type', 'product-schema');
+    scriptElement.text = _jsonEncode(schemaData);
+
+    // إضافة إلى head
+    html.document.head?.append(scriptElement);
+  }
+
+  /// ترميز JSON بشكل مبسط
+  static String _jsonEncode(Map<String, dynamic> data) {
+    // إزالة القيم null
+    final cleanData = <String, dynamic>{};
+    data.forEach((key, value) {
+      if (value != null) {
+        cleanData[key] = value;
+      }
+    });
+
+    // ترميز يدوي بسيط
+    final parts = <String>[];
+    cleanData.forEach((key, value) {
+      if (value is String) {
+        parts.add('"$key": "${_escapeJson(value)}"');
+      } else if (value is num) {
+        parts.add('"$key": $value');
+      } else if (value is bool) {
+        parts.add('"$key": $value');
+      } else if (value is Map<String, dynamic>) {
+        parts.add('"$key": ${_jsonEncode(value)}');
+      }
+    });
+
+    return '{${parts.join(', ')}}';
+  }
+
+  /// تهرب من أحرف خاصة في JSON
+  static String _escapeJson(String text) {
+    return text
+      .replaceAll('\\', '\\\\')
+      .replaceAll('"', '\\"')
+      .replaceAll('\n', '\\n')
+      .replaceAll('\r', '\\r')
+      .replaceAll('\t', '\\t');
   }
 }
