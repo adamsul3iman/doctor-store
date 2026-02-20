@@ -1,6 +1,6 @@
 {
   "buildCommand": "chmod +x build.sh && ./build.sh",
-  "outputDirectory": "deploy/web",
+  "outputDirectory": "build/web",
   "installCommand": "",
   "rewrites": [
     {
