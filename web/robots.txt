@@ -1,4 +1,41 @@
+# robots.txt - Doctor Store SEO Optimization
+# https://drstore.me/robots.txt
+
 User-agent: *
 Allow: /
 
+# السماح بجميع الصفحات المهمة
+Allow: /browse_all
+Allow: /all_products
+Allow: /category/
+Allow: /product/
+Allow: /about
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+
+# منع الزحف إلى صفحات المستخدم الخاصة (لا قيمة SEO)
+Disallow: /cart
+Disallow: /wishlist
+Disallow: /orders
+Disallow: /profile
+Disallow: /recently_viewed
+Disallow: /login
+Disallow: /signup
+Disallow: /reset-password
+
+# منع مسارات الإدارة
+Disallow: /admin/
+Disallow: /api/
+
+# منع المعلمات والبحث الديناميكي (لتجنب المحتوى المكرر)
+Disallow: /search?q=*
+Disallow: /*?sort=*
+Disallow: /*?page=*
+
+# منع ملفات التطبيق
+Disallow: /manifest.json
+Disallow: /flutter_bootstrap.js
+
+# Sitemap
 Sitemap: https://drstore.me/sitemap.xml

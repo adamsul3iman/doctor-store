@@ -116,6 +116,78 @@
     }
   </script>
 
+  <!-- ===== FAQ Schema (للأسئلة الشائعة في نتائج Google) ===== -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "ما هو متجر الدكتور؟",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "متجر الدكتور (Doctor Store) هو متجر إلكتروني داخل الأردن متخصص في بيع البياضات، الفرشات الطبية، الكهربائيات المنزلية، والطاولات. نقدم منتجات عالية الجودة بأسعار منافسة مع توصيل سريع للزرقاء، عمّان، وإربد."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "ما هي مناطق التوصيل؟",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "نقدم خدمة توصيل سريعة لجميع مناطق الأردن بما في ذلك الزرقاء، عمّان، إربد، الرصيفة، ومحافظات الشمال والجنوب. التوصيل مجاني للطلبات فوق 50 دينار أردني."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "هل المنتجات أصلية؟",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "نعم، جميع منتجاتنا أصلية 100% ومضمونة. نتعامل مع أفضل الموردين والمصنعين المحليين والعالميين لتوفير منتجات عالية الجودة تلبي احتياجات عملائنا."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "كيف يمكنني الدفع؟",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "نوفر عدة طرق للدفع: الدفع نقداً عند الاستلام، الدفع عبر البطاقات الائتمانية والبطاقات المصرفية عبر الإنترنت، وطرق دفع إلكترونية آمنة أخرى."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "ما هي سياسة الإرجاع؟",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "نقدم سياسة إرجاع مرنة خلال 14 يوماً من استلام المنتج، بشرط أن يكون المنتج في حالته الأصلية ولم يُستخدم. يمكنك التواصل مع خدمة العملاء عبر الواتساب أو الهاتف."
+          }
+        }
+      ]
+    }
+  </script>
+
+  <!-- ===== Breadcrumb Schema (للمسارات في Google) ===== -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "الرئيسية",
+          "item": "https://drstore.me/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "جميع المنتجات",
+          "item": "https://drstore.me/all_products"
+        }
+      ]
+    }
+  </script>
+
   <!-- ===== PWA ===== -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
