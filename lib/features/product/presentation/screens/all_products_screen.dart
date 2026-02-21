@@ -8,7 +8,7 @@ import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_card.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_card_skeleton.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_search_bottom_sheet.dart';
-import 'package:doctor_store/features/product/presentation/providers/products_provider.dart';
+import 'package:doctor_store/features/product/presentation/providers/cached_products_provider.dart';
 import 'package:doctor_store/shared/utils/responsive_layout.dart';
 import 'package:doctor_store/shared/utils/app_constants.dart';
 import 'package:doctor_store/shared/utils/categories_provider.dart';
@@ -145,7 +145,8 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final allProductsAsync = ref.watch(allProductsStreamProvider);
+    final productsState = ref.watch(cachedProductsProvider);
+    final products = productsState.products;
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -161,16 +162,15 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
         controller: _scrollController,
         cacheExtent: 800.0,
         slivers: [
-          // 1. عرض ذكي لكل الفئات كسكاشن أفقية (ستايل Netflix)
+          // 1. عرض ذكي لكل الفئات كسكاشن أفقية
           SliverResponsiveCenterPadding(
             minSidePadding: 0,
-            sliver: allProductsAsync.when(
-              data: (products) => _buildAllProductsSliver(products),
-              loading: () => _buildLoadingSliver(),
-              error: (err, stack) => _buildErrorSliver(err),
-            ),
+            sliver: productsState.isLoading
+                ? _buildLoadingSliver()
+                : productsState.hasError && products.isEmpty
+                    ? _buildErrorSliverWithRetry(productsState.errorMessage)
+                    : _buildAllProductsSliver(products, isOffline: productsState.isOffline),
           ),
-
           // مساحة في الأسفل + Footer موحّد
           const SliverResponsiveCenterPadding(
             minSidePadding: 0,
@@ -546,24 +546,106 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
     );
   }
 
-  Widget _buildAllProductsSliver(List<Product> products) {
-    if (products.isEmpty) {
-      return SliverToBoxAdapter(
-        child: Container(
-          height: 400,
-          alignment: Alignment.center,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.search_off, size: 80, color: Colors.grey[300]),
-              const SizedBox(height: 16),
-              Text(
-                "لا توجد منتجات متاحة حالياً",
-                style: TextStyle(color: Colors.grey, fontSize: 16),
-              ),
-            ],
+  Widget _buildAllProductsSliver(List<Product> products, {bool isOffline = false}) {
+    // إظهار تنبيه عند عدم الاتصال
+    final List<Widget> widgets = [];
+    
+    if (isOffline) {
+      widgets.add(
+        SliverToBoxAdapter(
+          child: Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.orange[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.orange[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.wifi_off, color: Colors.orange[700], size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'لا يوجد اتصال بالإنترنت. يتم عرض المنتجات المخزنة مؤقتاً.',
+                    style: TextStyle(
+                      color: Colors.orange[800],
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
+      );
+    }
+
+    if (products.isEmpty) {
+      widgets.add(
+        SliverToBoxAdapter(
+          child: Container(
+            height: 400,
+            alignment: Alignment.center,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.search_off, size: 80, color: Colors.grey[300]),
+                const SizedBox(height: 16),
+                Text(
+                  "لا توجد منتجات متاحة حالياً",
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      return SliverList(
+        delegate: SliverChildListDelegate([
+          if (isOffline) 
+            Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange[200]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.wifi_off, color: Colors.orange[700], size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'لا يوجد اتصال بالإنترنت. يتم عرض المنتجات المخزنة مؤقتاً.',
+                      style: TextStyle(
+                        color: Colors.orange[800],
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          Container(
+            height: 400,
+            alignment: Alignment.center,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.search_off, size: 80, color: Colors.grey[300]),
+                const SizedBox(height: 16),
+                Text(
+                  "لا توجد منتجات متاحة حالياً",
+                  style: TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+        ]),
       );
     }
 
@@ -650,36 +732,75 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
     );
   }
 
-  Widget _buildErrorSliver(Object error) {
+  /// واجهة خطأ محسّنة مع زر إعادة المحاولة (بدون ألوان حمراء)
+  Widget _buildErrorSliverWithRetry(String? errorMessage) {
     return SliverToBoxAdapter(
       child: Container(
-        height: 200,
+        height: 300,
         alignment: Alignment.center,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // أيقونة ودية بدون لون أحمر
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.cloud_off_outlined,
+                size: 40,
+                color: Colors.grey[400],
+              ),
+            ),
+            const SizedBox(height: 20),
+            // عنوان ودي
             Text(
-              "حدث خطأ بسيط أثناء تحميل المنتجات.",
+              'تعذر تحميل المنتجات',
               style: TextStyle(
-                color: Colors.redAccent,
-                fontSize: 14,
+                color: Colors.grey[800],
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
+            // وصف مساعد بدون لون أحمر
             Text(
-              "تأكد من اتصالك بالإنترنت ثم حاول مرة أخرى.",
+              errorMessage ?? 'تأكد من اتصالك بالإنترنت وحاول مرة أخرى',
               style: TextStyle(
-                color: Colors.grey,
-                fontSize: 12,
+                color: Colors.grey[600],
+                fontSize: 13,
               ),
               textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            // زر إعادة المحاولة
+            ElevatedButton.icon(
+              onPressed: () {
+                ref.read(cachedProductsProvider.notifier).retry();
+              },
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('إعادة المحاولة'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0A2647),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildErrorSliver(Object error) {
+    return _buildErrorSliverWithRetry('حدث خطأ في الاتصال. يرجى المحاولة لاحقاً.');
   }
 
   List<Widget> _buildCategorySections(

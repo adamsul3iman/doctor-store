@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "me.drstore.app",
+      "sha256_cert_fingerprints": [
+        "BC:D2:63:E9:56:6F:7D:95:BD:06:6E:C3:03:CD:F0:9F:A6:33:1D:9A:7A:CA:CD:AB:3F:05:C4:95:5F:C5:76:51"
+      ]
+    }
+  }
+]
