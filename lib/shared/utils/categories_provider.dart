@@ -25,6 +25,22 @@ class AppCategoryConfig {
   /// يرجع الأيقونة المناسبة بناءً على اسم الأيقونة المخزن في قاعدة البيانات
   IconData get icon => _iconFromName(iconName);
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'subtitle': subtitle,
+      'color_value': color.value,
+      'icon_name': iconName,
+      'is_active': isActive,
+      'sort_order': sortOrder,
+    };
+  }
+
+  factory AppCategoryConfig.fromJson(Map<String, dynamic> map) {
+    return AppCategoryConfig.fromMap(map);
+  }
+
   factory AppCategoryConfig.fromMap(Map<String, dynamic> map) {
     final rawColor = map['color_value'];
     Color color;

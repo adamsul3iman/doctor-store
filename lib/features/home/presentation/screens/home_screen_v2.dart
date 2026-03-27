@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-// import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:go_router/go_router.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -12,7 +11,6 @@ import 'package:doctor_store/shared/services/supabase_service.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/shared/services/analytics_service.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_card.dart';
-// import 'package:doctor_store/shared/utils/product_nav_helper.dart'; // لم نعد نستخدمه في v2
 import 'package:doctor_store/features/cart/application/cart_manager.dart';
 import 'package:doctor_store/shared/utils/settings_provider.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_search_bottom_sheet.dart';
@@ -46,6 +44,31 @@ final latestProductsProviderV2 = allProductsProvider;
 
 final diningProductsProviderV2 = FutureProvider<List<Product>>((ref) async {
   return SupabaseService().getDiningProducts();
+});
+
+/// Combined provider to reduce multiple watches and rebuilds
+final _homeDataProvider = Provider.autoDispose((ref) {
+  final latestProductsAsync = ref.watch(latestProductsProviderV2);
+  final diningProductsAsync = ref.watch(diningProductsProviderV2);
+  final cartCount = ref.watch(
+    cartProvider.select(
+      (items) => items.fold<int>(0, (sum, item) => sum + item.quantity),
+    ),
+  );
+  final cartHasItems = ref.watch(cartProvider.select((items) => items.isNotEmpty));
+  final user = ref.watch(userProfileProvider);
+  final settingsAsync = ref.watch(settingsProvider);
+  final sectionsAsync = ref.watch(homeSectionsProvider);
+  
+  return (
+    latestProductsAsync,
+    diningProductsAsync,
+    cartCount,
+    cartHasItems,
+    user,
+    settingsAsync,
+    sectionsAsync,
+  );
 });
 
 /// بيانات الـ Quick Grid (أعلى 8 أقسام) – مستوحاة من ModernCategorySection
@@ -156,7 +179,7 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
         AnalyticsService.instance.trackSiteVisit(
           pageUrl: '/home',
           deviceType: _detectDeviceType(),
-          country: 'Kuwait', // يمكن تحسينه لاحقاً باستخدام IP
+          country: 'Kuwait',
         );
       }
     });
@@ -220,28 +243,185 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
       );
     }
 
-    final latestProductsAsync = ref.watch(
-      latestProductsProviderV2.select((p) => p),
-    );
-    final diningProductsAsync = ref.watch(
-      diningProductsProviderV2.select((p) => p),
-    );
+    // Combine multiple provider watches into single watch with memoization
+    final homeData = ref.watch(_homeDataProvider);
+    final sectionsConfig = homeData.$7.asData?.value;
+    
+    final orderedSectionKeys = _resolveOrderedHomeSectionKeys(sectionsConfig);
 
-    final cartCount = ref.watch(
-      cartProvider.select(
-        (items) => items.fold<int>(0, (sum, item) => sum + item.quantity),
-      ),
+    return const Scaffold(
+      backgroundColor: Color(0xFFF8F9FA),
+      floatingActionButton: _HomeFloatingActionButton(),
+      body: _HomeBody(),
     );
-    final cartHasItems = ref.watch(cartProvider.select((items) => items.isNotEmpty));
-    final user = ref.watch(
-      userProfileProvider.select((u) => u),
+  }
+
+  List<String> _resolveOrderedHomeSectionKeys(
+    Map<String, HomeSectionConfig>? config,
+  ) {
+    const defaultOrder = <String>[
+      HomeSectionKeys.hero,
+      HomeSectionKeys.categories,
+      HomeSectionKeys.flashSale,
+      HomeSectionKeys.latest,
+      HomeSectionKeys.middleBanner,
+      HomeSectionKeys.dining,
+      HomeSectionKeys.owner,
+      HomeSectionKeys.baby,
+    ];
+
+    if (config == null || config.isEmpty) return defaultOrder;
+
+    final configuredKeys = config.keys.toSet();
+    final keys = <String>[...configuredKeys];
+    keys.sort((a, b) {
+      final sa = config[a]?.sortOrder ?? 0;
+      final sb = config[b]?.sortOrder ?? 0;
+      return sa.compareTo(sb);
+    });
+
+    for (final k in defaultOrder) {
+      if (!keys.contains(k)) keys.add(k);
+    }
+    return keys;
+  }
+
+  void _precacheHomeImages(List<Product> products) {
+    if (_didPrecacheHomeImages) return;
+    if (products.isEmpty) return;
+
+    _didPrecacheHomeImages = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      // نكتفي بأول 4 منتجات لتخفيف التحميل الأولي على الشبكة
+      for (final product in products.take(4)) {
+        final optimizedUrl = buildOptimizedImageUrl(
+          product.originalImageUrl,
+          variant: ImageVariant.productCard,
+        );
+
+        precacheImage(CachedNetworkImageProvider(optimizedUrl), context);
+      }
+    });
+  }
+}
+
+/// Optimized floatingActionButton widget to prevent unnecessary rebuilds
+class _HomeFloatingActionButton extends ConsumerWidget {
+  const _HomeFloatingActionButton();
+
+  Future<void> _launchSocial(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final homeData = ref.watch(_homeDataProvider);
+    final settingsAsync = homeData.$6;
+    final cartHasItems = homeData.$4;
+    final cartCount = homeData.$3;
+
+    return settingsAsync.when(
+      data: (settings) {
+        if (cartHasItems) {
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0A2647), Color(0xFF1A3A5F)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF0A2647).withValues(alpha: 0.4),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                  spreadRadius: -2,
+                ),
+              ],
+            ),
+            child: FloatingActionButton.extended(
+              onPressed: () => context.push('/cart'),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              highlightElevation: 0,
+              label: Row(
+                children: [
+                  const Icon(
+                    Icons.shopping_cart_checkout,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "إتمام الطلب",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      "$cartCount",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        } else {
+          return FloatingActionButton(
+            onPressed: () => _launchSocial('https://wa.me/${settings.whatsapp}'),
+            backgroundColor: const Color(0xFF25D366),
+            child: const FaIcon(
+              FontAwesomeIcons.whatsapp,
+              color: Colors.white,
+            ),
+          );
+        }
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (error, stack) => const SizedBox.shrink(),
     );
-    final settingsAsync = ref.watch(
-      settingsProvider.select((s) => s),
-    );
-    final sectionsAsync = ref.watch(
-      homeSectionsProvider.select((s) => s),
-    );
+  }
+}
+
+/// Optimized body widget to prevent unnecessary rebuilds
+class _HomeBody extends ConsumerWidget {
+  const _HomeBody();
+
+  Future<void> _launchSocial(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final homeData = ref.watch(_homeDataProvider);
+    final latestProductsAsync = homeData.$1;
+    final diningProductsAsync = homeData.$2;
+    final user = homeData.$5;
+    final sectionsAsync = homeData.$7;
 
     final sectionsConfig = sectionsAsync.asData?.value;
     bool isSectionEnabled(String key) =>
@@ -249,105 +429,24 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
 
     final orderedSectionKeys = _resolveOrderedHomeSectionKeys(sectionsConfig);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-
-      // زر الـ FAB كما هو
-      floatingActionButton: settingsAsync.when(
-        data: (settings) {
-          if (cartHasItems) {
-            return Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(30),
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF0A2647), Color(0xFF1A3A5F)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF0A2647).withValues(alpha: 0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                    spreadRadius: -2,
-                  ),
-                ],
-              ),
-              child: FloatingActionButton.extended(
-                onPressed: () => context.push('/cart'),
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                highlightElevation: 0,
-                label: Row(
-                  children: [
-                    const Icon(
-                      Icons.shopping_cart_checkout,
-                      color: Colors.white,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      "إتمام الطلب",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        "$cartCount",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          } else {
-            return FloatingActionButton(
-              onPressed: () =>
-                  _launchSocial('https://wa.me/${settings.whatsapp}'),
-              backgroundColor: const Color(0xFF25D366),
-              child: const FaIcon(
-                FontAwesomeIcons.whatsapp,
-                color: Colors.white,
-              ),
-            );
-          }
-        },
-        loading: () => null,
-        error: (error, stack) => null,
-      ),
-
-      body: RefreshIndicator(
-        onRefresh: () async {
-          // Invalidate all providers to refresh data
-          ref.invalidate(latestProductsProviderV2);
-          ref.invalidate(diningProductsProviderV2);
-          ref.invalidate(categoriesConfigProvider);
-          ref.invalidate(homeSectionsProvider);
-          
-          // Wait for the refresh to complete
-          await Future.delayed(const Duration(milliseconds: 500));
-          
-          // Track analytics
-          AnalyticsService.instance.trackEvent('home_pull_to_refresh');
-        },
-        color: const Color(0xFF0A2647),
-        backgroundColor: Colors.white,
-        displacement: 60,
-        child: CustomScrollView(
+    return RefreshIndicator(
+      onRefresh: () async {
+        // Invalidate all providers to refresh data
+        ref.invalidate(latestProductsProviderV2);
+        ref.invalidate(diningProductsProviderV2);
+        ref.invalidate(categoriesConfigProvider);
+        ref.invalidate(homeSectionsProvider);
+        
+        // Wait for the refresh to complete
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        // Track analytics
+        AnalyticsService.instance.trackEvent('home_pull_to_refresh');
+      },
+      color: const Color(0xFF0A2647),
+      backgroundColor: Colors.white,
+      displacement: 60,
+      child: CustomScrollView(
         cacheExtent: 800.0,
         slivers: [
           // ================= 1) شريط العنوان: أبيض أنيق مع أيقونات واضحة =================
@@ -376,16 +475,9 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
             ),
             automaticallyImplyLeading: false,
             centerTitle: true,
-            title: CustomAppBarContent(
+            title: const CustomAppBarContent(
               isHome: true,
-              centerWidget: Hero(
-                tag: 'app_logo_home_unique_v2',
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  height: 42,
-                  fit: BoxFit.contain,
-                ),
-              ),
+              centerWidget: _AppLogo(),
               showSearch: false,
               sharePath: '/',
               shareTitle: 'متجر الدكتور - الصفحة الرئيسية',
@@ -393,14 +485,14 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
           ),
 
           // ================= 2) Header: Search Bar + Hero =================
-          SliverResponsiveCenterPadding(
+          const SliverResponsiveCenterPadding(
             minSidePadding: 0,
             sliver: SliverToBoxAdapter(
               child: Column(
                 children: [
-                  const SizedBox(height: 12),
-                  _buildInlineSearchBar(context),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
+                  _InlineSearchBar(),
+                  SizedBox(height: 12),
                 ],
               ),
             ),
@@ -411,18 +503,10 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
 
             if (key == HomeSectionKeys.hero) {
               return <Widget>[
-                SliverResponsiveCenterPadding(
+                const SliverResponsiveCenterPadding(
                   minSidePadding: 0,
                   sliver: SliverToBoxAdapter(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isWide = constraints.maxWidth >= 900;
-                        return SizedBox(
-                          height: isWide ? 420 : null,
-                          child: const CinematicHeroSection(),
-                        );
-                      },
-                    ),
+                    child: _HeroSection(),
                   ),
                 ),
                 const SliverToBoxAdapter(child: SizedBox(height: 12)),
@@ -431,13 +515,12 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
 
             if (key == HomeSectionKeys.categories) {
               return <Widget>[
-                SliverToBoxAdapter(
-                  child: _buildSectionHeader(
-                    context,
+                const SliverToBoxAdapter(
+                  child: _SectionHeader(
                     title: 'تصفح سريع',
                     actionText: 'عرض الكل',
                     actionIcon: Icons.grid_view_rounded,
-                    onActionTap: () => context.push('/browse_all'),
+                    targetRoute: '/browse_all',
                   ),
                 ),
                 SliverResponsiveCenterPadding(
@@ -476,80 +559,19 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
 
             if (key == HomeSectionKeys.latest) {
               return <Widget>[
-                SliverToBoxAdapter(
-                  child: _buildSectionHeader(
-                    context,
+                const SliverToBoxAdapter(
+                  child: _SectionHeader(
                     title: 'وصل حديثاً',
                     actionText: 'عرض الكل',
-                    onActionTap: () => context.push('/all_products?sort=new'),
+                    targetRoute: '/all_products?sort=new',
                   ),
                 ),
                 SliverResponsiveCenterPadding(
                   minSidePadding: 0,
                   sliver: SliverToBoxAdapter(
-                    child: latestProductsAsync.when(
-                      data: (products) {
-                        if (products.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-
-                        if (!_homeLatestLogged) {
-                          _homeLatestLogged = true;
-                          final durationMs =
-                              DateTime.now().millisecondsSinceEpoch -
-                                  _homeStartMs;
-                          AnalyticsService.instance.trackEvent(
-                            'home_latest_loaded',
-                            props: {
-                              'duration_ms': durationMs,
-                              'count': products.length,
-                            },
-                          );
-                        }
-
-                        final latest = products.take(12).toList();
-                        return SizedBox(
-                          height: 280,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: latest.length,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(width: 16),
-                            addAutomaticKeepAlives: false,
-                            addRepaintBoundaries: false,
-                            cacheExtent: 100,
-                            itemBuilder: (context, index) {
-                              final product = latest[index];
-                              return SizedBox(
-                                width: 180,
-                                child: ProductCard(
-                                  product: product,
-                                  isCompact: true,
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      },
-                      loading: () => SizedBox(
-                        height: 240,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: 4,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(width: 16),
-                          itemBuilder: (_, __) => const SizedBox(
-                            width: 180,
-                            child: ProductCardSkeleton(),
-                          ),
-                        ),
-                      ),
-                      error: (e, s) => const SizedBox.shrink(),
+                    child: _LatestProductsSection(
+                      products: latestProductsAsync,
+                      onStartMs: () => DateTime.now().millisecondsSinceEpoch,
                     ),
                   ),
                 ),
@@ -609,8 +631,7 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
                 SliverResponsiveCenterPadding(
                   minSidePadding: 0,
                   sliver: SliverToBoxAdapter(
-                    child: _buildFeaturedSection(
-                      context,
+                    child: _FeaturedSection(
                       title: _resolveSectionTitle(
                         sectionsConfig,
                         HomeSectionKeys.baby,
@@ -672,11 +693,11 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
             ),
           ),
 
-          SliverResponsiveCenterPadding(
+          const SliverResponsiveCenterPadding(
             minSidePadding: 0,
             sliver: SliverToBoxAdapter(
               child: Column(
-                children: const [
+                children: [
                   SizedBox(height: 24),
                   AppFooter(),
                   SizedBox(height: 100),
@@ -686,8 +707,7 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
           ),
         ],
       ),
-    ),
-  );
+    );
   }
 
   List<String> _resolveOrderedHomeSectionKeys(
@@ -720,29 +740,6 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
     return keys;
   }
 
-  void _precacheHomeImages(List<Product> products) {
-    if (_didPrecacheHomeImages) return;
-    if (products.isEmpty) return;
-
-    _didPrecacheHomeImages = true;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-
-      // نكتفي بأول 4 منتجات لتخفيف التحميل الأولي على الشبكة
-      for (final product in products.take(4)) {
-        final optimizedUrl = buildOptimizedImageUrl(
-          product.originalImageUrl,
-          variant: ImageVariant.productCard,
-        );
-
-        precacheImage(CachedNetworkImageProvider(optimizedUrl), context);
-      }
-    });
-  }
-
-  // --- أدوات المساعدة (نفس الموجودة في الهوم الأصلية تقريباً) ---
-
   String _resolveSectionTitle(
     Map<String, HomeSectionConfig>? config,
     String key,
@@ -766,7 +763,7 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
   }
 
   PreferredSizeWidget? _buildTopBanner(BuildContext context, UserProfile user) {
-    // شريط دعوة إنشاء حساب للزائرين
+    // شريط دعوة إنشاء حساب للزوارين
     if (user.isGuest) {
       return const PreferredSize(
         preferredSize: Size.fromHeight(44),
@@ -858,149 +855,15 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
     );
   }
 
-  Widget _buildInlineSearchBar(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GestureDetector(
-        onTap: () => showProductSearchBottomSheet(context),
-        child: Container(
-          height: 52,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: const Color(0xFF0A2647).withValues(alpha: 0.15),
-              width: 1.5,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x0D000000),
-                blurRadius: 12,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: [
-              Icon(
-                Icons.search_rounded,
-                color: const Color(0xFF0A2647).withValues(alpha: 0.6),
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'ابحث عن منتج، قسم أو عرض...',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0A2647).withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.tune_rounded,
-                  size: 20,
-                  color: Color(0xFF0A2647),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// عنوان سكشن موحّد مع فاصل أنيق
-  Widget _buildSectionHeader(
-    BuildContext context, {
-    required String title,
-    String? actionText,
-    VoidCallback? onActionTap,
-    IconData? actionIcon,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                Container(
-                  width: 4,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0A2647),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF0A2647),
-                      letterSpacing: -0.3,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (actionText != null && onActionTap != null)
-            TextButton.icon(
-              onPressed: onActionTap,
-              icon: Icon(
-                actionIcon ?? Icons.arrow_forward_ios_rounded,
-                size: 14,
-                color: const Color(0xFF0A2647),
-              ),
-              label: Text(
-                actionText,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0A2647),
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  /// بناء شبكة الأقسام الديناميكية من قاعدة البيانات
   Widget _buildCategoriesGrid(WidgetRef ref) {
     final categoriesAsync = ref.watch(categoriesConfigProvider);
 
     return categoriesAsync.when(
       data: (categories) {
         if (categories.isEmpty) {
-          // إذا لم تكن هناك أقسام في قاعدة البيانات، نستخدم الأقسام الثابتة
           return _buildStaticCategoriesGrid();
         }
 
-        // نعرض أول 8 أقسام نشطة فقط
         final displayCategories = categories.take(8).toList();
 
         return SliverPadding(
@@ -1060,13 +923,11 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
         ),
       ),
       error: (error, stack) {
-        // في حالة الخطأ، نعرض الأقسام الثابتة
         return _buildStaticCategoriesGrid();
       },
     );
   }
 
-  /// شبكة الأقسام الثابتة (احتياطية)
   Widget _buildStaticCategoriesGrid() {
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1098,14 +959,268 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
       ),
     );
   }
+}
 
-  Widget _buildFeaturedSection(
-    BuildContext context, {
-    required String title,
-    String? subtitle,
-    required String category,
-    required Color bgColor,
-  }) {
+/// Optimized app logo widget
+class _AppLogo extends StatelessWidget {
+  const _AppLogo();
+
+  @override
+  Widget build(BuildContext context) {
+    return Hero(
+      tag: 'app_logo_home_unique_v2',
+      child: Image.asset(
+        'assets/images/logo.png',
+        height: 42,
+        fit: BoxFit.contain,
+      ),
+    );
+  }
+}
+
+/// Optimized inline search bar widget
+class _InlineSearchBar extends StatelessWidget {
+  const _InlineSearchBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GestureDetector(
+        onTap: () => showProductSearchBottomSheet(context),
+        child: Container(
+          height: 52,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: const Color(0xFF0A2647).withValues(alpha: 0.15),
+              width: 1.5,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0D000000),
+                blurRadius: 12,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              Icon(
+                Icons.search_rounded,
+                color: const Color(0xFF0A2647).withValues(alpha: 0.6),
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'ابحث عن منتج، قسم أو عرض...',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0A2647).withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.tune_rounded,
+                  size: 20,
+                  color: Color(0xFF0A2647),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Optimized hero section widget
+class _HeroSection extends StatelessWidget {
+  const _HeroSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 900;
+        return SizedBox(
+          height: isWide ? 420 : null,
+          child: const CinematicHeroSection(),
+        );
+      },
+    );
+  }
+}
+
+/// Optimized section header widget
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  final String? actionText;
+  final IconData? actionIcon;
+  final String? targetRoute;
+
+  const _SectionHeader({
+    required this.title,
+    this.actionText,
+    this.actionIcon,
+    this.targetRoute,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0A2647),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0A2647),
+                      letterSpacing: -0.3,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (actionText != null && targetRoute != null)
+            TextButton.icon(
+              onPressed: () => context.push(targetRoute!),
+              icon: Icon(
+                actionIcon ?? Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: const Color(0xFF0A2647),
+              ),
+              label: Text(
+                actionText!,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0A2647),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Optimized latest products section widget
+class _LatestProductsSection extends ConsumerWidget {
+  final AsyncValue<List<Product>> products;
+  final int Function() onStartMs;
+
+  const _LatestProductsSection({
+    required this.products,
+    required this.onStartMs,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return products.when(
+      data: (productList) {
+        if (productList.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final latest = productList.take(12).toList();
+        return SizedBox(
+          height: 280,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: latest.length,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 8,
+            ),
+            separatorBuilder: (_, __) => const SizedBox(width: 16),
+            addAutomaticKeepAlives: false,
+            addRepaintBoundaries: false,
+            cacheExtent: 100,
+            itemBuilder: (context, index) {
+              final product = latest[index];
+              return SizedBox(
+                width: 180,
+                child: ProductCard(
+                  product: product,
+                  isCompact: true,
+                ),
+              );
+            },
+          ),
+        );
+      },
+      loading: () => SizedBox(
+        height: 240,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: 4,
+          separatorBuilder: (_, __) => const SizedBox(width: 16),
+          itemBuilder: (_, __) => const SizedBox(
+            width: 180,
+            child: ProductCardSkeleton(),
+          ),
+        ),
+      ),
+      error: (e, s) => const SizedBox.shrink(),
+    );
+  }
+}
+
+/// Optimized featured section widget
+class _FeaturedSection extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final String category;
+  final Color bgColor;
+
+  const _FeaturedSection({
+    required this.title,
+    this.subtitle,
+    required this.category,
+    required this.bgColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       padding: const EdgeInsets.all(24),
@@ -1255,10 +1370,10 @@ class _CategoryTileFromDB extends StatelessWidget {
               minFontSize: 10,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF0A2647),
+                color: Color(0xFF0A2647),
                 height: 1.2,
               ),
             ),
@@ -1373,10 +1488,10 @@ class _QuickCategoryTile extends StatelessWidget {
               minFontSize: 10,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
-                color: const Color(0xFF0A2647),
+                color: Color(0xFF0A2647),
                 height: 1.2,
               ),
             ),

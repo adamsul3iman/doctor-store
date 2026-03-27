@@ -15,6 +15,8 @@ import 'package:doctor_store/shared/utils/categories_provider.dart';
 import 'package:doctor_store/shared/widgets/app_footer.dart';
 import 'package:doctor_store/shared/widgets/custom_app_bar.dart';
 import 'package:doctor_store/shared/widgets/responsive_center_wrapper.dart';
+import 'package:doctor_store/shared/services/image_preload_service.dart';
+import 'package:doctor_store/shared/utils/image_url_helper.dart';
 
 class AllProductsScreen extends ConsumerStatefulWidget {
   final String? initialSort; // new, best, offers, or null
@@ -147,6 +149,18 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
   Widget build(BuildContext context) {
     final productsState = ref.watch(cachedProductsProvider);
     final products = productsState.products;
+
+    // تحميل الصور مسبقاً للأداء الأفضل
+    if (!productsState.isLoading && products.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final imageUrls = products.take(10).map((p) => p.originalImageUrl).toList();
+        ImagePreloadService().preloadImages(
+          context,
+          imageUrls,
+          ImageVariant.productCard,
+        );
+      });
+    }
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -734,73 +748,71 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
 
   /// واجهة خطأ محسّنة مع زر إعادة المحاولة (بدون ألوان حمراء)
   Widget _buildErrorSliverWithRetry(String? errorMessage) {
-    return SliverToBoxAdapter(
-      child: Container(
-        height: 300,
-        alignment: Alignment.center,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // أيقونة ودية بدون لون أحمر
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.cloud_off_outlined,
-                size: 40,
-                color: Colors.grey[400],
-              ),
-            ),
-            const SizedBox(height: 20),
-            // عنوان ودي
-            Text(
-              'تعذر تحميل المنتجات',
-              style: TextStyle(
-                color: Colors.grey[800],
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            // وصف مساعد بدون لون أحمر
-            Text(
-              errorMessage ?? 'تأكد من اتصالك بالإنترنت وحاول مرة أخرى',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 13,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            // زر إعادة المحاولة
-            ElevatedButton.icon(
-              onPressed: () {
-                ref.read(cachedProductsProvider.notifier).retry();
-              },
-              icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('إعادة المحاولة'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF0A2647),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // أيقونة ودية بدون لون أحمر
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.cloud_off_outlined,
+                  size: 40,
+                  color: Colors.grey[400],
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+              // عنوان ودي
+              Text(
+                'تعذر تحميل المنتجات',
+                style: TextStyle(
+                  color: Colors.grey[800],
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              // وصف مساعد بدون لون أحمر
+              Text(
+                errorMessage ?? 'تأكد من اتصالك بالإنترنت وحاول مرة أخرى',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 13,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              // زر إعادة المحاولة
+              ElevatedButton.icon(
+                onPressed: () {
+                  ref.read(cachedProductsProvider.notifier).retry();
+                },
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('إعادة المحاولة'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0A2647),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
-  }
-
-  Widget _buildErrorSliver(Object error) {
-    return _buildErrorSliverWithRetry('حدث خطأ في الاتصال. يرجى المحاولة لاحقاً.');
   }
 
   List<Widget> _buildCategorySections(

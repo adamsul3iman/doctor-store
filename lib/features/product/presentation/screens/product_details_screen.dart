@@ -19,6 +19,7 @@ import 'package:doctor_store/shared/utils/app_notifier.dart';
 import 'package:doctor_store/shared/utils/product_nav_helper.dart';
 import 'package:doctor_store/shared/utils/link_share_helper.dart';
 import 'package:doctor_store/shared/services/analytics_service.dart';
+import 'package:doctor_store/shared/services/app_review_service.dart';
 import 'package:doctor_store/shared/widgets/custom_app_bar.dart';
 import 'package:doctor_store/shared/utils/categories_provider.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_search_delegate.dart';
@@ -107,6 +108,13 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
       productId: widget.product.id,
       categoryId: widget.product.category,
     );
+
+    // طلب تقييم التطبيق بعد تجربة إيجابية (مشاهدة منتج)
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        AppReviewService().recordSuccessfulAction();
+      }
+    });
     
     final Set<String> uniqueImages = {};
     uniqueImages.add(widget.product.originalImageUrl);

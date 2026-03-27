@@ -263,6 +263,12 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       o.dispose();
     }
 
+    // ✅ Dispose offer tier controllers to prevent memory leaks
+    for (final tier in _offerTiers) {
+      tier['qty']?.dispose();
+      tier['price']?.dispose();
+    }
+
     for (final img in _galleryImages) {
       img.dispose();
     }

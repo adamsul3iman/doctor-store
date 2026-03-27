@@ -479,6 +479,12 @@
 
 
   <script>
+    // Configure Flutter web renderer for optimal e-commerce performance
+    // html renderer: faster initial load, better for mobile web
+    // canvaskit: better performance for complex graphics, larger download
+    window.flutterWebRenderer = "html";
+    
+    // Performance optimization: Disable service worker for faster loads
     window._flutter = window._flutter || {};
     window._flutter.buildConfig = window._flutter.buildConfig || {
       engineRevision: "unknown",

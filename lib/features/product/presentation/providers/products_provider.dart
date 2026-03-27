@@ -46,16 +46,33 @@ final similarProductsProvider = FutureProvider.family<List<Product>, SimilarProd
   );
 });
 
-/// تدفق لحظي لكل المنتجات مع دعم Realtime (INSERT/UPDATE/DELETE)
-final allProductsStreamProvider = StreamProvider<List<Product>>((ref) {
+/// تحميل كل المنتجات مرة واحدة (أسرع للويب) - تم تحويله من StreamProvider إلى FutureProvider
+/// للاستخدام في صفحات الكاتالوج حيث لا نحتاج تحديثات فورية
+final allProductsStreamProvider = FutureProvider<List<Product>>((ref) async {
+  final supabase = Supabase.instance.client;
+
+  final response = await supabase
+      .from('products')
+      .select('id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
+      .eq('is_active', true)
+      .order('created_at', ascending: false)
+      .limit(200);
+
+  return (response as List)
+      .map((row) => Product.fromJson(row))
+      .toList();
+});
+
+/// تدفق لحظي لكل المنتجات - للوحة التحكم فقط (Admin)
+/// يستخدم للتحديثات الفورية في لوحة الإدارة
+final allProductsAdminStreamProvider = StreamProvider<List<Product>>((ref) {
   final supabase = Supabase.instance.client;
 
   final stream = supabase
       .from('products')
       .stream(primaryKey: ['id'])
-      .eq('is_active', true) // فلترة المنتجات غير الفعّالة على مستوى قاعدة البيانات
+      .eq('is_active', true)
       .order('created_at', ascending: false)
-      // نكتفي بعدد معقول من أحدث المنتجات لتحسين الأداء في صفحة كل المنتجات
       .limit(200);
 
   return stream.map((rows) {
@@ -65,21 +82,40 @@ final allProductsStreamProvider = StreamProvider<List<Product>>((ref) {
   });
 });
 
-/// تدفق لحظي لمنتجات فئة معيّنة
+/// تحميل منتجات فئة معيّنة مرة واحدة (أسرع للويب) - تم تحويله من StreamProvider إلى FutureProvider
+/// لتحسين الأداء على الويب حيث لا نحتاج إلى تحديثات فورية للكاتالوج
 final productsByCategoryStreamProvider =
+    FutureProvider.family<List<Product>, String>((ref, categoryId) async {
+  final supabase = Supabase.instance.client;
+  
+  final response = await supabase
+      .from('products')
+      .select('id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
+      .eq('is_active', true)
+      .eq('category', categoryId)
+      .order('created_at', ascending: false);
+  
+  return (response as List)
+      .map((row) => Product.fromJson(row))
+      .toList();
+});
+
+/// تدفق لحظي لمنتجات فئة معيّنة - للوحة التحكم فقط (Admin)
+/// يستخدم فقط عند الحاجة لتحديثات فورية في لوحة الإدارة
+final productsByCategoryAdminStreamProvider =
     StreamProvider.family<List<Product>, String>((ref, categoryId) {
   final supabase = Supabase.instance.client;
 
   final stream = supabase
       .from('products')
       .stream(primaryKey: ['id'])
-      .eq('is_active', true) // عرض المنتجات المفعّلة فقط
+      .eq('is_active', true)
       .order('created_at', ascending: false);
 
   return stream.map((rows) {
     return rows
         .map((row) => Product.fromJson(row))
-        .where((p) => p.category == categoryId) // فلترة على مستوى Dart حسب الفئة
+        .where((p) => p.category == categoryId)
         .toList();
   });
 });

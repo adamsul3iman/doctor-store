@@ -4,11 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import 'package:doctor_store/shared/utils/categories_provider.dart';
 import 'package:doctor_store/shared/utils/product_nav_helper.dart';
 import 'package:doctor_store/shared/utils/responsive_layout.dart';
-import 'package:doctor_store/features/product/presentation/providers/products_provider.dart';
+import 'package:doctor_store/features/browse/presentation/providers/cached_categories_provider.dart';
+import 'package:doctor_store/features/product/presentation/providers/cached_products_provider.dart';
 import 'package:doctor_store/shared/widgets/custom_app_bar.dart';
+import 'package:doctor_store/shared/widgets/empty_state_widget.dart';
 
 /// صفحة التصفح الكامل - تعرض جميع الأقسام والمنتجات بطريقة احترافية
 class BrowseAllScreen extends ConsumerStatefulWidget {
@@ -38,8 +39,8 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
 
   @override
   Widget build(BuildContext context) {
-    final categoriesAsync = ref.watch(categoriesConfigProvider);
-    final allProductsAsync = ref.watch(allProductsStreamProvider);
+    final categoriesState = ref.watch(cachedCategoriesProvider);
+    final productsState = ref.watch(cachedProductsProvider);
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -128,25 +129,66 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
         controller: _tabController,
         children: [
           // =============== التاب الأول: الأقسام ===============
-          _buildCategoriesTab(categoriesAsync),
+          _buildCategoriesTab(categoriesState),
 
           // =============== التاب الثاني: جميع المنتجات ===============
-          _buildAllProductsTab(allProductsAsync),
+          _buildAllProductsTab(productsState),
         ],
       ),
     );
   }
 
   /// تاب الأقسام
-  Widget _buildCategoriesTab(AsyncValue categoriesAsync) {
-    return categoriesAsync.when(
-      data: (categories) {
-        if (categories.isEmpty) {
-          return const Center(child: Text('لا توجد أقسام'));
-        }
+  Widget _buildCategoriesTab(CategoriesState state) {
+    if (state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-        return CustomScrollView(
-          slivers: [
+    if (state.hasError && state.categories.isEmpty) {
+      return EmptyStateWidget(
+        icon: Icons.wifi_off,
+        title: 'خطأ في الاتصال',
+        subtitle: state.errorMessage ?? 'تأكد من اتصالك بالإنترنت وحاول مجدداً.',
+        buttonText: 'إعادة المحاولة',
+        onButtonPressed: () => ref.read(cachedCategoriesProvider.notifier).retry(),
+      );
+    }
+
+    final categories = state.categories;
+    if (categories.isEmpty) {
+      return const Center(child: Text('لا توجد أقسام'));
+    }
+
+    return CustomScrollView(
+      slivers: [
+        if (state.isOffline)
+          SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange[200]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.wifi_off, color: Colors.orange[700], size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      state.errorMessage ?? 'لا يوجد اتصال بالإنترنت. يتم عرض البيانات المخزنة مؤقتاً.',
+                      style: TextStyle(
+                        color: Colors.orange[800],
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
             // هيدر ترحيبي
             SliverToBoxAdapter(
               child: Container(
@@ -236,10 +278,6 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
 
             const SliverToBoxAdapter(child: SizedBox(height: 20)),
           ],
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, s) => Center(child: Text('خطأ: $e')),
     );
   }
 
@@ -301,18 +339,59 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
   }
 
   /// تاب جميع المنتجات
-  Widget _buildAllProductsTab(AsyncValue allProductsAsync) {
-    return allProductsAsync.when(
-      data: (products) {
-        if (products.isEmpty) {
-          return const Center(child: Text('لا توجد منتجات'));
-        }
+  Widget _buildAllProductsTab(ProductsState state) {
+    if (state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (state.hasError && state.products.isEmpty) {
+      return EmptyStateWidget(
+        icon: Icons.wifi_off,
+        title: 'خطأ في الاتصال',
+        subtitle: state.errorMessage ?? 'تأكد من اتصالك بالإنترنت وحاول مجدداً.',
+        buttonText: 'إعادة المحاولة',
+        onButtonPressed: () => ref.read(cachedProductsProvider.notifier).retry(),
+      );
+    }
+
+    final products = state.products;
+    if (products.isEmpty) {
+      return const Center(child: Text('لا توجد منتجات'));
+    }
 
         // ترتيب المنتجات حسب الاختيار
         final sortedProducts = _sortProducts(products.toList());
 
         return CustomScrollView(
           slivers: [
+            if (state.isOffline)
+              SliverToBoxAdapter(
+                child: Container(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange[200]!),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.wifi_off, color: Colors.orange[700], size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          state.errorMessage ?? 'لا يوجد اتصال بالإنترنت. يتم عرض المنتجات المخزنة مؤقتاً.',
+                          style: TextStyle(
+                            color: Colors.orange[800],
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             // شريط الفلترة والترتيب
             SliverToBoxAdapter(
               child: Container(
@@ -398,10 +477,6 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
             const SliverToBoxAdapter(child: SizedBox(height: 80)),
           ],
         );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, s) => Center(child: Text('خطأ: $e')),
-    );
   }
 
   /// زر فلتر الترتيب

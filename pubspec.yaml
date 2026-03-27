@@ -1,7 +1,7 @@
 name: doctor_store
 description: A premium medical furniture catalog for MENA.
 publish_to: 'none'
-version: 1.0.6+9
+version: 1.0.7+11
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
@@ -55,6 +55,7 @@ dependencies:
   smooth_page_indicator: ^1.1.0
   auto_size_text: ^3.0.0
   uuid: ^4.2.2
+  in_app_review: ^2.0.9
 
 dev_dependencies:
   flutter_test:
@@ -81,4 +82,6 @@ flutter:
   # We will configure assets later if we need local images (like a logo)
   assets:
     - assets/images/
+    - assets/fonts/
+    - env.txt
     - web/icons/Icon-512.png

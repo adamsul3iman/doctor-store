@@ -9,6 +9,8 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'app/app.dart';
 import 'package:doctor_store/shared/utils/seo_manager.dart';
 import 'package:doctor_store/shared/utils/web_bootstrap.dart';
+import 'package:doctor_store/shared/services/image_cache_config.dart';
+import 'package:doctor_store/shared/services/app_review_service.dart';
 
 Future<void> main() async {
   // ✅ Web-only bootstrap (guarded via conditional imports)
@@ -17,6 +19,12 @@ Future<void> main() async {
   }
   
   WidgetsFlutterBinding.ensureInitialized();
+
+  // تهيئة كاش الصور للأداء الأفضل على Android
+  await ImageCacheConfig.init();
+
+  // زيادة عدد فتحات التطبيق (لتقييم الاستخدام)
+  await AppReviewService().incrementLaunchCount();
 
   // BUILD_VERSION: 9 - Path URL Strategy with redirect-based deep links
   if (kIsWeb) {
@@ -31,7 +39,8 @@ Future<void> main() async {
   // تحميل الإعدادات
   var envLoaded = false;
   try {
-    await dotenv.load(fileName: "assets/env.txt");
+    // Use correct path for Flutter Web - assets are served from root
+    await dotenv.load(fileName: "env.txt");
     envLoaded = dotenv.isInitialized;
     if (kDebugMode) debugPrint("Env Loaded");
   } catch (e) {

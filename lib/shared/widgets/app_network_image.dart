@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
 import 'package:doctor_store/shared/widgets/image_shimmer_placeholder.dart';
+import 'package:doctor_store/shared/services/image_cache_config.dart';
 
 class AppNetworkImage extends StatelessWidget {
   final String url;
@@ -24,11 +26,30 @@ class AppNetworkImage extends StatelessWidget {
     this.filterQuality = FilterQuality.low,
     this.placeholder,
     this.errorWidget,
-    this.fadeInDuration = Duration.zero, // إزالة fade للسرعة
+    this.fadeInDuration = Duration.zero,
     this.fadeOutDuration = Duration.zero,
   });
 
+  /// Web-optimized cache sizes to reduce memory usage on Flutter Web
   ({int width, int height}) _cacheSizeForVariant(ImageVariant v) {
+    // Smaller sizes for web to prevent memory spikes
+    if (kIsWeb) {
+      switch (v) {
+        case ImageVariant.productCard:
+        case ImageVariant.thumbnail:
+          return (width: 150, height: 150); // Reduced from 300x300 for web
+        case ImageVariant.mattressCard:
+          return (width: 250, height: 200); // Reduced from 420x320 for web
+        case ImageVariant.heroBanner:
+          return (width: 600, height: 340); // Reduced from 800x450 for web
+        case ImageVariant.homeBanner:
+          return (width: 600, height: 300); // Reduced from 800x400 for web
+        case ImageVariant.fullScreen:
+          return (width: 800, height: 800); // Reduced from 1200x1200 for web
+      }
+    }
+    
+    // Mobile sizes (larger for retina displays)
     switch (v) {
       case ImageVariant.productCard:
       case ImageVariant.thumbnail:
@@ -40,40 +61,105 @@ class AppNetworkImage extends StatelessWidget {
       case ImageVariant.homeBanner:
         return (width: 800, height: 400);
       case ImageVariant.fullScreen:
-        return (width: 800, height: 800);
+        return (width: 1200, height: 1200);
     }
+  }
+
+  /// Get web-optimized image URL with format and quality parameters
+  String _getOptimizedUrl(String originalUrl, ImageVariant variant) {
+    // Use the existing helper for Supabase images
+    final optimizedUrl = buildOptimizedImageUrl(originalUrl, variant: variant);
+    
+    // For web, ensure we have aggressive optimizations
+    if (kIsWeb && optimizedUrl.isNotEmpty) {
+      final uri = Uri.parse(optimizedUrl);
+      final params = Map<String, String>.from(uri.queryParameters);
+      
+      // Ensure webp format for web (better compression)
+      if (!params.containsKey('format')) {
+        params['format'] = 'webp';
+      }
+      
+      // Lower quality for thumbnails on web
+      if ((variant == ImageVariant.productCard || variant == ImageVariant.thumbnail) 
+          && !params.containsKey('quality')) {
+        params['quality'] = '60';
+      }
+      
+      // Rebuild URL with optimized params
+      final newUri = uri.replace(queryParameters: params);
+      return newUri.toString();
+    }
+    
+    return optimizedUrl;
   }
 
   @override
   Widget build(BuildContext context) {
+    // Handle empty URL with smooth error fallback
     if (url.isEmpty) {
-      return errorWidget ??
-          const Icon(
-            Icons.image_not_supported_outlined,
-            color: Colors.grey,
-          );
+      return _buildErrorWidget();
     }
 
-    final optimizedUrl = buildOptimizedImageUrl(url, variant: variant);
+    final optimizedUrl = _getOptimizedUrl(url, variant);
     final cacheSize = _cacheSizeForVariant(variant);
+
+    // For web: use smaller cache and lower filter quality to save memory
+    final effectiveFilterQuality = kIsWeb 
+        ? FilterQuality.low 
+        : filterQuality;
 
     return CachedNetworkImage(
       imageUrl: optimizedUrl,
+      cacheManager: kIsWeb ? null : ImageCacheConfig.cacheManager, // Use default on web
       fit: fit,
       alignment: alignment,
-      filterQuality: filterQuality,
+      filterQuality: effectiveFilterQuality,
+      // Memory cache constraints - critical for web performance
       memCacheWidth: cacheSize.width,
       memCacheHeight: cacheSize.height,
-      maxHeightDiskCache: cacheSize.height,
-      maxWidthDiskCache: cacheSize.width,
-      fadeInDuration: fadeInDuration,
-      fadeOutDuration: fadeOutDuration,
+      // Disk cache constraints for web to prevent storage bloat
+      maxHeightDiskCache: kIsWeb ? cacheSize.height : null,
+      maxWidthDiskCache: kIsWeb ? cacheSize.width : null,
+      // Smooth fade animations
+      fadeInDuration: kIsWeb ? const Duration(milliseconds: 100) : fadeInDuration,
+      fadeOutDuration: kIsWeb ? const Duration(milliseconds: 50) : fadeOutDuration,
+      // Placeholder with shimmer effect
       placeholder: (context, _) => placeholder ?? const ShimmerImagePlaceholder(),
-      errorWidget: (context, _, __) => errorWidget ??
-          const Icon(
-            Icons.image_not_supported_outlined,
-            color: Colors.grey,
-          ),
+      // Error handling with retry capability
+      errorWidget: (context, url, error) {
+        debugPrint('Image load error for $url: $error');
+        return errorWidget ?? _buildErrorWidget();
+      },
+    );
+  }
+
+  /// Build consistent error widget with fallback UI
+  Widget _buildErrorWidget() {
+    return Container(
+      color: Colors.grey[100],
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.image_not_supported_outlined,
+              color: Colors.grey[400],
+              size: 32,
+            ),
+            if (kDebugMode) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Image unavailable',
+                style: TextStyle(
+                  color: Colors.grey[400],
+                  fontSize: 10,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
