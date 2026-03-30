@@ -40,7 +40,7 @@ Future<void> main() async {
   var envLoaded = false;
   try {
     // Use correct path for Flutter Web - assets are served from root
-    await dotenv.load(fileName: "env.txt");
+    await dotenv.load(fileName: "assets/env.txt");
     envLoaded = dotenv.isInitialized;
     if (kDebugMode) debugPrint("Env Loaded");
   } catch (e) {

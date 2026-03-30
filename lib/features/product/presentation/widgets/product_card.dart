@@ -128,20 +128,23 @@ class ProductCard extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: isCompact ? 4 : 6),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                        // ✅ Use Wrap instead of Row to prevent overflow on small screens
+                        Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.end,
+                          spacing: 8,
+                          runSpacing: 4,
                           children: [
+                            // Price Column
                             Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (product.oldPrice != null)
                                   Text(
                                     '${product.oldPrice!.toStringAsFixed(0)} د.أ',
                                     style: const TextStyle(
-                                      decoration:
-                                          TextDecoration.lineThrough,
+                                      decoration: TextDecoration.lineThrough,
                                       color: Colors.grey,
                                       fontSize: 10,
                                     ),
@@ -156,25 +159,33 @@ class ProductCard extends ConsumerWidget {
                                 ),
                               ],
                             ),
-                            // أيقونة التقييم إن وجدت
+                            // Rating (if available) - wrapped in a Container to force new line when needed
                             if (product.ratingAverage > 0)
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.star,
-                                    size: 12,
-                                    color: Color(0xFFFFA726),
-                                  ),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    product.ratingAverage.toStringAsFixed(1),
-                                    style: TextStyle(
-                                      fontSize: isCompact ? 10 : 11,
-                                      fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF0A2647),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFA726).withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.star,
+                                      size: 12,
+                                      color: Color(0xFFFFA726),
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(width: 2),
+                                    Text(
+                                      product.ratingAverage.toStringAsFixed(1),
+                                      style: TextStyle(
+                                        fontSize: isCompact ? 10 : 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color(0xFF0A2647),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                           ],
                         ),

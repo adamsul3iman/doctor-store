@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
 import 'package:doctor_store/shared/widgets/app_network_image.dart';
 import 'package:doctor_store/features/admin/data/order_repository.dart';
+import 'package:doctor_store/features/orders/domain/models/order_model.dart';
 
 class AdminOrdersView extends StatefulWidget {
   const AdminOrdersView({super.key});
@@ -17,13 +19,13 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
   String _searchQuery = '';
 
   // نحتفظ بآخر بيانات ناجحة من الستريم لعرضها في حال حدوث خطأ مؤقت في Realtime
-  List<Map<String, dynamic>>? _lastOrdersData;
+  List<Order>? _lastOrdersData;
 
   // فلاتر متقدمة
   String _statusFilter = 'all'; // all, new, completed, cancelled
   String _dateFilter = 'all'; // all, today, 7d, 30d
 
-  Stream<List<Map<String, dynamic>>> get _ordersStream => _repo.watchOrders();
+  Stream<List<Order>> get _ordersStream => _repo.watchOrders();
 
   void _toggleSelect(String id, bool selected) {
     setState(() {
@@ -35,12 +37,11 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
     });
   }
 
-  void _toggleSelectAll(List<Map<String, dynamic>> orders) {
+  void _toggleSelectAll(List<Order> orders) {
     setState(() {
       // نطبق على القائمة بعد التصفية (بالاسم/الهاتف)
       final ids = orders
-          .map((o) => o['id']?.toString())
-          .whereType<String>()
+          .map((o) => o.id)
           .toList();
       final allSelected =
           ids.isNotEmpty && ids.every((id) => _selectedOrderIds.contains(id));
@@ -52,7 +53,7 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
     });
   }
 
-  Future<void> _deleteSelected(List<Map<String, dynamic>> visibleOrders) async {
+  Future<void> _deleteSelected(List<Order> visibleOrders) async {
     if (_selectedOrderIds.isEmpty) return;
 
     final count = _selectedOrderIds.length;
@@ -99,10 +100,10 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
   }
 
   // ✅ تحسين: تخزين مؤقت للطلبات المفلترة
-  List<Map<String, dynamic>>? _cachedFilteredOrders;
+  List<Order>? _cachedFilteredOrders;
   String _lastFilterKey = '';
 
-  List<Map<String, dynamic>> _getFilteredOrders(List<Map<String, dynamic>> allOrders) {
+  List<Order> _getFilteredOrders(List<Order> allOrders) {
     // إنشاء مفتاح فريد للفلاتر الحالية
     final filterKey = '$_statusFilter|$_dateFilter|$_searchQuery';
     
@@ -115,18 +116,14 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
     
     final filtered = allOrders.where((order) {
       // 1) فلتر الحالة
-      final status = (order['status'] ?? 'new').toString();
+      final status = order.status.toDbString();
       if (_statusFilter != 'all' && status != _statusFilter) {
         return false;
       }
 
       // 2) فلتر التاريخ - تحسين: استخدام parse مرة واحدة
       if (_dateFilter != 'all') {
-        final rawDate = order['created_at'];
-        if (rawDate is! String) return false;
-        
-        final date = DateTime.tryParse(rawDate)?.toLocal();
-        if (date == null) return false;
+        final date = order.createdAt.toLocal();
 
         final diff = now.difference(date);
         switch (_dateFilter) {
@@ -147,8 +144,8 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
       // 3) فلتر البحث - تحسين: toLowerCase مرة واحدة
       if (_searchQuery.trim().isNotEmpty) {
         final query = _searchQuery.trim().toLowerCase();
-        final name = (order['customer_name'] ?? '').toString().toLowerCase();
-        final phone = (order['customer_phone'] ?? '').toString();
+        final name = order.customerName.toLowerCase();
+        final phone = order.customerPhone;
         if (!name.contains(query) && !phone.contains(query)) {
           return false;
         }
@@ -168,7 +165,7 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: StreamBuilder<List<Map<String, dynamic>>>(
+      body: StreamBuilder<List<Order>>(
         stream: _ordersStream,
         builder: (context, snapshot) {
           // لا نعرض الخطأ للمستخدم. نكتفي بالـ log (اختياري) لتتبع مشاكل Realtime.
@@ -178,7 +175,7 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
 
           // استراتيجية صامتة: إذا كان هناك error لكن توجد بيانات (cached/previous)،
           // نتجاهل الخطأ ونعرض البيانات.
-          List<Map<String, dynamic>>? effectiveOrders;
+          List<Order>? effectiveOrders;
 
           if (snapshot.hasData) {
             effectiveOrders = snapshot.data;
@@ -256,8 +253,7 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
           }
 
           final visibleIds = filteredOrders
-              .map((o) => o['id']?.toString())
-              .whereType<String>()
+              .map((o) => o.id)
               .toList();
           final allVisibleSelected =
               visibleIds.isNotEmpty &&
@@ -297,15 +293,12 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
                   itemCount: filteredOrders.length,
                   itemBuilder: (context, index) {
                     final order = filteredOrders[index];
-                    final id = order['id']?.toString();
                     final isSelected =
-                        id != null && _selectedOrderIds.contains(id);
+                        _selectedOrderIds.contains(order.id);
                     return _OrderCard(
                       order: order,
                       isSelected: isSelected,
-                      onSelectedChanged: id == null
-                          ? null
-                          : (value) => _toggleSelect(id, value ?? false),
+                      onSelectedChanged: (value) => _toggleSelect(order.id, value ?? false),
                     );
                   },
                 ),
@@ -319,7 +312,7 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
 }
 
 class _OrderCard extends StatefulWidget {
-  final Map<String, dynamic> order;
+  final Order order;
   final bool isSelected;
   final ValueChanged<bool?>? onSelectedChanged;
 
@@ -335,9 +328,11 @@ class _OrderCard extends StatefulWidget {
 
 class _OrderCardState extends State<_OrderCard> {
   bool _expanded = false;
-  List<Map<String, dynamic>> _items = [];
+  List<OrderItem> _items = [];
   bool _loadingItems = false;
   final OrderRepository _repo = OrderRepository();
+  // Track which statuses are being updated to show loading state
+  final Set<OrderStatus> _updatingStatuses = {};
 
   // جلب تفاصيل المنتجات فقط عند فتح الكارد (لتحسين الأداء)
   Future<void> _fetchItems() async {
@@ -345,17 +340,12 @@ class _OrderCardState extends State<_OrderCard> {
     setState(() => _loadingItems = true);
     
     try {
-      final data = await _repo.getOrderItems(widget.order['id']);
+      final data = await _repo.getOrderItems(widget.order.id);
 
       if (!mounted) return;
 
-      final List<Map<String, dynamic>> items = [];
-      for (final item in data) {
-        items.add(Map<String, dynamic>.from(item as Map));
-      }
-
       setState(() {
-        _items = items;
+        _items = data;
         _loadingItems = false;
       });
     } catch (e) {
@@ -364,37 +354,48 @@ class _OrderCardState extends State<_OrderCard> {
     }
   }
 
-  Future<void> _updateStatus(String status) async {
+  Future<void> _updateStatus(OrderStatus status) async {
+    debugPrint('UI: Updating order ${widget.order.id} to status: ${status.toDbString()}');
+    
+    setState(() => _updatingStatuses.add(status));
+    
     try {
-      await _repo.updateOrderStatus(widget.order['id'], status);
-    } catch (e) {
+      await _repo.updateOrderStatus(widget.order.id, status);
+      debugPrint('UI: Order status updated successfully');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('فشل تحديث حالة الطلب: $e')),
+        SnackBar(
+          content: Text('تم تحديث حالة الطلب إلى: ${status.displayName}'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
       );
+    } catch (e, stackTrace) {
+      debugPrint('UI: Error updating order status: $e');
+      debugPrint('Stack trace: $stackTrace');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('فشل تحديث حالة الطلب: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _updatingStatuses.remove(status));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final status = widget.order['status']?.toString() ?? 'new';
-    DateTime date;
-    final rawDate = widget.order['created_at'];
-    if (rawDate is String) {
-      try {
-        date = DateTime.parse(rawDate).toLocal();
-      } catch (_) {
-        date = DateTime.fromMillisecondsSinceEpoch(0);
-      }
-    } else {
-      date = DateTime.fromMillisecondsSinceEpoch(0);
-    }
+    final status = widget.order.status.toDbString();
+    final date = widget.order.createdAt.toLocal();
     
     // تنسيق الألوان حسب الحالة
-    Color statusColor = Colors.blue;
-    String statusText = "جديد 🆕";
-    if (status == 'completed') { statusColor = Colors.green; statusText = "مكتمل ✅"; }
-    if (status == 'cancelled') { statusColor = Colors.red; statusText = "ملغي ❌"; }
+    Color statusColor = Color(widget.order.status.colorValue);
+    String statusText = widget.order.status.displayName;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -425,7 +426,7 @@ class _OrderCardState extends State<_OrderCard> {
             ),
             title: Row(
               children: [
-                Text(widget.order['customer_name'] ?? 'مجهول', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(widget.order.customerName, style: const TextStyle(fontWeight: FontWeight.bold)),
                 const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -435,7 +436,7 @@ class _OrderCardState extends State<_OrderCard> {
               ],
             ),
             subtitle: Text(
-              "${intl.DateFormat('yyyy/MM/dd HH:mm').format(date)} • ${(widget.order['total_amount'] as num?)?.toDouble() ?? 0.0} د.أ",
+              "${intl.DateFormat('yyyy/MM/dd HH:mm').format(date)} • ${widget.order.totalAmount.toStringAsFixed(0)} د.أ",
               style: TextStyle(color: Colors.grey[600]),
             ),
             trailing: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
@@ -451,9 +452,9 @@ class _OrderCardState extends State<_OrderCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _InfoRow(Icons.phone, widget.order['customer_phone'] ?? '-'),
+                  _InfoRow(Icons.phone, widget.order.customerPhone),
                   const SizedBox(height: 5),
-                  _InfoRow(Icons.location_on, widget.order['customer_address'] ?? '-'),
+                  _InfoRow(Icons.location_on, widget.order.customerAddress),
                 ],
               ),
             ),
@@ -469,7 +470,7 @@ class _OrderCardState extends State<_OrderCard> {
                     width: 40,
                     height: 40,
                     child: AppNetworkImage(
-                      url: (item['image_url'] ?? '').toString(),
+                      url: item.imageUrl ?? '',
                       variant: ImageVariant.thumbnail,
                       fit: BoxFit.cover,
                       placeholder: Container(color: Colors.grey[200]),
@@ -477,13 +478,13 @@ class _OrderCardState extends State<_OrderCard> {
                     ),
                   ),
                 ),
-                title: Text((item['product_title'] ?? '').toString()),
+                title: Text(item.productTitle),
                 subtitle: Text(
-                  "${item['quantity'] ?? ''}x  |  "
-                  "${(item['selected_size'] ?? '').toString()} "
-                  "${(item['selected_color'] ?? '').toString()}",
+                  "${item.quantity}x  |  "
+                  "${item.selectedSize ?? ''} "
+                  "${item.selectedColor ?? ''}",
                 ),
-                trailing: Text("${((item['price'] as num?)?.toDouble() ?? 0.0).toStringAsFixed(0)} د.أ"),
+                trailing: Text("${item.price.toStringAsFixed(0)} د.أ"),
               )),
 
             // أزرار التحكم
@@ -493,18 +494,42 @@ class _OrderCardState extends State<_OrderCard> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   if (status != 'completed')
-                    ElevatedButton.icon(
-                      onPressed: () => _updateStatus('completed'),
-                      icon: const Icon(Icons.check, size: 18),
-                      label: const Text("إتمام الطلب"),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
-                    ),
+                    Builder(builder: (context) {
+                      final orderId = widget.order.id;
+                      final isUpdating = _updatingStatuses.contains(OrderStatus.completed);
+                      return ElevatedButton.icon(
+                        onPressed: isUpdating ? null : () {
+                          debugPrint('COMPLETE BUTTON CLICKED: order=$orderId, currentStatus=$status');
+                          _updateStatus(OrderStatus.completed);
+                        },
+                        icon: isUpdating 
+                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          : const Icon(Icons.check, size: 18),
+                        label: Text(isUpdating ? "جاري التحديث..." : "إتمام الطلب"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green, 
+                          foregroundColor: Colors.white,
+                          elevation: 2,
+                        ),
+                      );
+                    }),
                   const SizedBox(width: 8),
                   if (status != 'cancelled')
-                    TextButton(
-                      onPressed: () => _updateStatus('cancelled'),
-                      child: const Text("إلغاء الطلب", style: TextStyle(color: Colors.red)),
-                    ),
+                    Builder(builder: (context) {
+                      final orderId = widget.order.id;
+                      final isUpdating = _updatingStatuses.contains(OrderStatus.cancelled);
+                      return TextButton(
+                        onPressed: isUpdating ? null : () {
+                          debugPrint('CANCEL BUTTON CLICKED: order=$orderId, currentStatus=$status');
+                          _updateStatus(OrderStatus.cancelled);
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: isUpdating ? Colors.grey : Colors.red,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                        ),
+                        child: Text(isUpdating ? "جاري الإلغاء..." : "إلغاء الطلب"),
+                      );
+                    }),
                 ],
               ),
             ),

@@ -1137,4 +1137,129 @@ class SmartSearchService {
       return [];
     }
   }
+
+  /// ✅ البحث الذكي مع دعم الترقيم الصفحي (Pagination)
+  Future<List<Product>> smartSearchPaginated(
+    String query, {
+    required int page,
+    required int pageSize,
+  }) async {
+    final trimmed = query.trim().toLowerCase();
+    if (trimmed.isEmpty) return [];
+
+    try {
+      // 1. تصحيح الأخطاء الإملائية
+      final correctedQuery = _correctTypos(trimmed);
+
+      // 2. الحصول على المرادفات
+      final synonyms = _getSynonyms(correctedQuery);
+
+      // 3. البحث المتعدد مع pagination
+      final results = await _multiSearchPaginated(
+        correctedQuery,
+        synonyms,
+        page: page,
+        pageSize: pageSize,
+      );
+
+      // 4. إذا لم نجد نتائج، نحاول البحث الغامض
+      if (results.isEmpty && page == 0) {
+        return await _fuzzySearchPaginated(
+          correctedQuery,
+          page: page,
+          pageSize: pageSize,
+        );
+      }
+
+      return results;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Smart search paginated error: $e');
+      }
+      return [];
+    }
+  }
+
+  /// ✅ البحث المتعدد مع دعم الترقيم الصفحي
+  Future<List<Product>> _multiSearchPaginated(
+    String query,
+    List<String> synonyms, {
+    required int page,
+    required int pageSize,
+  }) async {
+    final Set<Product> uniqueProducts = {};
+    final allTerms = <String>{query, ...synonyms};
+
+    // ✅ استخدام Future.wait للبحث المتوازي (أفضل أداء)
+    final futures = allTerms.map((term) => _searchByTermPaginated(
+      term,
+      page: page,
+      pageSize: pageSize,
+    )).toList();
+
+    final results = await Future.wait(futures);
+
+    for (final list in results) {
+      uniqueProducts.addAll(list);
+    }
+
+    // تحويل إلى قائمة وإرجاع نتائج محدودة
+    final allResults = uniqueProducts.toList();
+    final start = page * pageSize;
+    if (start >= allResults.length) return [];
+    final end = (start + pageSize).clamp(start, allResults.length);
+    return allResults.sublist(start, end);
+  }
+
+  /// ✅ البحث بكلمة مع pagination
+  Future<List<Product>> _searchByTermPaginated(
+    String term, {
+    required int page,
+    required int pageSize,
+  }) async {
+    try {
+      final data = await _supabase
+          .from('products')
+          .select()
+          .eq('is_active', true)
+          .or('title.ilike.%$term%,description.ilike.%$term%,tags.cs.{"$term"}')
+          .order('created_at', ascending: false)
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+
+      return data.map((e) => Product.fromJson(e)).toList();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Search by term paginated error: $e');
+      }
+      return [];
+    }
+  }
+
+  /// ✅ البحث الغامض مع pagination
+  Future<List<Product>> _fuzzySearchPaginated(
+    String query, {
+    required int page,
+    required int pageSize,
+  }) async {
+    try {
+      if (query.length < 3) return [];
+
+      final prefix = query.substring(0, query.length >= 4 ? 4 : 3);
+
+      final data = await _supabase
+          .from('products')
+          .select()
+          .eq('is_active', true)
+          .or('title.ilike.%$prefix%,description.ilike.%$prefix%,tags.cs.{"$prefix"}')
+          .order('created_at', ascending: false)
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+
+      return data.map((e) => Product.fromJson(e)).toList();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Fuzzy search paginated error: $e');
+      }
+      return [];
+    }
+  }
 }

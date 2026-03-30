@@ -938,12 +938,17 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             throw Exception('Invalid variant price');
           }
           final key =
-              '${row.colorCtrl.text.trim()}|${row.sizeCtrl.text.trim()}|${row.unitCtrl.text.trim()}';
+              '${row.colorCtrl.text.trim()}|${row.sizeCtrl.text.trim()}|${row.unitCtrl.text.trim()}|${row.attributes.entries.map((e) => '${e.key}:${e.value}').join(',')}';
+          
+          // Debug: print the key being checked
+          debugPrint('Checking variant key: "$key" (color: "${row.colorCtrl.text.trim()}", size: "${row.sizeCtrl.text.trim()}", unit: "${row.unitCtrl.text.trim()}", attrs: ${row.attributes})');
+          
           if (keys.contains(key)) {
+            debugPrint('Duplicate found! Existing keys: $keys');
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text("يوجد متغير مكرر بنفس اللون/المقاس/الوحدة")),
+                SnackBar(
+                    content: Text("يوجد متغير مكرر: ${row.colorCtrl.text.trim()}/${row.sizeCtrl.text.trim()}/${row.unitCtrl.text.trim()}")),
               );
             }
             throw Exception('Duplicate variant');
@@ -2082,7 +2087,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(8)),
               border: Border.all(color: Colors.grey[300]!)),
-          child: Row(
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               _EditorButton(
                   label: "عنوان فرعي",
@@ -2092,7 +2100,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   label: "قائمة",
                   icon: Icons.list,
                   onTap: () => _insertTextAtCursor("- ")),
-              const Spacer(),
+              const SizedBox(width: 8),
               IconButton(
                   icon: const Icon(Icons.clear, size: 18, color: Colors.red),
                   onPressed: () => _descController.clear()),
@@ -2186,13 +2194,15 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             const SizedBox(height: 24),
             
             // ✅ معرض الصور - شبكة واضحة
-            Row(
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                const Expanded(
-                  child: Text(
-                    "معرض الصور الإضافية:",
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
+                const Text(
+                  "معرض الصور الإضافية:",
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
                 TextButton.icon(
                   onPressed: () => _pickImage(false),
@@ -2201,7 +2211,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                     "إضافة (${_galleryImages.length})",
                     style: const TextStyle(fontSize: 12),
                   ),
-                )
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -2335,8 +2345,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               borderRadius: BorderRadius.circular(6),
               border: Border.all(color: Colors.grey[200]!),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            child: Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              alignment: WrapAlignment.spaceEvenly,
               children: [
                 // سحب
                 ReorderableDragStartListener(
@@ -2819,14 +2831,16 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.start,
                   children: [
                     TextButton.icon(
                       onPressed: _syncMattressWidthPriceRowsFromWidths,
                       icon: const Icon(Icons.auto_awesome),
                       label: const Text('توليد جدول الأسعار'),
                     ),
-                    const SizedBox(width: 8),
                     if (_mattressWidthPriceRows.isNotEmpty)
                       Text(
                         'عدد الأسعار: ${_mattressWidthPriceRows.length}',
@@ -3068,196 +3082,17 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 style: TextStyle(fontSize: 12, color: Colors.grey),
               )
             else ...[
-              Column(
-                children: _variantRows.map((row) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: TextField(
-                            controller: row.colorCtrl,
-                            decoration: const InputDecoration(
-                              labelText: "اللون",
-                              isDense: true,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          flex: 2,
-                          child: TextField(
-                            controller: row.sizeCtrl,
-                            decoration: const InputDecoration(
-                              labelText: "المقاس",
-                              isDense: true,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: TextField(
-                            controller: row.unitCtrl,
-                            decoration: const InputDecoration(
-                              labelText: "الوحدة",
-                              isDense: true,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
-              Column(
-                children: _variantRows.map((row) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isNarrow = constraints.maxWidth < 720;
-
-                        final priceStockRow = Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: row.priceCtrl,
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(
-                                  labelText: "السعر",
-                                  prefixIcon:
-                                      Icon(Icons.attach_money, size: 16),
-                                  isDense: true,
-                                ),
-                              ),
-                            ),
-                            if (_inventoryPolicy == 'track_qty') ...[
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: TextField(
-                                  controller: row.stockCtrl,
-                                  keyboardType: TextInputType.number,
-                                  decoration: const InputDecoration(
-                                    labelText: "المخزون",
-                                    isDense: true,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        );
-
-                        final skuImageDeleteRow = Row(
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: TextField(
-                                controller: row.skuCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: "SKU (اختياري)",
-                                  isDense: true,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              flex: 2,
-                              child: Row(
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: SizedBox(
-                                      width: 44,
-                                      height: 44,
-                                      child: row.variantImage?.localBytes !=
-                                              null
-                                          ? Image.memory(
-                                              row.variantImage!.localBytes!,
-                                              fit: BoxFit.cover,
-                                            )
-                                          : (row.variantImage?.serverUrl !=
-                                                      null &&
-                                                  row.variantImage!.serverUrl!
-                                                      .trim()
-                                                      .isNotEmpty)
-                                              ? AppNetworkImage(
-                                                  url: row
-                                                      .variantImage!.serverUrl!,
-                                                  variant:
-                                                      ImageVariant.thumbnail,
-                                                  fit: BoxFit.cover,
-                                                  placeholder:
-                                                      const ShimmerImagePlaceholder(),
-                                                  errorWidget: const Icon(
-                                                    Icons
-                                                        .image_not_supported_outlined,
-                                                    color: Colors.grey,
-                                                  ),
-                                                )
-                                              : Container(
-                                                  color: Colors.grey.shade200,
-                                                  child: const Icon(
-                                                    Icons.image_outlined,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: OutlinedButton.icon(
-                                      onPressed: () =>
-                                          _openVariantImagePicker(row),
-                                      icon: const Icon(Icons.photo_outlined,
-                                          size: 18),
-                                      label: Text(
-                                        row.variantImage == null
-                                            ? 'اختيار صورة'
-                                            : 'تغيير',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline,
-                                  color: Colors.red),
-                              onPressed: () {
-                                setState(() {
-                                  _variantRows.remove(row);
-                                });
-                              },
-                            ),
-                          ],
-                        );
-
-                        if (!isNarrow) {
-                          return Row(
-                            children: [
-                              Expanded(child: priceStockRow),
-                              const SizedBox(width: 6),
-                              Expanded(flex: 5, child: skuImageDeleteRow),
-                            ],
-                          );
-                        }
-
-                        return Column(
-                          children: [
-                            priceStockRow,
-                            const SizedBox(height: 8),
-                            skuImageDeleteRow,
-                          ],
-                        );
-                      },
-                    ),
-                  );
-                }).toList(),
-              ),
+              // عرض المتغيرات بطريقة منطقية وواضحة - كل متغير في كارت مستقل
+              ..._variantRows.asMap().entries.map((entry) {
+                final index = entry.key;
+                final row = entry.value;
+                return _buildVariantCard(row, index);
+              }),
               const SizedBox(height: 8),
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.start,
                 children: [
                   TextButton.icon(
                     onPressed: () {
@@ -3269,19 +3104,16 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                     icon: const Icon(Icons.add),
                     label: const Text("إضافة متغير"),
                   ),
-                  const SizedBox(width: 12),
                   TextButton.icon(
                     onPressed: _openVariantsGeneratorDialog,
                     icon: const Icon(Icons.auto_awesome),
                     label: const Text("توليد من الألوان/المقاسات"),
                   ),
-                  const SizedBox(width: 12),
                   TextButton.icon(
                     onPressed: _generateSkusForVariants,
                     icon: const Icon(Icons.qr_code_2),
                     label: const Text("توليد SKU تلقائياً"),
                   ),
-                  const SizedBox(width: 12),
                   if (_variantRows.isNotEmpty)
                     TextButton(
                       onPressed: () {
@@ -3298,13 +3130,235 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                         });
                       },
                       child: const Text(
-                        "نسخ السعر الأساسي للمتغيرات",
+                        "نسخ السعر الأساسي",
                         style: TextStyle(fontSize: 11),
                       ),
                     ),
                 ],
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// بناء كارت متغير واحد بشكل منطقي وواضح
+  Widget _buildVariantCard(_VariantRow row, int index) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey[300]!, width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // عنوان المتغير ورقم الترتيب
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0A2647),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'متغير #${index + 1}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                  onPressed: () {
+                    setState(() {
+                      _variantRows.removeAt(index);
+                    });
+                  },
+                  tooltip: 'حذف المتغير',
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            
+            // صف 1: اللون والمقاس والوحدة
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    controller: row.colorCtrl,
+                    onChanged: (v) => setState(() {}),
+                    decoration: InputDecoration(
+                      labelText: "اللون",
+                      hintText: "مثال: أحمر",
+                      isDense: true,
+                      filled: true,
+                      fillColor: Colors.grey[50],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    controller: row.sizeCtrl,
+                    onChanged: (v) => setState(() {}),
+                    decoration: InputDecoration(
+                      labelText: "المقاس",
+                      hintText: "مثال: XL",
+                      isDense: true,
+                      filled: true,
+                      fillColor: Colors.grey[50],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: row.unitCtrl,
+                    onChanged: (v) => setState(() {}),
+                    decoration: InputDecoration(
+                      labelText: "الوحدة",
+                      hintText: "مثال: حبة",
+                      isDense: true,
+                      filled: true,
+                      fillColor: Colors.grey[50],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            
+            // صف 2: السعر والمخزون
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: row.priceCtrl,
+                    onChanged: (v) => setState(() {}),
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: "السعر",
+                      prefixIcon: const Icon(Icons.attach_money, size: 18),
+                      isDense: true,
+                      filled: true,
+                      fillColor: Colors.grey[50],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                    ),
+                  ),
+                ),
+                if (_inventoryPolicy == 'track_qty') ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: row.stockCtrl,
+                      onChanged: (v) => setState(() {}),
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: "المخزون",
+                        prefixIcon: const Icon(Icons.inventory_2_outlined, size: 18),
+                        isDense: true,
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: row.skuCtrl,
+                    onChanged: (v) => setState(() {}),
+                    decoration: InputDecoration(
+                      labelText: "SKU (اختياري)",
+                      isDense: true,
+                      filled: true,
+                      fillColor: Colors.grey[50],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            
+            // صف 3: صورة المتغير
+            Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    color: Colors.grey[200],
+                    child: row.variantImage?.localBytes != null
+                        ? Image.memory(
+                            row.variantImage!.localBytes!,
+                            fit: BoxFit.cover,
+                          )
+                        : (row.variantImage?.serverUrl != null &&
+                                row.variantImage!.serverUrl!.trim().isNotEmpty)
+                            ? AppNetworkImage(
+                                url: row.variantImage!.serverUrl!,
+                                variant: ImageVariant.thumbnail,
+                                fit: BoxFit.cover,
+                                placeholder: const ShimmerImagePlaceholder(),
+                                errorWidget: const Icon(
+                                  Icons.image_not_supported_outlined,
+                                  color: Colors.grey,
+                                ),
+                              )
+                            : const Icon(
+                                Icons.image_outlined,
+                                color: Colors.grey,
+                              ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton.icon(
+                  onPressed: () => _openVariantImagePicker(row),
+                  icon: const Icon(Icons.photo_outlined, size: 18),
+                  label: Text(
+                    row.variantImage == null ? 'اختيار صورة' : 'تغيير الصورة',
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF0A2647),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

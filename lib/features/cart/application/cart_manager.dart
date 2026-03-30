@@ -228,7 +228,41 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     await _loadCart(mergeLocalWithRemote: true);
   }
 
-  Future<void> addItem(Product product, {int quantity = 1, String? selectedColor, String? selectedSize, double? variantPrice}) async {
+  /// ✅ Helper: Get available stock for a product variant
+  int? _getAvailableStock(Product product, String? selectedColor, String? selectedSize) {
+    final variant = product.findMatchingVariant(
+      color: selectedColor,
+      size: selectedSize,
+      unit: null,
+    );
+    return variant?.stock;
+  }
+
+  /// ✅ Helper: Get total quantity of an item already in cart
+  int _getCurrentCartQuantity(Product product, String? selectedColor, String? selectedSize) {
+    final existingItem = state.firstWhere(
+      (item) =>
+          item.product.id == product.id &&
+          item.selectedColor == selectedColor &&
+          item.selectedSize == selectedSize,
+      orElse: () => CartItem(product: product, quantity: 0),
+    );
+    return existingItem.quantity;
+  }
+
+  Future<bool> addItem(Product product, {int quantity = 1, String? selectedColor, String? selectedSize, double? variantPrice}) async {
+    // ✅ Stock validation: Check if adding exceeds available stock
+    final availableStock = _getAvailableStock(product, selectedColor, selectedSize);
+    if (availableStock != null) {
+      final currentQty = _getCurrentCartQuantity(product, selectedColor, selectedSize);
+      final totalRequested = currentQty + quantity;
+      
+      if (totalRequested > availableStock) {
+        debugPrint('❌ Stock limit exceeded: requested $totalRequested, available $availableStock');
+        return false; // Cannot add more than available
+      }
+    }
+
     final newItem = CartItem(
       product: product,
       quantity: quantity,
@@ -256,6 +290,7 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     }
     await _saveCart();
     await _syncCartToCloud();
+    return true;
   }
 
   void removeItem(CartItem item) {
@@ -265,6 +300,12 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
   }
 
   void incrementQuantity(CartItem item) {
+    // ✅ Stock validation before incrementing
+    final availableStock = _getAvailableStock(item.product, item.selectedColor, item.selectedSize);
+    if (availableStock != null && item.quantity >= availableStock) {
+      debugPrint('❌ Cannot increment: stock limit reached ($availableStock)');
+      return; // Already at max stock
+    }
     updateQuantity(item, item.quantity + 1);
   }
 
@@ -278,6 +319,14 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
 
   void updateQuantity(CartItem item, int newQuantity) {
     if (newQuantity < 1) return;
+    
+    // ✅ Stock validation: Cannot exceed available stock
+    final availableStock = _getAvailableStock(item.product, item.selectedColor, item.selectedSize);
+    if (availableStock != null && newQuantity > availableStock) {
+      debugPrint('❌ Cannot update: requested $newQuantity, available $availableStock');
+      newQuantity = availableStock; // Cap at available stock
+    }
+    
     state = [
       for (final i in state)
         if (i == item)
@@ -481,14 +530,19 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     LaunchMode mode = kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication;
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: mode);
-      // عند نجاح الإطلاق يمكننا إفراغ السلة فوراً
-      clearCart();
+      // ✅ Fix: Don't clear cart here - user might cancel WhatsApp
+      // Cart will be cleared after successful Supabase save below
     } else {
       throw Exception('Cannot launch WhatsApp');
     }
 
     // 2) بعد فتح الواتساب نحاول حفظ الطلب في Supabase في الخلفية.
     () async {
+      // ✅ لا نحفظ الطلب للزوار (غير مسجلين)
+      if (user?.id == null) {
+        debugPrint('Guest checkout: skipping database save');
+        return;
+      }
       try {
         final orderRes = await supabase.from('orders').insert({
           'customer_name': customerName,
@@ -503,6 +557,9 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
 
         final dynamic orderIdRaw = orderRes['id'];
         orderIdLabel = orderIdRaw.toString();
+
+        // ✅ Fix: Only clear cart after successful order save
+        clearCart();
 
         // بعد الحصول على رقم الطلب، نحاول حفظ عناصر السلة (من النسخة الثابتة)
         for (final item in itemsSnapshot) {

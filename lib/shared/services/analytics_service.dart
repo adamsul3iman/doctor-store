@@ -136,40 +136,21 @@ class AnalyticsService {
       final user = client.auth.currentUser;
       final visitorId = getVisitorId();
 
-      final payload = {
+      final now = DateTime.now().toIso8601String();
+
+      // ✅ Use upsert directly - RPC has schema caching issues
+      // The upsert handles conflicts gracefully with onConflict
+      await client.from('product_views').upsert({
         'product_id': productId,
         'visitor_id': visitorId,
         'user_id': user?.id,
         'category_id': categoryId,
         'view_count': 1,
-        'last_viewed_at': DateTime.now().toIso8601String(),
+        'last_viewed_at': now,
         'view_duration_seconds': viewDurationSeconds ?? 0,
-      };
-
-      // ملاحظة: upsert (on_conflict) قد يفشل مع RLS في بعض إعدادات Postgres.
-      // لذلك نستخدم INSERT أولاً ثم UPDATE عند وجود تعارض (Unique violation).
-      try {
-        await client.from('product_views').insert(payload);
-      } on PostgrestException catch (e) {
-        // 23505 = unique_violation (السجل موجود بالفعل)
-        if (e.code == '23505') {
-          await client
-              .from('product_views')
-              .update({
-                'user_id': user?.id,
-                'category_id': categoryId,
-                'last_viewed_at': payload['last_viewed_at'],
-                'view_duration_seconds': payload['view_duration_seconds'],
-              })
-              .match({
-                'product_id': productId,
-                'visitor_id': visitorId,
-              });
-        } else {
-          rethrow;
-        }
-      }
+      }, onConflict: 'product_id,visitor_id');
     } catch (e) {
+      // Silently ignore analytics errors to not break user experience
       debugPrint('Analytics error tracking product view: $e');
     }
   }

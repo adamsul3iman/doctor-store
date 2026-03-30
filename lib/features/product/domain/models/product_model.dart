@@ -45,7 +45,13 @@ class Product {
   final List<String> tags;
   
   // ✅ الحقل الجديد لعروض الفلاش
-  final bool isFlashDeal; 
+  final bool isFlashDeal;
+
+  // ✅ الحقول المفقودة من DB (تمت إضافتها للتزامن التام مع السكيمة)
+  final DateTime? createdAt;
+  final List<String>? imageUrls;
+  final String? categoryId;
+  final String? shippingSize; 
 
   Product({
     required this.id,
@@ -59,14 +65,19 @@ class Product {
     required this.options,
     required this.gallery,
     required this.variants,
-    this.ratingAverage = 0.0, 
+    this.ratingAverage = 0.0,
     this.ratingCount = 0,
     this.isFeatured = false,
     this.isActive = true,
     this.slug,
     this.shortDescription,
     this.tags = const [],
-    this.isFlashDeal = false, // ✅ قيمة افتراضية
+    this.isFlashDeal = false,
+    // ✅ الحقول الجديدة
+    this.createdAt,
+    this.imageUrls,
+    this.categoryId,
+    this.shippingSize,
   }) : _originalImageUrl = imageUrl;
 
   /// Getter افتراضي متوسط الجودة/الحجم، مناسب لمعظم الاستخدامات العامة.
@@ -430,6 +441,11 @@ class Product {
   }
 
   /// إيجاد المتغير المطابق لاختيارات العميل (لون + مقاس + وحدة).
+  /// 
+  /// التحسينات:
+  /// - يبحث عن مطابق تام أولاً
+  /// - إذا لم يجد، يبحث عن مطابق جزئي (حسب ما هو محدد فقط)
+  /// - يتجاهل القيم الفارغة في المقارنة
   ProductVariant? findMatchingVariant({
     String? color,
     String? size,
@@ -437,15 +453,78 @@ class Product {
   }) {
     if (variants.isEmpty) return null;
 
-    return variants.firstWhere(
-      (v) {
-        final sameColor = color == null || (v.color ?? '') == color;
-        final sameSize = size == null || (v.size ?? '') == size;
-        final sameUnit = unit == null || (v.unit ?? '') == unit;
-        return sameColor && sameSize && sameUnit;
-      },
-      orElse: () => variants.first,
-    );
+    // ✅ Normalize inputs - treat empty strings as null
+    final normalizedColor = (color?.trim().isEmpty ?? true) ? null : color!.trim();
+    final normalizedSize = (size?.trim().isEmpty ?? true) ? null : size!.trim();
+    final normalizedUnit = (unit?.trim().isEmpty ?? true) ? null : unit!.trim();
+
+    // ✅ First pass: Look for exact match
+    for (final v in variants) {
+      final vColor = (v.color?.trim().isEmpty ?? true) ? null : v.color!.trim();
+      final vSize = (v.size?.trim().isEmpty ?? true) ? null : v.size!.trim();
+      final vUnit = (v.unit?.trim().isEmpty ?? true) ? null : v.unit!.trim();
+
+      final colorMatch = normalizedColor == null || normalizedColor == vColor;
+      final sizeMatch = normalizedSize == null || normalizedSize == vSize;
+      final unitMatch = normalizedUnit == null || normalizedUnit == vUnit;
+
+      // All specified criteria must match
+      if (colorMatch && sizeMatch && unitMatch) {
+        // But at least one criterion must be specified and non-null in variant
+        if ((normalizedColor != null && vColor != null) ||
+            (normalizedSize != null && vSize != null) ||
+            (normalizedUnit != null && vUnit != null)) {
+          return v;
+        }
+      }
+    }
+
+    // ✅ Second pass: Partial match (match what we can, ignore nulls)
+    for (final v in variants) {
+      final vColor = (v.color?.trim().isEmpty ?? true) ? null : v.color!.trim();
+      final vSize = (v.size?.trim().isEmpty ?? true) ? null : v.size!.trim();
+      final vUnit = (v.unit?.trim().isEmpty ?? true) ? null : v.unit!.trim();
+
+      // Check if any specified criteria matches
+      var matches = 0;
+      var criteriaChecked = 0;
+
+      if (normalizedColor != null) {
+        criteriaChecked++;
+        if (normalizedColor == vColor) matches++;
+      }
+      if (normalizedSize != null) {
+        criteriaChecked++;
+        if (normalizedSize == vSize) matches++;
+      }
+      if (normalizedUnit != null) {
+        criteriaChecked++;
+        if (normalizedUnit == vUnit) matches++;
+      }
+
+      // Return if at least one criterion matches and variant has relevant data
+      if (matches > 0 && criteriaChecked > 0) {
+        return v;
+      }
+    }
+
+    // ✅ Third pass: If only color is selected, return first variant with that color
+    if (normalizedColor != null && normalizedSize == null) {
+      for (final v in variants) {
+        final vColor = (v.color?.trim().isEmpty ?? true) ? null : v.color!.trim();
+        if (vColor == normalizedColor) return v;
+      }
+    }
+
+    // ✅ Fourth pass: If only size is selected, return first variant with that size
+    if (normalizedSize != null && normalizedColor == null) {
+      for (final v in variants) {
+        final vSize = (v.size?.trim().isEmpty ?? true) ? null : v.size!.trim();
+        if (vSize == normalizedSize) return v;
+      }
+    }
+
+    return null;
   }
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -507,10 +586,18 @@ class Product {
     } else {
       safeOptions = <String, dynamic>{};
     }
-    
-    // ✅ إضافة shipping_size من الحقل المباشر إلم options لسهولة الوصول
-    if (json['shipping_size'] != null) {
-      safeOptions['shipping_size'] = json['shipping_size'];
+
+    // ✅ قراءة image_urls من DB (مصفوفة نصوص)
+    final rawImageUrls = json['image_urls'];
+    final parsedImageUrls = rawImageUrls is List
+        ? rawImageUrls.map((e) => e.toString()).toList()
+        : null;
+
+    // ✅ قراءة created_at من DB (timestamptz)
+    DateTime? parsedCreatedAt;
+    final rawCreatedAt = json['created_at'];
+    if (rawCreatedAt is String) {
+      parsedCreatedAt = DateTime.tryParse(rawCreatedAt);
     }
 
     return Product(
@@ -532,8 +619,12 @@ class Product {
       slug: json['slug']?.toString(),
       shortDescription: json['short_description']?.toString(),
       tags: parsedTags,
-      // ✅ قراءة حالة الفلاش ديل من قاعدة البيانات بشكل آمن
       isFlashDeal: (json['is_flash_deal'] as bool?) ?? false,
+      // ✅ الحقول الجديدة من DB
+      createdAt: parsedCreatedAt,
+      imageUrls: parsedImageUrls,
+      categoryId: json['category_id']?.toString(),
+      shippingSize: json['shipping_size']?.toString(),
     );
   }
 
@@ -559,6 +650,11 @@ class Product {
       'tags': tags,
       // ✅ إرسال حالة الفلاش ديل لقاعدة البيانات
       'is_flash_deal': isFlashDeal,
+      // ✅ الحقول الجديدة للتزامن التام مع السكيمة
+      if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
+      if (imageUrls != null) 'image_urls': imageUrls,
+      if (categoryId != null) 'category_id': categoryId,
+      if (shippingSize != null) 'shipping_size': shippingSize,
     };
   }
 }

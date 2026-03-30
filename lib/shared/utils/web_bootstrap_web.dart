@@ -14,13 +14,25 @@ void setupUrlStrategy() {
 
 Future<void> cleanupServiceWorkers() async {
   try {
-    final regs = await html.window.navigator.serviceWorker?.getRegistrations();
-    if (regs == null) return;
-    for (final reg in regs) {
-      await reg.unregister();
-    }
-    if (kDebugMode) {
-      debugPrint('Service Workers unregistered: ${regs.length}');
+    // ✅ Optimization: Only cleanup if version mismatch to improve startup performance
+    const currentVersion = '2.0.0'; // Bump this when deploying new builds
+    final storedVersion = html.window.localStorage['sw_version'];
+
+    if (storedVersion != currentVersion) {
+      final regs = await html.window.navigator.serviceWorker?.getRegistrations();
+      if (regs != null && regs.isNotEmpty) {
+        for (final reg in regs) {
+          await reg.unregister();
+        }
+        if (kDebugMode) {
+          debugPrint('Service Workers unregistered: ${regs.length} (version change)');
+        }
+      }
+      html.window.localStorage['sw_version'] = currentVersion;
+    } else {
+      if (kDebugMode) {
+        debugPrint('Service Workers: Version matches, skipping cleanup');
+      }
     }
   } catch (e) {
     if (kDebugMode) {

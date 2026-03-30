@@ -83,7 +83,42 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
 
   bool get _hasSizes {
     final sizes = widget.product.options['sizes'];
-    return sizes is List && sizes.isNotEmpty;
+    if (sizes is List && sizes.isNotEmpty) return true;
+    // Also check variants for sizes when using advanced variants
+    if (_variants.isNotEmpty) {
+      for (final v in _variants) {
+        // Check size field
+        if (v.size != null && v.size!.trim().isNotEmpty) return true;
+        // Also check attributes
+        for (final entry in v.attributes.entries) {
+          if (entry.value.trim().isNotEmpty) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /// Get sizes list from options or variants
+  List<String> _getSizesList() {
+    final optionSizes = widget.product.options['sizes'];
+    if (optionSizes is List && optionSizes.isNotEmpty) {
+      return List<String>.from(optionSizes);
+    }
+    // Extract from variants (including attributes)
+    final variantSizes = <String>{};
+    for (final v in _variants) {
+      // First check the size field
+      if (v.size != null && v.size!.trim().isNotEmpty) {
+        variantSizes.add(v.size!);
+      }
+      // Also check attributes for dynamic options (e.g., الارتفاع)
+      for (final entry in v.attributes.entries) {
+        if (entry.value.trim().isNotEmpty) {
+          variantSizes.add(entry.value);
+        }
+      }
+    }
+    return variantSizes.toList();
   }
 
   @override
@@ -253,7 +288,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                               if (_hasSizes)
                                 _buildSelectionSection(
                                   title: "اختر المقاس",
-                                  options: widget.product.options['sizes'],
+                                  options: _getSizesList(),
                                   isColor: false,
                                   modalSetState: setModalState,
                                 ),
@@ -1021,8 +1056,29 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
   Widget _buildCompactVariantRow() {
     final List<String> colors =
         _hasColors ? List<String>.from(widget.product.options['colors']) : const [];
-    final List<String> sizes =
-        _hasSizes ? List<String>.from(widget.product.options['sizes']) : const [];
+    
+    // Get sizes from options or variants (including attributes)
+    List<String> sizes = const [];
+    final optionSizes = widget.product.options['sizes'];
+    if (optionSizes is List && optionSizes.isNotEmpty) {
+      sizes = List<String>.from(optionSizes);
+    } else if (_variants.isNotEmpty) {
+      // Extract unique sizes from variants when using advanced variants
+      final variantSizes = <String>{};
+      for (final v in _variants) {
+        // First check the size field
+        if (v.size != null && v.size!.trim().isNotEmpty) {
+          variantSizes.add(v.size!);
+        }
+        // Also check attributes for dynamic options (e.g., الارتفاع)
+        for (final entry in v.attributes.entries) {
+          if (entry.value.trim().isNotEmpty) {
+            variantSizes.add(entry.value);
+          }
+        }
+      }
+      sizes = variantSizes.toList();
+    }
 
     if (colors.isEmpty && sizes.isEmpty) return const SizedBox.shrink();
 
@@ -1682,11 +1738,36 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
       _selectedVariant = null;
       return;
     }
+    
+    // First try to find by color/size directly
     _selectedVariant = widget.product.findMatchingVariant(
       color: _selectedColor,
       size: _selectedSize,
       unit: null,
     );
+    
+    // If not found and size is selected, try matching by attributes
+    if (_selectedVariant == null && _selectedSize != null) {
+      for (final v in _variants) {
+        // Check if any attribute value matches the selected size
+        for (final entry in v.attributes.entries) {
+          if (entry.value == _selectedSize) {
+            // Verify color matches if selected
+            if (_selectedColor == null || v.color == _selectedColor) {
+              _selectedVariant = v;
+              return;
+            }
+          }
+        }
+        // Also check if size field matches
+        if (v.size == _selectedSize) {
+          if (_selectedColor == null || v.color == _selectedColor) {
+            _selectedVariant = v;
+            return;
+          }
+        }
+      }
+    }
   }
 
   Widget _buildQuantitySection({StateSetter? modalSetState}) {
@@ -1778,13 +1859,30 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     if (!_hasOrderLines) {
       if (!await _ensureSelection()) return;
 
-      cartNotifier.addItem(
+      // ✅ Fix: Handle stock validation result
+      final added = await cartNotifier.addItem(
         widget.product,
         quantity: _quantity,
         selectedColor: _selectedColor,
         selectedSize: _selectedSize,
         variantPrice: _effectiveUnitPrice,
       );
+      
+      if (!added) {
+        if (mounted) {
+          final variant = widget.product.findMatchingVariant(
+            color: _selectedColor,
+            size: _selectedSize,
+            unit: null,
+          );
+          final available = variant?.stock ?? 0;
+          AppNotifier.showError(
+            context,
+            'الكمية المطلوبة غير متوفرة. المخزون المتاح: $available ${widget.product.pricingUnitLabel}',
+          );
+        }
+        return;
+      }
 
       AnalyticsService.instance.trackEvent('add_to_cart', props: {
         'product_id': widget.product.id,
@@ -1798,13 +1896,30 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     } else {
       // في حال وجود أسطر في "سلة هذا المنتج" نضيف كل سطر كعنصر مستقل في السلة
       for (final line in _orderLines) {
-        cartNotifier.addItem(
+        final added = await cartNotifier.addItem(
           widget.product,
           quantity: line.quantity,
           selectedColor: line.color,
           selectedSize: line.size,
           variantPrice: line.unitPrice,
         );
+        
+        // ✅ Fix: Handle stock validation for multiple lines
+        if (!added) {
+          if (mounted) {
+            final variant = widget.product.findMatchingVariant(
+              color: line.color,
+              size: line.size,
+              unit: null,
+            );
+            final available = variant?.stock ?? 0;
+            AppNotifier.showError(
+              context,
+              'الكمية غير متوفرة للون: ${line.color ?? 'غير محدد'}، المقاس: ${line.size ?? 'غير محدد'}. المخزون: $available ${widget.product.pricingUnitLabel}',
+            );
+          }
+          return;
+        }
       }
 
       AnalyticsService.instance.trackEvent(

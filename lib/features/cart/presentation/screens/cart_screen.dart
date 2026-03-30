@@ -50,6 +50,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     }
   }
 
+  bool _analyticsTracked = false; // ✅ Guard to prevent duplicate analytics tracking
+
   @override
   void initState() {
     super.initState();
@@ -62,18 +64,27 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // تتبع زيارة شاشة السلة بعد اكتمال بناء الـ widget
-    final cartItems = ref.read(cartProvider);
     
-    AnalyticsService.instance.trackSiteVisit(
-      pageUrl: '/cart',
-      deviceType: _detectDeviceType(),
-      country: 'Kuwait',
-    );
+    // ✅ Fix: Only track analytics once to prevent duplicate events
+    if (_analyticsTracked) return;
+    _analyticsTracked = true;
     
-    AnalyticsService.instance.trackEvent('cart_view', props: {
-      'items_count': cartItems.length,
-      'total_value': cartItems.fold(0.0, (sum, item) => sum + (item.activePrice * item.quantity)),
+    // ✅ Fix: Use post-frame callback to ensure widget is fully built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      
+      final cartItems = ref.read(cartProvider);
+      
+      AnalyticsService.instance.trackSiteVisit(
+        pageUrl: '/cart',
+        deviceType: _detectDeviceType(),
+        country: 'Kuwait',
+      );
+      
+      AnalyticsService.instance.trackEvent('cart_view', props: {
+        'items_count': cartItems.length,
+        'total_value': cartItems.fold(0.0, (sum, item) => sum + (item.activePrice * item.quantity)),
+      });
     });
   }
 

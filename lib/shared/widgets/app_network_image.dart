@@ -139,25 +139,10 @@ class AppNetworkImage extends StatelessWidget {
     return Container(
       color: Colors.grey[100],
       child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.image_not_supported_outlined,
-              color: Colors.grey[400],
-              size: 32,
-            ),
-            if (kDebugMode) ...[
-              const SizedBox(height: 4),
-              Text(
-                'Image unavailable',
-                style: TextStyle(
-                  color: Colors.grey[400],
-                  fontSize: 10,
-                ),
-              ),
-            ],
-          ],
+        child: Icon(
+          Icons.image_not_supported_outlined,
+          color: Colors.grey[400],
+          size: 24,
         ),
       ),
     );

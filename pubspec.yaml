@@ -83,5 +83,5 @@ flutter:
   assets:
     - assets/images/
     - assets/fonts/
-    - env.txt
+    - assets/env.txt
     - web/icons/Icon-512.png
