@@ -78,7 +78,14 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
 
   bool get _hasColors {
     final colors = widget.product.options['colors'];
-    return colors is List && colors.isNotEmpty;
+    if (colors is List && colors.isNotEmpty) return true;
+    // Also check variants for colors when using advanced variants
+    if (_variants.isNotEmpty) {
+      for (final v in _variants) {
+        if (v.color != null && v.color!.trim().isNotEmpty) return true;
+      }
+    }
+    return false;
   }
 
   bool get _hasSizes {
@@ -96,6 +103,22 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
       }
     }
     return false;
+  }
+
+  /// Get colors list from options or variants
+  List<String> _getColorsList() {
+    final optionColors = widget.product.options['colors'];
+    if (optionColors is List && optionColors.isNotEmpty) {
+      return List<String>.from(optionColors);
+    }
+    // Extract from variants
+    final variantColors = <String>{};
+    for (final v in _variants) {
+      if (v.color != null && v.color!.trim().isNotEmpty) {
+        variantColors.add(v.color!);
+      }
+    }
+    return variantColors.toList();
   }
 
   /// Get sizes list from options or variants
@@ -158,13 +181,13 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     }
     _displayImages = uniqueImages.toList();
 
-    // اختيار تلقائي إذا كان خياراً واحداً من الألوان/المقاسات العادية
+    // اختيار تلقائي إذا كان خياراً واحداً من الألوان/المقاسات
     if (_hasColors) {
-      final colors = List<String>.from(widget.product.options['colors']);
+      final colors = _getColorsList();
       if (colors.length == 1) _selectedColor = colors.first;
     }
     if (_hasSizes) {
-      final sizes = List<String>.from(widget.product.options['sizes']);
+      final sizes = _getSizesList();
       if (sizes.length == 1) _selectedSize = sizes.first;
     }
 
@@ -280,7 +303,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                               if (_hasColors)
                                 _buildSelectionSection(
                                   title: "اختر اللون",
-                                  options: widget.product.options['colors'],
+                                  options: _getColorsList(),
                                   isColor: true,
                                   showPreviewImage: true,
                                   modalSetState: setModalState,
@@ -1054,31 +1077,11 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
 
   /// شريط صغير أسفل العنوان لعرض خيارات اللون والمقاس بشكل أنيق
   Widget _buildCompactVariantRow() {
-    final List<String> colors =
-        _hasColors ? List<String>.from(widget.product.options['colors']) : const [];
+    // Get colors from options or variants
+    final colors = _getColorsList();
     
     // Get sizes from options or variants (including attributes)
-    List<String> sizes = const [];
-    final optionSizes = widget.product.options['sizes'];
-    if (optionSizes is List && optionSizes.isNotEmpty) {
-      sizes = List<String>.from(optionSizes);
-    } else if (_variants.isNotEmpty) {
-      // Extract unique sizes from variants when using advanced variants
-      final variantSizes = <String>{};
-      for (final v in _variants) {
-        // First check the size field
-        if (v.size != null && v.size!.trim().isNotEmpty) {
-          variantSizes.add(v.size!);
-        }
-        // Also check attributes for dynamic options (e.g., الارتفاع)
-        for (final entry in v.attributes.entries) {
-          if (entry.value.trim().isNotEmpty) {
-            variantSizes.add(entry.value);
-          }
-        }
-      }
-      sizes = variantSizes.toList();
-    }
+    final sizes = _getSizesList();
 
     if (colors.isEmpty && sizes.isEmpty) return const SizedBox.shrink();
 

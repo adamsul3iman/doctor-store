@@ -65,33 +65,11 @@ class AppNetworkImage extends StatelessWidget {
     }
   }
 
-  /// Get web-optimized image URL with format and quality parameters
+  /// Get clean image URL without transformation parameters.
+  /// Server-side transformations removed due to 400 errors and plan limitations.
   String _getOptimizedUrl(String originalUrl, ImageVariant variant) {
-    // Use the existing helper for Supabase images
-    final optimizedUrl = buildOptimizedImageUrl(originalUrl, variant: variant);
-    
-    // For web, ensure we have aggressive optimizations
-    if (kIsWeb && optimizedUrl.isNotEmpty) {
-      final uri = Uri.parse(optimizedUrl);
-      final params = Map<String, String>.from(uri.queryParameters);
-      
-      // Ensure webp format for web (better compression)
-      if (!params.containsKey('format')) {
-        params['format'] = 'webp';
-      }
-      
-      // Lower quality for thumbnails on web
-      if ((variant == ImageVariant.productCard || variant == ImageVariant.thumbnail) 
-          && !params.containsKey('quality')) {
-        params['quality'] = '60';
-      }
-      
-      // Rebuild URL with optimized params
-      final newUri = uri.replace(queryParameters: params);
-      return newUri.toString();
-    }
-    
-    return optimizedUrl;
+    // Just pass through to the helper which now returns clean URLs
+    return buildOptimizedImageUrl(originalUrl, variant: variant);
   }
 
   @override

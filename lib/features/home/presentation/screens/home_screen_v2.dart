@@ -156,7 +156,7 @@ class HomeScreenV2 extends ConsumerStatefulWidget {
 
 class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
   late final int _homeStartMs;
-  bool _homeLatestLogged = false;
+  final bool _homeLatestLogged = false;
   bool _didPrecacheHomeImages = false;
   bool _listenersRegistered = false;
 

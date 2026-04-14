@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:doctor_store/shared/utils/image_url_helper.dart';
 
 class Product {
   final String id;
@@ -80,52 +81,18 @@ class Product {
     this.shippingSize,
   }) : _originalImageUrl = imageUrl;
 
-  /// Getter افتراضي متوسط الجودة/الحجم، مناسب لمعظم الاستخدامات العامة.
-  /// يستخدم WebP بجودة 80 بدون تحديد عرض ثابت.
-  String get imageUrl => _buildOptimizedUrl(quality: 80);
+  /// رابط الصورة الأصلي نظيف بدون معاملات.
+  /// يستخدم cleanImageUrl لإزالة أي معاملات Supabase transformation مكررة.
+  String get imageUrl => cleanImageUrl(_originalImageUrl);
 
-  /// رابط صورة مصغّرة (Thumbnail) لقوائم المنتجات، الـ home، الـ wishlist، إلخ.
-  ///
-  /// - عرض ثابت 300 بكسل تقريباً.
-  /// - جودة 70 لتقليل الحجم قدر الإمكان.
-  String get thumbnailUrl => _buildOptimizedUrl(width: 300, quality: 70);
+  /// رابط الصورة المصغّرة - نفس الرابط النظيف.
+  String get thumbnailUrl => cleanImageUrl(_originalImageUrl);
 
-  /// رابط صورة أكبر لصفحة تفاصيل المنتج، مناسب لشاشات الويب/الموبايل.
-  ///
-  /// - عرض مستهدف 1000 بكسل.
-  /// - جودة 80 لموازنة الوضوح مع الحجم.
-  String get detailImageUrl => _buildOptimizedUrl(width: 1000, quality: 80);
+  /// رابط صورة التفاصيل - نفس الرابط النظيف.
+  String get detailImageUrl => cleanImageUrl(_originalImageUrl);
 
-  /// رابط الصورة الخام كما هو مخزَّن في قاعدة البيانات بدون أي معاملات.
-  /// مفيد عندما نريد ترك مهمة التحسين لـ [image_url_helper] فقط.
-  String get originalImageUrl => _originalImageUrl ?? '';
-
-  /// مُساعد داخلي لبناء رابط صورة محسَّن من Supabase.
-  ///
-  /// - لو `_originalImageUrl` فارغ → يرجع سلسلة فارغة (توافقاً مع الكود القديم).
-  /// - لو الرابط لا يحتوي `supabase.co` → يرجع كما هو بدون تغيير.
-  /// - لو الرابط من Supabase → يضيف معاملات WebP + quality + resize،
-  ///   بالإضافة إلى `width` إن تم تمريرها.
-  String _buildOptimizedUrl({int? width, int quality = 80}) {
-    final url = _originalImageUrl;
-    if (url == null || url.isEmpty) return '';
-
-    // في حال كان الرابط خارجي أو من مصدر آخر، نرجعه كما هو بدون تغيير.
-    if (!url.contains('supabase.co')) {
-      return url;
-    }
-
-    final params = <String>[
-      if (width != null) 'width=$width',
-      'format=webp',
-      'quality=$quality',
-      'resize=contain',
-    ];
-
-    // لو كان هناك بارامترات مسبقاً نستخدم &، وإلا نستخدم ?
-    final separator = url.contains('?') ? '&' : '?';
-    return '$url$separator${params.join('&')}';
-  }
+  /// رابط الصورة الخام كما هو مخزَّن في قاعدة البيانات بدون أي معاملات.
+  String get originalImageUrl => cleanImageUrl(_originalImageUrl);
 
   String get categoryArabic {
     // هذه الترجمة تعتمد على قيم enum product_category في قاعدة البيانات.
@@ -672,7 +639,7 @@ class ProductImage {
         rawColor is num ? rawColor.toInt() : 0xFFFFFFFF;
 
     return ProductImage(
-      url: (json['url'] as String?) ?? '', 
+      url: cleanImageUrl(json['url'] as String?), 
       colorName: (json['color_name'] as String?) ?? '',
       colorValue: resolvedColor,
     );
@@ -738,7 +705,7 @@ class ProductVariant {
       color: color,
       size: size,
       unit: unit,
-      imageUrl: json['image_url']?.toString(),
+      imageUrl: cleanImageUrl(json['image_url']?.toString()),
       attributes: attrs,
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       stock: json['stock'] is num ? (json['stock'] as num).toInt() : null,
