@@ -21,9 +21,7 @@ class AnalyticsService {
 
   /// الحصول على معرف الزائر الفريد
   String getVisitorId() {
-    if (_visitorId == null) {
-      _visitorId = const Uuid().v4();
-    }
+    _visitorId ??= const Uuid().v4();
     return _visitorId!;
   }
 
