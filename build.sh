@@ -25,9 +25,17 @@ fi
 echo "Getting dependencies..."
 flutter pub get
 
-# Build for web with HTML renderer (smaller bundle, faster loading)
+# Build for web with HTML renderer - pass env vars via --dart-define
 echo "Building for web with HTML renderer..."
-flutter build web --release
+if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_ANON_KEY" ]; then
+    echo "✅ Building with environment variables via --dart-define..."
+    flutter build web --release \
+        --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+        --dart-define=SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY"
+else
+    echo "⚠️ Building without environment variables..."
+    flutter build web --release
+fi
 
 # Ensure PWA/static files are present in the build output (Vercel serves build/web)
 cp -f web/manifest.json build/web/manifest.json
