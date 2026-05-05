@@ -4,12 +4,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/features/cart/application/cart_manager.dart';
+import 'package:doctor_store/features/cart/domain/pricing_calculator.dart';
 import 'package:doctor_store/features/auth/application/user_data_manager.dart';
 import 'package:doctor_store/shared/utils/app_notifier.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
 import 'package:doctor_store/shared/utils/delivery_zones_provider.dart';
 import 'package:doctor_store/shared/utils/shipping_calculator.dart'; // ✅
 import 'package:doctor_store/shared/widgets/image_shimmer_placeholder.dart';
+import 'package:doctor_store/shared/services/whatsapp_service.dart';
 
 const _brandColor = Color(0xFF0A2647);
 
@@ -97,19 +99,21 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
   }
 
   double get _totalPrice {
-    double base = _productsTotal;
-    if (_appliedCoupon != null) {
-      if (_appliedCoupon!.type == 'percent') {
-        base -= base * (_appliedCoupon!.value / 100);
-      } else {
-        base -= _appliedCoupon!.value;
-      }
-    }
-    if (base < 0) base = 0;
-
-    // ✅ استخدام السعر الديناميكي أو القديم احتياطياً
-    final shipping = _dynamicDeliveryFee > 0 ? _dynamicDeliveryFee : (_selectedZone?.price ?? 0);
-    return base + shipping;
+    // استخدام PricingCalculator لتجنب تكرار المنطق
+    final discountAmount = PricingCalculator.calculateDiscount(
+      subtotal: _productsTotal,
+      coupon: _appliedCoupon,
+    );
+    final deliveryFee = PricingCalculator.calculateDeliveryFee(
+      dynamicFee: _dynamicDeliveryFee > 0 ? _dynamicDeliveryFee : null,
+      zonePrice: _selectedZone?.price,
+      subtotal: _productsTotal,
+    );
+    return PricingCalculator.calculateGrandTotal(
+      subtotal: _productsTotal,
+      discountAmount: discountAmount,
+      deliveryFee: deliveryFee,
+    );
   }
 
   Future<void> _applyCoupon() async {
@@ -118,7 +122,11 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
     setState(() => _isValidatingCoupon = true);
 
     // استخدام الدالة العامة من cart_manager.dart
-    final error = await validateCoupon(ref, _couponCtrl.text);
+    final error = await validateCoupon(
+      ref,
+      _couponCtrl.text,
+      phone: _phoneCtrl.text,
+    );
 
     if (!mounted) return;
 
@@ -255,6 +263,11 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
   }
 
   Widget _buildProductHeader(BuildContext context) {
+    final imageUrl = WhatsAppService.getCorrectImageUrl(
+      widget.product,
+      widget.selectedColor,
+    );
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -262,7 +275,7 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
           borderRadius: BorderRadius.circular(10),
           child: CachedNetworkImage(
             imageUrl: buildOptimizedImageUrl(
-              widget.product.imageUrl,
+              imageUrl,
               variant: ImageVariant.thumbnail,
             ),
             width: 60,
@@ -485,20 +498,16 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
 
   Widget _buildSummaryCard(bool requireDeliveryZone) {
     final productsTotal = _productsTotal;
-    double discountAmount = 0;
-    if (_appliedCoupon != null) {
-      if (_appliedCoupon!.type == 'percent') {
-        discountAmount = productsTotal * (_appliedCoupon!.value / 100);
-      } else {
-        discountAmount = _appliedCoupon!.value;
-      }
-      if (discountAmount > productsTotal) {
-        discountAmount = productsTotal;
-      }
-    }
-
-    // ✅ استخدام السعر الديناميكي
-    final deliveryFee = _dynamicDeliveryFee > 0 ? _dynamicDeliveryFee : (_selectedZone?.price ?? 0);
+    // استخدام PricingCalculator لتجنب تكرار المنطق
+    final discountAmount = PricingCalculator.calculateDiscount(
+      subtotal: productsTotal,
+      coupon: _appliedCoupon,
+    );
+    final deliveryFee = PricingCalculator.calculateDeliveryFee(
+      dynamicFee: _dynamicDeliveryFee > 0 ? _dynamicDeliveryFee : null,
+      zonePrice: _selectedZone?.price,
+      subtotal: productsTotal,
+    );
 
     return Container(
       width: double.infinity,
@@ -570,26 +579,25 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
   Future<void> _onSubmit(bool requireDeliveryZone) async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (requireDeliveryZone && _selectedZone == null) {
+      AppNotifier.showError(context, "يرجى اختيار منطقة التوصيل قبل إتمام الطلب");
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
-    // لم نعد نمنع الإرسال تماماً عند عدم اختيار منطقة التوصيل
-    // إذا كانت المناطق مفعّلة وتم تركها فارغة، سنستمر مع وضع "غير محددة"
-    // وسيقوم فريق خدمة العملاء بتأكيد الرسوم بعد فتح الواتساب.
-
-      try {
-        final productsTotal = _productsTotal;
-      double discountAmount = 0;
-      if (_appliedCoupon != null) {
-        if (_appliedCoupon!.type == 'percent') {
-          discountAmount = productsTotal * (_appliedCoupon!.value / 100);
-        } else {
-          discountAmount = _appliedCoupon!.value;
-        }
-        if (discountAmount > productsTotal) {
-          discountAmount = productsTotal;
-        }
-      }
-      final deliveryFee = _selectedZone?.price ?? 0;
+    try {
+      final productsTotal = _productsTotal;
+      // استخدام PricingCalculator لتجنب تكرار المنطق
+      final discountAmount = PricingCalculator.calculateDiscount(
+        subtotal: productsTotal,
+        coupon: _appliedCoupon,
+      );
+      final deliveryFee = PricingCalculator.calculateDeliveryFee(
+        dynamicFee: _dynamicDeliveryFee > 0 ? _dynamicDeliveryFee : null,
+        zonePrice: _selectedZone?.price,
+        subtotal: productsTotal,
+      );
 
       if (_isMulti) {
         // نمط عدة اختيارات لنفس المنتج
@@ -639,7 +647,7 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
       }
 
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context, true);
         AppNotifier.showSuccess(
           context,
           "تم تجهيز طلبك وفتح واتساب للتأكيد النهائي.",

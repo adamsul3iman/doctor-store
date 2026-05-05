@@ -1,11 +1,12 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/features/auth/application/user_data_manager.dart';
+import 'package:doctor_store/features/cart/domain/pricing_calculator.dart';
+import 'package:doctor_store/features/cart/data/cart_repository.dart';
+import 'package:doctor_store/shared/services/whatsapp_service.dart';
 
 // ================== الموديل (CartItem) ==================
 class CartItem {
@@ -98,32 +99,35 @@ final cartTotalProvider = Provider<double>((ref) {
   final cart = ref.watch(cartProvider);
   final coupon = ref.watch(couponProvider);
 
-  double originalTotal = cart.fold(0, (sum, item) => sum + item.activePrice * item.quantity);
-
-  if (coupon == null) return originalTotal;
-
-  double discountAmount = 0;
-  if (coupon.type == 'percent') {
-    discountAmount = originalTotal * (coupon.value / 100);
-  } else {
-    discountAmount = coupon.value;
-  }
-  
-  double finalTotal = originalTotal - discountAmount;
-  return finalTotal < 0 ? 0.0 : finalTotal;
+  // استخدام PricingCalculator لتجنب تكرار المنطق
+  return PricingCalculator.calculateCartTotalForProvider(
+    items: cart,
+    coupon: coupon,
+  );
 });
 
 class CartNotifier extends StateNotifier<List<CartItem>> {
-  CartNotifier() : super([]) {
-    // عند بدء التشغيل نحمّل السلة مرة واحدة بدون دمج محلي/سحابي متكرر
+  late final CartRepository _cartRepository;
+  Timer? _cloudSyncDebounceTimer;
+  static const _cloudSyncDebounceDelay = Duration(seconds: 2);
+
+  CartNotifier({CartRepository? cartRepository}) : super([]) {
+    _cartRepository = cartRepository ?? CartRepository.current();
     _loadCart();
   }
 
-  SupabaseClient? _getClientOrNull() {
+  @override
+  void dispose() {
+    // Flush any pending cloud sync before disposal
+    _flushPendingCloudSync();
+    _cloudSyncDebounceTimer?.cancel();
+    super.dispose();
+  }
+
+  String? get _currentUserId {
     try {
-      return Supabase.instance.client;
+      return Supabase.instance.client.auth.currentUser?.id;
     } catch (_) {
-      // في بيئات الاختبار أو قبل تهيئة Supabase نعمل بالسلة المحلية فقط
       return null;
     }
   }
@@ -134,92 +138,62 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
   /// مع سلة الحساب مرة واحدة. في الاستخدام العادي نفضّل السحابة كمصدر
   /// رئيسي لتجنّب تكرار جمع الكميات في كل مرة يفتح فيها المستخدم التطبيق.
   Future<void> _loadCart({bool mergeLocalWithRemote = false}) async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? cartString = prefs.getString('cart_items');
-    List<CartItem> localItems = [];
-    if (cartString != null) {
-      final List<dynamic> decoded = jsonDecode(cartString);
-      localItems = decoded.map((e) => CartItem.fromJson(e)).toList();
-    }
-
-    // محاولة مزامنة السلة مع Supabase للمستخدم المسجّل
-    final client = _getClientOrNull();
-    final user = client?.auth.currentUser;
-    if (client != null && user != null) {
-      try {
-        final data = await client
-            .from('user_carts')
-            .select('items')
-            .eq('user_id', user.id)
-            .maybeSingle();
-
-        List<CartItem> remoteItems = [];
-        if (data != null && data['items'] is List) {
-          remoteItems = (data['items'] as List)
-              .map((e) => CartItem.fromJson(Map<String, dynamic>.from(e as Map)))
-              .toList();
-        }
-
-        if (mergeLocalWithRemote) {
-          // يُستخدم عند تسجيل الدخول فقط لدمج سلة الزائر مع سلة الحساب
-          state = _mergeCarts(localItems, remoteItems);
-        } else {
-          // في الاستخدام العادي نعتبر السحابة هي المصدر الرئيسي
-          // إذا كانت السحابة فارغة نستخدم المحلي، وإلا نستخدم السحابة فقط
-          if (remoteItems.isNotEmpty) {
-            state = remoteItems;
-          } else {
-            state = localItems;
-          }
-        }
-      } catch (e) {
-        debugPrint('Load remote cart error: $e');
-        state = localItems;
-      }
-    } else {
-      // مستخدم زائر: نستخدم السلة المحلية فقط
-      state = localItems;
-    }
-
-    await _saveCart();
-    await _syncCartToCloud();
-  }
-
-  /// دمج سلتين مع جمع الكميات لنفس العنصر
-  List<CartItem> _mergeCarts(List<CartItem> a, List<CartItem> b) {
-    final Map<CartItem, int> map = {};
-    for (final item in [...a, ...b]) {
-      map[item] = (map[item] ?? 0) + item.quantity;
-    }
-    return map.entries
-        .map((entry) => CartItem(
-              product: entry.key.product,
-              quantity: entry.value,
-              selectedColor: entry.key.selectedColor,
-              selectedSize: entry.key.selectedSize,
-              variantPrice: entry.key.variantPrice,
-            ))
-        .toList();
-  }
-
-  Future<void> _saveCart() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String encoded = jsonEncode(state.map((e) => e.toJson()).toList());
-    await prefs.setString('cart_items', encoded);
-  }
-
-  Future<void> _syncCartToCloud() async {
-    final client = _getClientOrNull();
-    final user = client?.auth.currentUser;
-    if (client == null || user == null) return; // زائر أو بيئة بدون Supabase
+    final userId = _currentUserId;
 
     try {
-      await client.from('user_carts').upsert({
-        'user_id': user.id,
-        'items': state.map((e) => e.toJson()).toList(),
-      }, onConflict: 'user_id');
+      final result = mergeLocalWithRemote && userId != null
+          ? await _cartRepository.loadAndMergeCarts(userId)
+          : await _cartRepository.loadCart(userId: userId);
+
+      state = result.items;
     } catch (e) {
-      debugPrint('Sync cart error: $e');
+      debugPrint('Load cart error: $e');
+      state = [];
+    }
+  }
+
+  /// حفظ السلة: Local فوري + Cloud debounced
+  Future<void> _saveCart() async {
+    final userId = _currentUserId;
+
+    // 1. Local save is always immediate
+    try {
+      await _cartRepository.saveLocalCart(state);
+    } catch (e) {
+      debugPrint('Local cart save error: $e');
+    }
+
+    // 2. Cloud sync is debounced (only for logged-in users)
+    if (userId != null) {
+      _debounceCloudSync(userId);
+    }
+  }
+
+  /// Debounced cloud sync - cancels previous timer if new edit arrives
+  void _debounceCloudSync(String userId) {
+    _cloudSyncDebounceTimer?.cancel();
+    _cloudSyncDebounceTimer = Timer(_cloudSyncDebounceDelay, () async {
+      await _syncToCloud(userId);
+    });
+  }
+
+  /// Immediate cloud sync (used for flush scenarios)
+  Future<void> _syncToCloud(String userId) async {
+    try {
+      await _cartRepository.syncRemoteCart(userId, state);
+    } catch (e) {
+      debugPrint('Cloud sync error: $e');
+      // Silent failure - local is already saved, will retry on next edit
+    }
+  }
+
+  /// Flush any pending cloud sync immediately (for dispose/clear scenarios)
+  Future<void> _flushPendingCloudSync() async {
+    final userId = _currentUserId;
+    if (_cloudSyncDebounceTimer != null && userId != null) {
+      _cloudSyncDebounceTimer!.cancel();
+      _cloudSyncDebounceTimer = null;
+      await _syncToCloud(userId);
     }
   }
 
@@ -289,14 +263,12 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
       state = [...state, newItem];
     }
     await _saveCart();
-    await _syncCartToCloud();
     return true;
   }
 
   void removeItem(CartItem item) {
     state = state.where((element) => element != item).toList();
     _saveCart();
-    _syncCartToCloud();
   }
 
   void incrementQuantity(CartItem item) {
@@ -341,121 +313,15 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
           i
     ];
     _saveCart();
-    _syncCartToCloud();
   }
 
   void clearCart() {
     state = [];
     _saveCart();
-    _syncCartToCloud();
   }
 
-  // ✅ 1. دالة مساعدة لتحديد رابط الصورة المناسبة
-  String _getCorrectImageUrl(Product product, String? selectedColor) {
-    // الصورة الافتراضية
-    String finalUrl = product.imageUrl;
-
-    // إذا اختار العميل لوناً، نبحث في المعرض عن صورة مرتبطة بهذا اللون
-    if (selectedColor != null && product.gallery.isNotEmpty) {
-      try {
-        final variantImage = product.gallery.firstWhere(
-          (img) => img.colorName == selectedColor,
-        );
-        finalUrl = variantImage.url;
-      } catch (e) {
-        // إذا لم نجد صورة للون، نستخدم الصورة الرئيسية
-      }
-    }
-    return finalUrl;
-  }
-
-  // ✅ 2. تحديث شكل الفاتورة لإظهار رابط الصورة + ملخص الأسعار (منتجات / خصم / توصيل)
-  String _buildWhatsAppInvoice({
-    required String orderId,
-    required String name,
-    required String address,
-    required String phone,
-    required List<Map<String, dynamic>> items,
-    required double productsTotal,
-    required double finalTotal,
-    double? discountAmount,
-    double? deliveryFee,
-    String? deliveryZoneName,
-    Coupon? coupon,
-    String? notes,
-  }) {
-    final buffer = StringBuffer();
-
-    buffer.writeln("🧾 *طلب جديد - متجر الدكتور*");
-    buffer.writeln("🔹 رقم الطلب: #${orderId.substring(0, 5)}");
-    buffer.writeln("================================");
-
-    buffer.writeln("👤 *العميل:* $name");
-    buffer.writeln("📍 *العنوان:* $address");
-    buffer.writeln("📞 *الهاتف:* $phone");
-    buffer.writeln("================================");
-
-    buffer.writeln("📦 *تفاصيل الطلب:*");
-    for (var item in items) {
-      buffer.writeln("• *${item['title']}*");
-
-      if (item['color'] != null) {
-        buffer.writeln("   🎨 اللون: ${item['color']}");
-      }
-      if (item['size'] != null) {
-        buffer.writeln("   📏 المقاس: ${item['size']}");
-      }
-
-      final unitLabel = item['unit'] != null ? ' ${item['unit']}' : '';
-      final int quantity = (item['quantity'] as num?)?.toInt() ?? 0;
-      final double unitPrice = (item['price'] as num?)?.toDouble() ?? 0.0;
-      final double lineTotal = unitPrice * quantity;
-
-      buffer.writeln("   🔢 الكمية: $quantity$unitLabel");
-      buffer.writeln("   💵 سعر الوحدة: ${unitPrice.toStringAsFixed(2)} د.أ");
-      buffer.writeln("   💰 إجمالي هذا المنتج: ${lineTotal.toStringAsFixed(2)} د.أ");
-
-      buffer.writeln("   🖼️ رابط الصورة: ${item['image_url']}");
-      buffer.writeln(""); // مسافة بين المنتجات
-    }
-
-    buffer.writeln("================================");
-    buffer.writeln("💳 *ملخص الفاتورة:*");
-    buffer.writeln("🧾 مجموع المنتجات: ${productsTotal.toStringAsFixed(2)} د.أ");
-
-    if (discountAmount != null && discountAmount > 0) {
-      buffer.writeln("🎟️ إجمالي الخصم: -${discountAmount.toStringAsFixed(2)} د.أ");
-      if (coupon != null) {
-        buffer.writeln("   (كوبون: ${coupon.code})");
-      }
-    } else if (coupon != null) {
-      // في حال تم تمرير كوبون بدون تمرير قيمة الخصم
-      buffer.writeln("🎟️ كوبون مفعّل: ${coupon.code}");
-    }
-
-    if (deliveryFee != null && deliveryFee > 0) {
-      final zoneLabel = deliveryZoneName != null && deliveryZoneName.trim().isNotEmpty
-          ? " (${deliveryZoneName.trim()})"
-          : "";
-      buffer.writeln(
-        "🚚 رسوم التوصيل$zoneLabel: ${deliveryFee.toStringAsFixed(2)} د.أ",
-      );
-      buffer.writeln("⚖️ *ملاحظة:* رسوم التوصيل تقديرية وتختلف حسب حجم الطلب.");
-    }
-
-    buffer.writeln("================================");
-    buffer.writeln("💰 *المجموع النهائي المستحق:* ${finalTotal.toStringAsFixed(2)} د.أ");
-
-    if (notes != null && notes.trim().isNotEmpty) {
-      buffer.writeln("================================");
-      buffer.writeln("📝 *ملاحظات العميل:* ${notes.trim()}");
-    }
-
-    buffer.writeln("================================");
-    buffer.writeln("📍 يرجى تأكيد الطلب وموعد التوصيل.");
-
-    return buffer.toString();
-  }
+  // ✅ استخدام WhatsAppService لبناء رسائل الواتساب وفتحها
+  // تم نقل المنطق إلى lib/shared/services/whatsapp_service.dart
 
   // ✅ 3. تحديث دالة الشراء من السلة مع دعم رسوم التوصيل
   // ملاحظة مهمة على الويب: يجب فتح نافذة الواتساب مباشرة بعد تفاعل المستخدم
@@ -484,7 +350,7 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     // نبني عناصر الفاتورة دائماً من حالة السلة الحالية (النسخة الثابتة)
     final List<Map<String, dynamic>> invoiceItems = [];
     for (final item in itemsSnapshot) {
-      final specificImageUrl = _getCorrectImageUrl(item.product, item.selectedColor);
+      final specificImageUrl = WhatsAppService.getCorrectImageUrl(item.product, item.selectedColor);
 
       final variant = item.product.findMatchingVariant(
         color: item.selectedColor,
@@ -511,26 +377,26 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     String orderIdLabel = 'local';
 
     // 1) نرسل رسالة الواتساب أولاً (حتى لا يحظرها المتصفح على الويب)
-    final msg = _buildWhatsAppInvoice(
-      orderId: orderIdLabel,
-      name: customerName,
-      address: 'منطقة التوصيل: $deliveryZoneName',
-      phone: customerPhone,
-      items: invoiceItems,
-      productsTotal: productsTotal,
-      finalTotal: totalAmount,
-      discountAmount: discountAmount,
-      deliveryFee: deliveryFee,
-      deliveryZoneName: deliveryZoneName,
-      coupon: coupon,
-      notes: notes,
+    final url = WhatsAppService.buildWhatsAppUrl(
+      storePhone,
+      WhatsAppService.buildInvoiceMessage(
+        orderId: orderIdLabel,
+        customerName: customerName,
+        address: 'منطقة التوصيل: $deliveryZoneName',
+        phone: customerPhone,
+        items: invoiceItems,
+        productsTotal: productsTotal,
+        finalTotal: totalAmount,
+        discountAmount: discountAmount,
+        deliveryFee: deliveryFee,
+        deliveryZoneName: deliveryZoneName,
+        coupon: coupon,
+        notes: notes,
+      ),
     );
-
-    final url = Uri.parse("https://wa.me/$storePhone?text=${Uri.encodeComponent(msg)}");
-    LaunchMode mode = kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication;
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: mode);
-      // ✅ Fix: Don't clear cart here - user might cancel WhatsApp
+    final result = await WhatsAppService.launchWhatsApp(url);
+    if (result.success) {
+      // Fix: Don't clear cart here - user might cancel WhatsApp
       // Cart will be cleared after successful Supabase save below
     } else {
       throw Exception('Cannot launch WhatsApp');
@@ -538,11 +404,7 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
 
     // 2) بعد فتح الواتساب نحاول حفظ الطلب في Supabase في الخلفية.
     () async {
-      // ✅ لا نحفظ الطلب للزوار (غير مسجلين)
-      if (user?.id == null) {
-        debugPrint('Guest checkout: skipping database save');
-        return;
-      }
+      // نحفظ طلبات السلة للضيوف أيضًا حتى تظهر في لوحة التحكم.
       try {
         final orderRes = await supabase.from('orders').insert({
           'customer_name': customerName,
@@ -558,12 +420,11 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
         final dynamic orderIdRaw = orderRes['id'];
         orderIdLabel = orderIdRaw.toString();
 
-        // ✅ Fix: Only clear cart after successful order save
-        clearCart();
-
+        // Fix: Only clear cart after at least one order item is saved
         // بعد الحصول على رقم الطلب، نحاول حفظ عناصر السلة (من النسخة الثابتة)
+        var savedItemsCount = 0;
         for (final item in itemsSnapshot) {
-          final specificImageUrl = _getCorrectImageUrl(item.product, item.selectedColor);
+          final specificImageUrl = WhatsAppService.getCorrectImageUrl(item.product, item.selectedColor);
           try {
             await supabase.from('order_items').insert({
               'order_id': orderIdRaw,
@@ -575,9 +436,14 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
               'selected_color': item.selectedColor,
               'image_url': specificImageUrl,
             });
+            savedItemsCount++;
           } catch (e) {
             debugPrint('Order item insert error: $e');
           }
+        }
+
+        if (savedItemsCount > 0) {
+          clearCart();
         }
 
         if (coupon != null) {
@@ -594,7 +460,7 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     }();
   }
 
-  // ✅ 4. تحديث دالة الشراء السريع لدعم رسوم التوصيل
+  // تحديث دالة الشراء السريع لدعم رسوم التوصيل
   // على الويب أيضاً نفتح الواتساب أولاً ثم نحفظ الطلب في الخلفية.
   Future<void> checkoutSingleProductViaWhatsApp({
     required Product product,
@@ -613,10 +479,6 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     String? notes,
   }) async {
     final supabase = Supabase.instance.client;
-    // تنظيف رقم الهاتف من أي رموز أو مسافات لضمان عمل رابط الواتساب بشكل صحيح
-    final String cleanPhone =
-        storePhone.replaceAll(RegExp(r'[^0-9]'), '');
-    // احتساب المجموع والخصم محلياً لحماية إضافية
     double effectiveProductsTotal = productsTotal;
     if (effectiveProductsTotal <= 0) {
       effectiveProductsTotal = price * quantity;
@@ -640,7 +502,7 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
 
     final user = Supabase.instance.client.auth.currentUser;
     String orderIdLabel = 'local';
-    final specificImageUrl = _getCorrectImageUrl(product, color);
+    final specificImageUrl = WhatsAppService.getCorrectImageUrl(product, color);
 
     final variant = product.findMatchingVariant(
       color: color,
@@ -652,42 +514,36 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
         : product.options['pricing_unit'];
 
     // 1) نبني رسالة الواتساب ونفتحها فوراً
-    final msg = _buildWhatsAppInvoice(
-      orderId: orderIdLabel,
-      name: customerName,
-      address: 'منطقة التوصيل: $deliveryZoneName',
-      phone: customerPhone,
-      items: [
-        {
-          'title': product.title,
-          'size': size,
-          'color': color,
-          'quantity': quantity,
-          'price': price,
-          'unit': unitLabel,
-          'image_url': specificImageUrl,
-        }
-      ],
-      productsTotal: effectiveProductsTotal,
-      finalTotal: total,
-      discountAmount: appliedDiscount,
-      deliveryFee: deliveryFee,
-      deliveryZoneName: deliveryZoneName,
-      coupon: coupon,
-      notes: notes,
+    final url = WhatsAppService.buildWhatsAppUrl(
+      storePhone,
+      WhatsAppService.buildInvoiceMessage(
+        orderId: orderIdLabel,
+        customerName: customerName,
+        address: 'منطقة التوصيل: $deliveryZoneName',
+        phone: customerPhone,
+        items: [
+          {
+            'title': product.title,
+            'size': size,
+            'color': color,
+            'quantity': quantity,
+            'price': price,
+            'unit': unitLabel,
+            'image_url': specificImageUrl,
+          }
+        ],
+        productsTotal: effectiveProductsTotal,
+        finalTotal: total,
+        discountAmount: appliedDiscount,
+        deliveryFee: deliveryFee,
+        deliveryZoneName: deliveryZoneName,
+        coupon: coupon,
+        notes: notes,
+      ),
     );
-
-    final url = Uri.parse(
-      "https://wa.me/$cleanPhone?text=${Uri.encodeComponent(msg)}",
-    );
-    
-    // For web, use platform-specific launch mode
-    LaunchMode mode = kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication;
-    
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: mode);
-    } else {
-      throw Exception('Cannot launch WhatsApp');
+    final result = await WhatsAppService.launchWhatsApp(url);
+    if (!result.success) {
+      throw Exception(result.error ?? 'Cannot launch WhatsApp');
     }
 
     // 2) بعد فتح الواتساب نحفظ الطلب في Supabase في الخلفية
@@ -751,9 +607,6 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     final supabase = Supabase.instance.client;
     final user = Supabase.instance.client.auth.currentUser;
 
-    // تنظيف رقم الهاتف من أي رموز أو مسافات لضمان عمل رابط الواتساب بشكل صحيح
-    final String cleanPhone = storePhone.replaceAll(RegExp(r'[^0-9]'), '');
-
     double effectiveProductsTotal = productsTotal;
     if (effectiveProductsTotal <= 0) {
       effectiveProductsTotal = items.fold(
@@ -783,7 +636,7 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     // بناء عناصر الفاتورة لاستخدامها في رسالة الواتساب
     final List<Map<String, dynamic>> invoiceItems = [];
     for (final item in items) {
-      final specificImageUrl = _getCorrectImageUrl(item.product, item.selectedColor);
+      final specificImageUrl = WhatsAppService.getCorrectImageUrl(item.product, item.selectedColor);
 
       final variant = item.product.findMatchingVariant(
         color: item.selectedColor,
@@ -805,29 +658,26 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
       });
     }
 
-    final msg = _buildWhatsAppInvoice(
-      orderId: orderIdLabel,
-      name: customerName,
-      address: 'منطقة التوصيل: $deliveryZoneName',
-      phone: customerPhone,
-      items: invoiceItems,
-      productsTotal: effectiveProductsTotal,
-      finalTotal: total,
-      discountAmount: appliedDiscount,
-      deliveryFee: deliveryFee,
-      deliveryZoneName: deliveryZoneName,
-      coupon: coupon,
-      notes: notes,
+    final url = WhatsAppService.buildWhatsAppUrl(
+      storePhone,
+      WhatsAppService.buildInvoiceMessage(
+        orderId: orderIdLabel,
+        customerName: customerName,
+        address: 'منطقة التوصيل: $deliveryZoneName',
+        phone: customerPhone,
+        items: invoiceItems,
+        productsTotal: effectiveProductsTotal,
+        finalTotal: total,
+        discountAmount: appliedDiscount,
+        deliveryFee: deliveryFee,
+        deliveryZoneName: deliveryZoneName,
+        coupon: coupon,
+        notes: notes,
+      ),
     );
-
-    final url = Uri.parse(
-      "https://wa.me/$cleanPhone?text=${Uri.encodeComponent(msg)}",
-    );
-    LaunchMode mode = kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication;
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: mode);
-    } else {
-      throw Exception('Cannot launch WhatsApp');
+    final result = await WhatsAppService.launchWhatsApp(url);
+    if (!result.success) {
+      throw Exception(result.error ?? 'Cannot launch WhatsApp');
     }
 
     // 2) بعد فتح الواتساب نحفظ الطلب في Supabase في الخلفية
@@ -848,7 +698,7 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
         orderIdLabel = orderIdRaw.toString();
 
         for (final item in items) {
-          final specificImageUrl = _getCorrectImageUrl(item.product, item.selectedColor);
+          final specificImageUrl = WhatsAppService.getCorrectImageUrl(item.product, item.selectedColor);
           try {
             await supabase.from('order_items').insert({
               'order_id': orderIdRaw,
@@ -897,12 +747,14 @@ class CustomCheckoutItem {
 }
 
 // الدوال المساعدة العامة
-Future<String?> validateCoupon(WidgetRef ref, String code) async {
+Future<String?> validateCoupon(WidgetRef ref, String code, {String? phone}) async {
   try {
     final userProfile = ref.read(userProfileProvider);
+    final customerPhone =
+        (phone != null && phone.trim().isNotEmpty) ? phone.trim() : userProfile.phone;
     final response = await Supabase.instance.client.rpc('verify_and_apply_coupon', params: {
       'p_code': code,
-      'p_phone': userProfile.phone, 
+      'p_phone': customerPhone,
     });
     
     final data = response as Map<String, dynamic>;
@@ -922,17 +774,32 @@ Future<String?> validateCoupon(WidgetRef ref, String code) async {
 
 Future<void> registerCouponUsage(String couponId, String orderId, String phone) async {
   try {
-    await Supabase.instance.client.from('coupon_usage').insert({
-      'coupon_id': couponId,
-      'order_id': orderId,
-      'customer_phone': phone,
+    await Supabase.instance.client.rpc('register_coupon_usage', params: {
+      'p_coupon_id': couponId,
+      'p_order_id': orderId,
+      'p_customer_phone': phone,
     });
-    await Supabase.instance.client.rpc('increment_coupon_usage', params: {'coupon_id': couponId});
-  } catch (e) {
-    debugPrint("Error registering coupon: $e");
+  } catch (rpcError) {
+    debugPrint("RPC coupon usage error: $rpcError");
+    try {
+      await Supabase.instance.client.from('coupon_usage').insert({
+        'coupon_id': couponId,
+        'order_id': orderId,
+        'customer_phone': phone,
+      });
+      await Supabase.instance.client.rpc(
+        'increment_coupon_usage',
+        params: {'coupon_id': couponId},
+      );
+    } catch (e) {
+      debugPrint("Error registering coupon: $e");
+    }
   }
 }
 
 Future<void> incrementCouponUsage(String couponId) async {
-   await Supabase.instance.client.rpc('increment_coupon_usage', params: {'coupon_id': couponId});
+  await Supabase.instance.client.rpc(
+    'increment_coupon_usage',
+    params: {'coupon_id': couponId},
+  );
 }

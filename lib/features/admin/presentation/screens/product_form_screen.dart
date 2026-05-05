@@ -937,14 +937,9 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             }
             throw Exception('Invalid variant price');
           }
-          final key =
-              '${row.colorCtrl.text.trim()}|${row.sizeCtrl.text.trim()}|${row.unitCtrl.text.trim()}|${row.attributes.entries.map((e) => '${e.key}:${e.value}').join(',')}';
-          
-          // Debug: print the key being checked
-          debugPrint('Checking variant key: "$key" (color: "${row.colorCtrl.text.trim()}", size: "${row.sizeCtrl.text.trim()}", unit: "${row.unitCtrl.text.trim()}", attrs: ${row.attributes})');
-          
+          final key = _variantRowKey(row);
+
           if (keys.contains(key)) {
-            debugPrint('Duplicate found! Existing keys: $keys');
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -1100,10 +1095,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         },
       };
 
-      // إذا كانت المتغيرات المتقدمة مفعّلة وهناك بيانات، نضيف حقل variants ديناميكياً
-      if (_useAdvancedVariants && variantsPayload.isNotEmpty) {
-        productData['variants'] = variantsPayload;
-      }
+      // نرسل القائمة دائماً حتى يتم مسح المتغيرات القديمة عند إلغاء التفعيل أو حذف الصفوف.
+      productData['variants'] = _useAdvancedVariants ? variantsPayload : <Map<String, dynamic>>[];
 
       await _adminProductRepo.upsertProduct(
         productData: productData,
@@ -3397,6 +3390,49 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     setState(() {});
   }
 
+  String _normalizeVariantOptionKey(String raw) {
+    final value = raw.trim();
+    final lower = value.toLowerCase();
+    final compact = lower.replaceAll(RegExp(r'[\s_\-]+'), '');
+
+    if (compact == 'color' ||
+        compact == 'colour' ||
+        compact == 'colors' ||
+        compact == 'colours' ||
+        compact == 'لون' ||
+        compact == 'اللون' ||
+        compact == 'ألوان' ||
+        compact == 'الوان') {
+      return 'color';
+    }
+
+    if (compact == 'size' ||
+        compact == 'sizes' ||
+        compact == 'measure' ||
+        compact == 'مقاس' ||
+        compact == 'المقاس' ||
+        compact == 'مقاسات' ||
+        compact == 'القياس' ||
+        compact == 'قياس') {
+      return 'size';
+    }
+
+    return value;
+  }
+
+  String _variantRowKey(_VariantRow row) {
+    final attrs = row.attributes.entries
+        .where((e) => e.key.trim().isNotEmpty && e.value.trim().isNotEmpty)
+        .toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+    return [
+      row.colorCtrl.text.trim(),
+      row.sizeCtrl.text.trim(),
+      row.unitCtrl.text.trim(),
+      attrs.map((e) => '${e.key.trim()}:${e.value.trim()}').join(',')
+    ].join('|');
+  }
+
   /// فتح أداة ذكية لتوليد المتغيرات تلقائياً من الألوان + المقاسات الحالية.
   Future<void> _openVariantsGeneratorDialog() async {
     // تفعيل المتغيرات المتقدمة تلقائياً عند فتح أداة التوليد
@@ -3410,6 +3446,12 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     final dynOptions = _dynamicOptions
         .where((o) => o.nameCtrl.text.trim().isNotEmpty && o.values.isNotEmpty)
         .toList();
+    final supportedDynOptions = dynOptions
+        .where((o) {
+          final key = _normalizeVariantOptionKey(o.nameCtrl.text);
+          return key == 'color' || key == 'size';
+        })
+        .toList();
 
     // المصدر 2 (القديم): ألوان المعرض + مقاسات legacy
     final availableColors = _galleryImages
@@ -3419,7 +3461,9 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         .toList();
     final availableSizes = List<String>.from(_sizes);
 
-    if (dynOptions.isEmpty && availableColors.isEmpty && availableSizes.isEmpty) {
+    if (supportedDynOptions.isEmpty &&
+        availableColors.isEmpty &&
+        availableSizes.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -3433,9 +3477,12 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     final selectedSizes = <String>{...availableSizes};
 
     // خيارات ديناميكية: نخليها كلها محددة افتراضياً
-    final Map<String, Set<String>> selectedDyn = {
-      for (final o in dynOptions) o.nameCtrl.text.trim(): {...o.values}
-    };
+    final Map<String, Set<String>> selectedDyn = {};
+    for (final o in supportedDynOptions) {
+      final name = _normalizeVariantOptionKey(o.nameCtrl.text);
+      if (name.isEmpty) continue;
+      selectedDyn.putIfAbsent(name, () => <String>{}).addAll(o.values);
+    }
 
     final unitCtrl = TextEditingController(
         text: _unitLabelCtrl.text.trim().isNotEmpty
@@ -3519,12 +3566,12 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                       const SizedBox(height: 12),
                     ],
 
-                    if (dynOptions.isNotEmpty) ...[
+                    if (supportedDynOptions.isNotEmpty) ...[
                       const Text('خيارات إضافية',
                           style: TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 6),
-                      ...dynOptions.map((opt) {
-                        final name = opt.nameCtrl.text.trim();
+                      ...supportedDynOptions.map((opt) {
+                        final name = _normalizeVariantOptionKey(opt.nameCtrl.text);
                         final values = opt.values;
                         final selectedSet = selectedDyn[name] ?? <String>{};
                         return Padding(
@@ -3677,9 +3724,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     // تجنّب إنشاء صفوف مكررة بنفس (لون + مقاس + وحدة).
     final existingKeys = <String>{};
     for (final row in _variantRows) {
-      final key =
-          '${row.colorCtrl.text.trim()}|${row.sizeCtrl.text.trim()}|${row.unitCtrl.text.trim()}';
-      existingKeys.add(key);
+      existingKeys.add(_variantRowKey(row));
     }
 
     setState(() {
@@ -3722,7 +3767,17 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         final color = combo['color'] ?? '';
         final size = combo['size'] ?? '';
 
-        final key = '${color.trim()}|${size.trim()}|$unit|${combo.entries.map((e) => '${e.key}:${e.value}').join(',')}';
+        final attrs = combo.entries
+            .where((e) => e.key != 'color' && e.key != 'size')
+            .where((e) => e.key.trim().isNotEmpty && e.value.trim().isNotEmpty)
+            .toList()
+          ..sort((a, b) => a.key.compareTo(b.key));
+        final key = [
+          color.trim(),
+          size.trim(),
+          unit.trim(),
+          attrs.map((e) => '${e.key.trim()}:${e.value.trim()}').join(',')
+        ].join('|');
         if (existingKeys.contains(key)) continue;
 
         final newRow = _VariantRow.empty(defaultUnit: unit);

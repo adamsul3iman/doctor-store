@@ -483,23 +483,28 @@
     // html renderer: faster initial load, better for mobile web
     // canvaskit: better performance for complex graphics, larger download
     window.flutterWebRenderer = "html";
-    
-    // Performance optimization: Disable service worker for faster loads
+
+    // Required by flutter.js loader (FlutterLoader.load)
+    // Must contain a builds array.
     window._flutter = window._flutter || {};
     window._flutter.buildConfig = window._flutter.buildConfig || {
       engineRevision: "unknown",
       buildNumber: "1",
-      buildVersion: "1.0.0"
+      buildVersion: "1.0.0",
+      builds: [
+        {
+          compileTarget: "dart2js",
+          renderer: "html",
+          mainJsPath: "main.dart.js"
+        }
+      ]
     };
   </script>
   <script src="flutter.js" defer></script>
   <script>
     window.addEventListener('load', function () {
       if (window._flutter && window._flutter.loader) {
-        window._flutter.loader.loadEntrypoint({
-          serviceWorker: {
-            serviceWorkerVersion: null
-          },
+        window._flutter.loader.load({
           onEntrypointLoaded: function (engineInitializer) {
             engineInitializer.initializeEngine().then(function (appRunner) {
               return appRunner.runApp();

@@ -16,7 +16,9 @@ import 'package:doctor_store/shared/widgets/free_shipping_progress_bar.dart';
 import 'package:doctor_store/core/theme/app_theme.dart';
 import 'package:doctor_store/shared/utils/shipping_calculator.dart'; // ✅
 import 'package:doctor_store/shared/utils/app_settings_provider.dart';
+import 'package:doctor_store/features/cart/domain/pricing_calculator.dart';
 import 'package:doctor_store/shared/widgets/responsive_center_wrapper.dart';
+import 'package:doctor_store/shared/services/whatsapp_service.dart';
 
 // ignore_for_file: use_build_context_synchronously
 
@@ -105,26 +107,17 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final appSettingsAsync = ref.watch(appSettingsStreamProvider);
     final deliveryZonesAsync = ref.watch(deliveryZonesProvider);
 
-    // حساب مجموع المنتجات وقيمة الخصم محلياً
-    double productsTotal = cartItems.fold(
-        0, (sum, item) => sum + item.activePrice * item.quantity);
-
-    double discountAmount = 0;
-    if (coupon != null) {
-      if (coupon.type == 'percent') {
-        discountAmount = productsTotal * (coupon.value / 100);
-      } else {
-        discountAmount = coupon.value;
-      }
-      if (discountAmount > productsTotal) {
-        discountAmount = productsTotal;
-      }
-    }
-
-    final double totalAfterDiscount = productsTotal - discountAmount;
-    // ✅ استخدام السعر الديناميكي أو السعر القديم احتياطياً
-    final double deliveryFee = _dynamicDeliveryFee > 0 ? _dynamicDeliveryFee : (_selectedZone?.price ?? 0);
-    final double grandTotal = totalAfterDiscount + deliveryFee;
+    // حساب الأسعار باستخدام PricingCalculator (extracted domain logic)
+    final pricing = PricingCalculator.calculateCartPricing(
+      items: cartItems,
+      coupon: coupon,
+      dynamicDeliveryFee: _dynamicDeliveryFee > 0 ? _dynamicDeliveryFee : null,
+      zonePrice: _selectedZone?.price,
+    );
+    final double productsTotal = pricing.subtotal;
+    final double discountAmount = pricing.discountAmount;
+    final double deliveryFee = pricing.deliveryFee;
+    final double grandTotal = pricing.grandTotal;
 
     final bool requireDeliveryZone = deliveryZonesAsync.maybeWhen(
       data: (zones) => zones.isNotEmpty,
@@ -252,6 +245,15 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         itemCount: cartItems.length,
                         itemBuilder: (context, index) {
                           final item = cartItems[index];
+                          final variantImageUrl =
+                              WhatsAppService.getCorrectImageUrl(
+                            item.product,
+                            item.selectedColor,
+                          );
+                          final hasVariantSelection =
+                              (item.selectedSize?.trim().isNotEmpty ?? false) ||
+                                  (item.selectedColor?.trim().isNotEmpty ??
+                                      false);
                           return Card(
                             margin: const EdgeInsets.only(bottom: 16),
                             child: Padding(
@@ -264,7 +266,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                       width: 80,
                                       height: 80,
                                       child: AppNetworkImage(
-                                        url: item.product.imageUrl,
+                                        url: variantImageUrl,
                                         variant: ImageVariant.thumbnail,
                                         fit: BoxFit.cover,
                                         placeholder:
@@ -288,9 +290,20 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                           style: const TextStyle(
                                               fontWeight: FontWeight.bold),
                                         ),
-                                        if (item.selectedSize != null)
+                                        if (hasVariantSelection)
                                           Text(
-                                            "المقاس: ${item.selectedSize} | اللون: ${item.selectedColor ?? '-'}",
+                                            [
+                                              if (item.selectedSize
+                                                      ?.trim()
+                                                      .isNotEmpty ??
+                                                  false)
+                                                "المقاس: ${item.selectedSize}",
+                                              if (item.selectedColor
+                                                      ?.trim()
+                                                      .isNotEmpty ??
+                                                  false)
+                                                "اللون: ${item.selectedColor}",
+                                            ].join(' | '),
                                             style: const TextStyle(
                                                 fontSize: 12,
                                                 color: Colors.grey),
@@ -386,7 +399,10 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                         }
                                         // ✅ حماية السياق (Context Safety)
                                         final error = await validateCoupon(
-                                            ref, _couponController.text);
+                                          ref,
+                                          _couponController.text,
+                                          phone: phoneController.text,
+                                        );
                                         if (!mounted) return;
 
                                         if (error == null) {

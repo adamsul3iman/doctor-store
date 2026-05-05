@@ -196,14 +196,20 @@ class Product {
   /// هل المنتج يحتوي خيارات ألوان (ضمن options['colors']).
   bool get hasColorOptions {
     final colors = options['colors'];
-    return colors is List && colors.isNotEmpty;
+    if (colors is List && colors.isNotEmpty) return true;
+    return variants.any(
+      (variant) => variant.color != null && variant.color!.trim().isNotEmpty,
+    );
   }
 
   /// هل المنتج يحتوي خيارات مقاسات، بما فيها وضع الفرشات (mattress auto pricing).
   bool get hasSizeOptions {
     final sizes = options['sizes'];
     final hasStandard = sizes is List && sizes.isNotEmpty;
-    return hasStandard || isMattressAuto;
+    if (hasStandard || isMattressAuto) return true;
+    return variants.any(
+      (variant) => variant.size != null && variant.size!.trim().isNotEmpty,
+    );
   }
 
   /// ✅ هل هذا المنتج فرشة بنظام تسعير تلقائي حسب المقاس؟
@@ -462,7 +468,9 @@ class Product {
       }
       if (normalizedSize != null) {
         criteriaChecked++;
-        if (normalizedSize == vSize) matches++;
+        if (normalizedSize == vSize) {
+          matches++;
+        }
       }
       if (normalizedUnit != null) {
         criteriaChecked++;
@@ -678,9 +686,9 @@ class ProductVariant {
 
   factory ProductVariant.fromJson(Map<String, dynamic> json) {
     // دعم البيانات القديمة: قد تحتوي فقط على size و price.
-    final size = json['size']?.toString();
-    final color = json['color']?.toString();
-    final unit = json['unit']?.toString();
+    String? size = _cleanOptionalText(json['size']);
+    String? color = _cleanOptionalText(json['color']);
+    final unit = _cleanOptionalText(json['unit']);
     final rawId = json['id']?.toString();
 
     Map<String, String> attrs = const <String, String>{};
@@ -692,6 +700,15 @@ class ProductVariant {
       attrs = Map<String, dynamic>.from(rawAttrs)
           .map((k, v) => MapEntry(k.toString(), v?.toString() ?? ''))
         ..removeWhere((k, v) => k.trim().isEmpty || v.trim().isEmpty);
+    }
+
+    color ??= _firstMatchingAttributeValue(attrs, _isColorAttributeKey);
+    size ??= _firstMatchingAttributeValue(attrs, _isSizeAttributeKey);
+    if (color != null || size != null) {
+      attrs = Map<String, String>.from(attrs)
+        ..removeWhere(
+          (key, _) => _isColorAttributeKey(key) || _isSizeAttributeKey(key),
+        );
     }
 
     // إذا لم يكن هناك id محفوظ، نكوّن واحداً بسيطاً من الأبعاد المتاحة.
@@ -710,6 +727,47 @@ class ProductVariant {
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       stock: json['stock'] is num ? (json['stock'] as num).toInt() : null,
     );
+  }
+
+  static String? _cleanOptionalText(dynamic value) {
+    final text = value?.toString().trim();
+    return text == null || text.isEmpty ? null : text;
+  }
+
+  static String? _firstMatchingAttributeValue(
+    Map<String, String> attributes,
+    bool Function(String key) matches,
+  ) {
+    for (final entry in attributes.entries) {
+      if (matches(entry.key) && entry.value.trim().isNotEmpty) {
+        return entry.value.trim();
+      }
+    }
+    return null;
+  }
+
+  static bool _isColorAttributeKey(String key) {
+    final compact = key.toLowerCase().replaceAll(RegExp(r'[\s_\-]+'), '');
+    return compact == 'color' ||
+        compact == 'colour' ||
+        compact == 'colors' ||
+        compact == 'colours' ||
+        compact == 'لون' ||
+        compact == 'اللون' ||
+        compact == 'ألوان' ||
+        compact == 'الوان';
+  }
+
+  static bool _isSizeAttributeKey(String key) {
+    final compact = key.toLowerCase().replaceAll(RegExp(r'[\s_\-]+'), '');
+    return compact == 'size' ||
+        compact == 'sizes' ||
+        compact == 'measure' ||
+        compact == 'مقاس' ||
+        compact == 'المقاس' ||
+        compact == 'مقاسات' ||
+        compact == 'القياس' ||
+        compact == 'قياس';
   }
 
   Map<String, dynamic> toJson() {

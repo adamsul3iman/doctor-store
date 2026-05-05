@@ -58,3 +58,9 @@ app.*.map.json
 # Database dumps / backups (DO NOT COMMIT)
 *.dump
 *.backup
+
+# Deploy/build artifacts
+deploy/
+
+# Generated files
+project_tree.txt

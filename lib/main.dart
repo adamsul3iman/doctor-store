@@ -52,11 +52,22 @@ Future<void> main() async {
     return dotenv.maybeGet(key);
   }
 
-  // تهيئة Supabase
-  final supabaseUrl =
-      safeEnv('SUPABASE_URL') ?? 'https://owgaklkhquntsqahmegt.supabase.co';
-  final supabaseAnonKey = safeEnv('SUPABASE_ANON_KEY') ??
-      'sb_publishable_smx9EmqfqEL-vAk6z29t3Q_6bHZXq7u';
+  // تهيئة Supabase - يتطلب قيمًا من env.txt فقط (لا fallback hardcoded)
+  final supabaseUrl = safeEnv('SUPABASE_URL');
+  final supabaseAnonKey = safeEnv('SUPABASE_ANON_KEY');
+
+  if (supabaseUrl == null || supabaseUrl.isEmpty) {
+    throw StateError(
+      'MISSING SUPABASE_URL: Add SUPABASE_URL to assets/env.txt. '
+      'Example: SUPABASE_URL=https://your-project.supabase.co',
+    );
+  }
+  if (supabaseAnonKey == null || supabaseAnonKey.isEmpty) {
+    throw StateError(
+      'MISSING SUPABASE_ANON_KEY: Add SUPABASE_ANON_KEY to assets/env.txt. '
+      'Get it from Supabase Dashboard > Project Settings > API.',
+    );
+  }
 
   await Supabase.initialize(
     url: supabaseUrl,

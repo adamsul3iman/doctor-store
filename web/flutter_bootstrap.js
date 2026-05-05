@@ -151,10 +151,7 @@
       
       // Configure Flutter engine for WASM
       if (window._flutter && window._flutter.loader) {
-        window._flutter.loader.loadEntrypoint({
-          serviceWorker: {
-            serviceWorkerVersion: null, // We handle this ourselves
-          },
+        window._flutter.loader.load({
           onEntrypointLoaded: function(engineInitializer) {
             log('Initializing Flutter engine...');
             
@@ -190,7 +187,7 @@
     
     script.onload = function() {
       if (window._flutter && window._flutter.loader) {
-        window._flutter.loader.loadEntrypoint({
+        window._flutter.loader.load({
           onEntrypointLoaded: function(engineInitializer) {
             engineInitializer.initializeEngine().then(function(appRunner) {
               return appRunner.runApp();

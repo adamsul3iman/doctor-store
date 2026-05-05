@@ -462,7 +462,14 @@ class _OrderCardState extends State<_OrderCard> {
             if (_loadingItems)
               const Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator()))
             else
-              ..._items.map((item) => ListTile(
+              ..._items.map((item) {
+                final details = [
+                  if (item.selectedSize?.trim().isNotEmpty ?? false)
+                    'المقاس: ${item.selectedSize}',
+                  if (item.selectedColor?.trim().isNotEmpty ?? false)
+                    'اللون: ${item.selectedColor}',
+                ];
+                return ListTile(
                 leading: ClipRRect(
                   borderRadius: BorderRadius.circular(6),
                   child: SizedBox(
@@ -478,13 +485,13 @@ class _OrderCardState extends State<_OrderCard> {
                   ),
                 ),
                 title: Text(item.productTitle),
-                subtitle: Text(
-                  "${item.quantity}x  |  "
-                  "${item.selectedSize ?? ''} "
-                  "${item.selectedColor ?? ''}",
-                ),
+                subtitle: Text([
+                  "${item.quantity}x",
+                  if (details.isNotEmpty) details.join(' | '),
+                ].join('  |  ')),
                 trailing: Text("${item.price.toStringAsFixed(0)} د.أ"),
-              )),
+              );
+              }),
 
             // أزرار التحكم
             Padding(
