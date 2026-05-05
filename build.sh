@@ -11,6 +11,16 @@ flutter doctor
 # Enable web support
 flutter config --enable-web
 
+# Generate assets/env.txt from environment variables (for Vercel deployment)
+echo "Setting up environment variables..."
+if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_ANON_KEY" ]; then
+    echo "SUPABASE_URL=$SUPABASE_URL" > assets/env.txt
+    echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> assets/env.txt
+    echo "✅ Generated assets/env.txt from environment variables"
+else
+    echo "⚠️ Warning: SUPABASE_URL or SUPABASE_ANON_KEY not set. Using existing env.txt if available."
+fi
+
 # Get dependencies
 echo "Getting dependencies..."
 flutter pub get

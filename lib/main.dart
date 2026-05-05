@@ -36,36 +36,43 @@ Future<void> main() async {
     await cleanupServiceWorkers();
   }
 
-  // تحميل الإعدادات
+  // تحميل الإعدادات - يدعم env.txt (محلي) أو --dart-define (Vercel/إنتاج)
   var envLoaded = false;
   try {
-    // Use correct path for Flutter Web - assets are served from root
     await dotenv.load(fileName: "assets/env.txt");
     envLoaded = dotenv.isInitialized;
-    if (kDebugMode) debugPrint("Env Loaded");
+    if (kDebugMode) debugPrint("Env Loaded from assets/env.txt");
   } catch (e) {
-    if (kDebugMode) debugPrint("Env Error: $e");
+    if (kDebugMode) debugPrint("Env Error (expected in production): $e");
   }
 
   String? safeEnv(String key) {
+    // أولاً: تحقق من compile-time environment variables (--dart-define)
+    const compileTimeValue = String.fromEnvironment('SUPABASE_URL');
+    if (compileTimeValue.isNotEmpty && key == 'SUPABASE_URL') {
+      return compileTimeValue;
+    }
+    const compileTimeKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+    if (compileTimeKey.isNotEmpty && key == 'SUPABASE_ANON_KEY') {
+      return compileTimeKey;
+    }
+    // ثانياً: fallback إلى env.txt إذا كان محملاً
     if (!envLoaded || !dotenv.isInitialized) return null;
     return dotenv.maybeGet(key);
   }
 
-  // تهيئة Supabase - يتطلب قيمًا من env.txt فقط (لا fallback hardcoded)
+  // تهيئة Supabase - يدعم env.txt محلياً أو --dart-define في الإنتاج
   final supabaseUrl = safeEnv('SUPABASE_URL');
   final supabaseAnonKey = safeEnv('SUPABASE_ANON_KEY');
 
   if (supabaseUrl == null || supabaseUrl.isEmpty) {
     throw StateError(
-      'MISSING SUPABASE_URL: Add SUPABASE_URL to assets/env.txt. '
-      'Example: SUPABASE_URL=https://your-project.supabase.co',
+      'MISSING SUPABASE_URL: Add to assets/env.txt (local) or pass --dart-define=SUPABASE_URL=... (build).',
     );
   }
   if (supabaseAnonKey == null || supabaseAnonKey.isEmpty) {
     throw StateError(
-      'MISSING SUPABASE_ANON_KEY: Add SUPABASE_ANON_KEY to assets/env.txt. '
-      'Get it from Supabase Dashboard > Project Settings > API.',
+      'MISSING SUPABASE_ANON_KEY: Add to assets/env.txt (local) or pass --dart-define=SUPABASE_ANON_KEY=... (build).',
     );
   }
 
