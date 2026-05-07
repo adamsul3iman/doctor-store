@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // الموديلات والخدمات
@@ -16,6 +17,7 @@ import 'package:doctor_store/shared/utils/product_nav_helper.dart';
 import 'package:doctor_store/shared/utils/link_share_helper.dart';
 import 'package:doctor_store/shared/services/analytics_service.dart';
 import 'package:doctor_store/shared/services/app_review_service.dart';
+import 'package:doctor_store/shared/services/whatsapp_service.dart';
 import 'package:doctor_store/shared/widgets/custom_app_bar.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_search_delegate.dart';
 
@@ -465,24 +467,51 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     );
   }
 
-  Widget _buildCategoryChip() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: _primaryDark.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          widget.product.categoryArabic,
-          style: TextStyle(
-            color: _primaryDark,
-            fontWeight: FontWeight.w800,
-            fontSize: 12,
-          ),
+  Widget _buildCategoryChip({bool isInteractive = false}) {
+    final child = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: _primaryDark.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: _primaryDark.withValues(alpha: 0.12),
         ),
       ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.category_outlined,
+            size: 16,
+            color: _primaryDark,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            widget.product.categoryArabic,
+            style: TextStyle(
+              color: _primaryDark,
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: isInteractive
+          ? InkWell(
+              borderRadius: BorderRadius.circular(999),
+              onTap: () => context.push(
+                '/category/${widget.product.category}',
+                extra: {
+                  'name': widget.product.categoryArabic,
+                },
+              ),
+              child: child,
+            )
+          : child,
     );
   }
 
@@ -721,12 +750,33 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
 
   void _launchWhatsApp() async {
     final settingsAsync = ref.read(settingsProvider);
-    final phone = settingsAsync.valueOrNull?.whatsapp ?? '';
+    final phone = WhatsAppService.normalizePhoneNumber(
+      settingsAsync.valueOrNull?.whatsapp ?? '',
+    );
     if (phone.isEmpty) return;
 
-    final url = 'https://wa.me/$phone';
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    final currentProduct = ref
+        .read(productByIdStreamProvider(widget.product.id))
+        .maybeWhen(data: (p) => p ?? widget.product, orElse: () => widget.product);
+    final buffer = StringBuffer()
+      ..writeln('مرحباً، لدي استفسار عن هذا المنتج من متجر الدكتور:')
+      ..writeln('الاسم: ${currentProduct.title}')
+      ..writeln('القسم: ${currentProduct.categoryArabic}')
+      ..writeln(
+        'رابط المنتج: ${buildFullUrl('/p/${currentProduct.slug ?? currentProduct.id}')}',
+      )
+      ..writeln('الكمية: $_quantity ${currentProduct.pricingUnitLabel}');
+
+    if (_hasColors) {
+      buffer.writeln('اللون: ${_selectedColor ?? 'لم أحدد بعد'}');
+    }
+    if (_hasSizes) {
+      buffer.writeln('المقاس: ${_selectedSize ?? 'لم أحدد بعد'}');
+    }
+
+    final url = WhatsAppService.buildWhatsAppUrl(phone, buffer.toString());
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
     }
   }
 
@@ -824,6 +874,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _buildCategoryChip(isInteractive: true),
                   _buildHeaderSection(),
                   const SizedBox(height: 25),
                   
@@ -883,7 +934,6 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                       minFontSize: 12,
                     ),
                     children: <Widget>[
-                      _buildCategoryChip(),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

@@ -19,6 +19,7 @@ import 'package:doctor_store/shared/utils/home_sections_provider.dart';
 import 'package:doctor_store/shared/utils/seo_pages_provider.dart';
 import 'package:doctor_store/shared/utils/seo_manager.dart';
 import 'package:doctor_store/features/auth/application/user_data_manager.dart';
+import 'package:doctor_store/shared/services/whatsapp_service.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
 import 'package:doctor_store/shared/widgets/custom_app_bar.dart';
 import 'package:doctor_store/features/product/presentation/providers/products_provider.dart';
@@ -388,8 +389,18 @@ class _HomeFloatingActionButton extends ConsumerWidget {
             ),
           );
         } else {
+          final normalizedPhone =
+              WhatsAppService.normalizePhoneNumber(settings.whatsapp);
+          if (normalizedPhone.isEmpty) {
+            return const SizedBox.shrink();
+          }
           return FloatingActionButton(
-            onPressed: () => _launchSocial('https://wa.me/${settings.whatsapp}'),
+            onPressed: () => _launchSocial(
+              WhatsAppService.buildWhatsAppUrl(
+                normalizedPhone,
+                'مرحباً، أود الاستفسار عن منتجات متجر الدكتور.',
+              ).toString(),
+            ),
             backgroundColor: const Color(0xFF25D366),
             child: const FaIcon(
               FontAwesomeIcons.whatsapp,
@@ -422,6 +433,14 @@ class _HomeBody extends ConsumerWidget {
     final diningProductsAsync = homeData.$2;
     final user = homeData.$5;
     final sectionsAsync = homeData.$7;
+
+    if (sectionsAsync.isLoading && !sectionsAsync.hasValue) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: Color(0xFF0A2647),
+        ),
+      );
+    }
 
     final sectionsConfig = sectionsAsync.asData?.value;
     bool isSectionEnabled(String key) =>

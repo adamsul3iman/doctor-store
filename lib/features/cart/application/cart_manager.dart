@@ -396,10 +396,9 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     );
     final result = await WhatsAppService.launchWhatsApp(url);
     if (result.success) {
-      // Fix: Don't clear cart here - user might cancel WhatsApp
-      // Cart will be cleared after successful Supabase save below
+      clearCart();
     } else {
-      throw Exception('Cannot launch WhatsApp');
+      throw Exception(result.error ?? 'تعذر فتح واتساب لإتمام الطلب.');
     }
 
     // 2) بعد فتح الواتساب نحاول حفظ الطلب في Supabase في الخلفية.
@@ -440,10 +439,6 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
           } catch (e) {
             debugPrint('Order item insert error: $e');
           }
-        }
-
-        if (savedItemsCount > 0) {
-          clearCart();
         }
 
         if (coupon != null) {

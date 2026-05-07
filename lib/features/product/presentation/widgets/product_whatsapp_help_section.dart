@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
+import 'package:doctor_store/shared/services/whatsapp_service.dart';
 import 'package:doctor_store/shared/utils/app_notifier.dart';
 import 'package:doctor_store/shared/utils/link_share_helper.dart';
 
@@ -92,7 +93,7 @@ class ProductWhatsappHelpSection extends StatelessWidget {
   }
 
   Future<void> _launchWhatsAppProductHelp(BuildContext context) async {
-    final phone = storePhone.trim();
+    final phone = WhatsAppService.normalizePhoneNumber(storePhone);
     if (phone.isEmpty) {
       AppNotifier.showError(context, 'خدمة الواتساب غير متاحة حالياً. حاول مرة أخرى لاحقاً.');
       return;
@@ -122,8 +123,7 @@ class ProductWhatsappHelpSection extends StatelessWidget {
     buffer.writeln('');
     buffer.writeln('أرغب بمساعدتكم في اختيار الأنسب وتأكيد تفاصيل الطلب، وشكراً لكم.');
 
-    final encoded = Uri.encodeComponent(buffer.toString());
-    final url = Uri.parse('https://wa.me/$phone?text=$encoded');
+    final url = WhatsAppService.buildWhatsAppUrl(phone, buffer.toString());
 
     final messenger = ScaffoldMessenger.maybeOf(context);
 

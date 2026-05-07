@@ -560,7 +560,191 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
     );
   }
 
+  bool get _showFlatResultsMode {
+    return widget.initialSort != null ||
+        _selectedCategoryId != null ||
+        _sortBy != 'newest';
+  }
+
+  List<Product> _buildFilteredProducts(List<Product> products) {
+    var filtered = List<Product>.from(products);
+    DateTime sortDate(Product product) =>
+        product.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+
+    if (_selectedCategoryId != null) {
+      filtered = filtered
+          .where((product) => product.category == _selectedCategoryId)
+          .toList();
+    }
+
+    switch (_sortBy) {
+      case 'price_low':
+        filtered.sort((a, b) => a.price.compareTo(b.price));
+        break;
+      case 'price_high':
+        filtered.sort((a, b) => b.price.compareTo(a.price));
+        break;
+      case 'best':
+        filtered.sort((a, b) => b.ratingCount.compareTo(a.ratingCount));
+        break;
+      case 'offers':
+        filtered = filtered.where((product) => product.hasOffers).toList();
+        filtered.sort((a, b) => sortDate(b).compareTo(sortDate(a)));
+        break;
+      case 'newest':
+      default:
+        filtered.sort((a, b) => sortDate(b).compareTo(sortDate(a)));
+        break;
+    }
+
+    return filtered;
+  }
+
+  Widget _buildFlatProductsSliver(
+    List<Product> products, {
+    required bool isOffline,
+  }) {
+    final filteredProducts = _buildFilteredProducts(products);
+
+    return SliverMainAxisGroup(
+      slivers: [
+        if (isOffline)
+          SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange[200]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.wifi_off, color: Colors.orange[700], size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'لا يوجد اتصال بالإنترنت. يتم عرض المنتجات المخزنة مؤقتاً.',
+                      style: TextStyle(
+                        color: Colors.orange[800],
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSmartIntro(
+                  filteredProducts.length,
+                  filteredProducts.where((p) => p.hasOffers).length,
+                  filteredProducts.where((p) => p.ratingCount > 0).length,
+                  _effectiveCategories.length,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(child: _buildCategoryFilterChips()),
+                    const SizedBox(width: 8),
+                    _buildSortFilterButton(),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Text(
+                      'عدد النتائج: ${filteredProducts.length}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    const Spacer(),
+                    TextButton.icon(
+                      onPressed: () {
+                        setState(() {
+                          _selectedCategoryId = null;
+                          _sortBy = 'newest';
+                        });
+                      },
+                      icon: const Icon(Icons.restart_alt_rounded, size: 16),
+                      label: const Text('إعادة الضبط'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (filteredProducts.isEmpty)
+          SliverToBoxAdapter(
+            child: Container(
+              height: 280,
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                'لا توجد منتجات مطابقة للفلاتر الحالية.',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          )
+        else
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            sliver: SliverLayoutBuilder(
+              builder: (context, constraints) {
+                final crossAxisCount = ResponsiveLayout.gridCountForWidth(
+                  constraints.crossAxisExtent,
+                  desiredItemWidth: 120,
+                  minCount: 3,
+                  maxCount: 5,
+                );
+                final isCompact = crossAxisCount >= 3;
+
+                return SliverGrid(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    mainAxisExtent: isCompact ? 270 : 330,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final product = filteredProducts[index];
+                      return ProductCard(
+                        product: product,
+                        heroTag: 'flat_${product.id}',
+                        isCompact: isCompact,
+                      );
+                    },
+                    childCount: filteredProducts.length,
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _buildAllProductsSliver(List<Product> products, {bool isOffline = false}) {
+    if (_showFlatResultsMode) {
+      return _buildFlatProductsSliver(products, isOffline: isOffline);
+    }
+
     // إظهار تنبيه عند عدم الاتصال
     final List<Widget> widgets = [];
     

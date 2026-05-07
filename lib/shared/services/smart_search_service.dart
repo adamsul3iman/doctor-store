@@ -1014,10 +1014,11 @@ class SmartSearchService {
 
       // 4. إذا لم نجد نتائج، نحاول البحث الغامض (fuzzy)
       if (results.isEmpty) {
-        return await _fuzzySearch(correctedQuery);
+        final fuzzyResults = await _fuzzySearch(correctedQuery);
+        return _sortByRelevance(fuzzyResults, correctedQuery, synonyms);
       }
 
-      return results;
+      return _sortByRelevance(results, correctedQuery, synonyms);
     } catch (e) {
       if (kDebugMode) {
         debugPrint('Smart search error: $e');
@@ -1164,14 +1165,15 @@ class SmartSearchService {
 
       // 4. إذا لم نجد نتائج، نحاول البحث الغامض
       if (results.isEmpty && page == 0) {
-        return await _fuzzySearchPaginated(
+        final fuzzyResults = await _fuzzySearchPaginated(
           correctedQuery,
           page: page,
           pageSize: pageSize,
         );
+        return _sortByRelevance(fuzzyResults, correctedQuery, synonyms);
       }
 
-      return results;
+      return _sortByRelevance(results, correctedQuery, synonyms);
     } catch (e) {
       if (kDebugMode) {
         debugPrint('Smart search paginated error: $e');
@@ -1204,7 +1206,7 @@ class SmartSearchService {
     }
 
     // تحويل إلى قائمة وإرجاع نتائج محدودة
-    final allResults = uniqueProducts.toList();
+    final allResults = _sortByRelevance(uniqueProducts.toList(), query, synonyms);
     final start = page * pageSize;
     if (start >= allResults.length) return [];
     final end = (start + pageSize).clamp(start, allResults.length);
@@ -1261,5 +1263,53 @@ class SmartSearchService {
       }
       return [];
     }
+  }
+
+  List<Product> _sortByRelevance(
+    List<Product> products,
+    String query,
+    List<String> synonyms,
+  ) {
+    final scored = products
+        .map((product) => (
+              product: product,
+              score: _scoreProduct(product, query, synonyms),
+            ))
+        .toList();
+
+    scored.sort((a, b) => b.score.compareTo(a.score));
+    return scored.map((item) => item.product).toList();
+  }
+
+  int _scoreProduct(Product product, String query, List<String> synonyms) {
+    final title = product.title.toLowerCase();
+    final description = product.description.toLowerCase();
+    final category = product.categoryArabic.toLowerCase();
+    final tags = product.tags.map((tag) => tag.toLowerCase()).toList();
+
+    int score = 0;
+
+    if (title == query) score += 120;
+    if (title.startsWith(query)) score += 90;
+    if (title.contains(query)) score += 70;
+    if (description.contains(query)) score += 30;
+    if (category.contains(query)) score += 25;
+    if (tags.any((tag) => tag == query)) score += 50;
+    if (tags.any((tag) => tag.contains(query))) score += 25;
+
+    for (final synonym in synonyms.take(12)) {
+      final normalized = synonym.toLowerCase().trim();
+      if (normalized.isEmpty || normalized == query) continue;
+
+      if (title.contains(normalized)) score += 16;
+      if (description.contains(normalized)) score += 8;
+      if (category.contains(normalized)) score += 6;
+      if (tags.any((tag) => tag.contains(normalized))) score += 10;
+    }
+
+    if (product.hasOffers) score += 2;
+    if (product.isFeatured) score += 2;
+
+    return score;
   }
 }

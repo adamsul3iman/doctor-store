@@ -147,10 +147,44 @@ class WhatsAppService {
 
   // ================== URL & Launching ==================
 
+  /// Normalize phone numbers before building WhatsApp URLs.
+  /// Supports raw digits, local Jordan numbers, and mistakenly stored wa.me links.
+  static String normalizePhoneNumber(String phoneNumber) {
+    final raw = phoneNumber.trim();
+    if (raw.isEmpty) return '';
+
+    String extracted = raw;
+    final uri = Uri.tryParse(raw);
+    if (uri != null) {
+      if (uri.host.contains('wa.me') && uri.pathSegments.isNotEmpty) {
+        extracted = uri.pathSegments.first;
+      } else {
+        final qpPhone = uri.queryParameters['phone'];
+        if (qpPhone != null && qpPhone.trim().isNotEmpty) {
+          extracted = qpPhone;
+        }
+      }
+    }
+
+    String digits = extracted.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.isEmpty) return '';
+
+    if (digits.startsWith('00962')) {
+      digits = digits.substring(2);
+    }
+
+    if (digits.startsWith('0') && digits.length == 10) {
+      digits = '962${digits.substring(1)}';
+    } else if (digits.startsWith('79') && digits.length == 9) {
+      digits = '962$digits';
+    }
+
+    return digits;
+  }
+
   /// Build WhatsApp URL for a given phone number and message.
   static Uri buildWhatsAppUrl(String phoneNumber, String message) {
-    // تنظيف رقم الهاتف من أي رموز أو مسافات
-    final String cleanPhone = phoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
+    final String cleanPhone = normalizePhoneNumber(phoneNumber);
     return Uri.parse(
       "https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}",
     );

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -10,15 +11,16 @@ import 'package:doctor_store/shared/utils/image_url_helper.dart';
 import 'package:doctor_store/shared/widgets/app_network_image.dart';
 import 'package:doctor_store/features/admin/data/admin_product_repository.dart';
 import 'package:doctor_store/features/admin/data/category_repository.dart';
+import 'package:doctor_store/features/product/presentation/providers/products_provider.dart';
 
-class AdminProductsView extends StatefulWidget {
+class AdminProductsView extends ConsumerStatefulWidget {
   const AdminProductsView({super.key});
 
   @override
-  State<AdminProductsView> createState() => _AdminProductsViewState();
+  ConsumerState<AdminProductsView> createState() => _AdminProductsViewState();
 }
 
-class _AdminProductsViewState extends State<AdminProductsView> {
+class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
   final AdminProductRepository _repo = AdminProductRepository();
   final CategoryRepository _categoryRepo = CategoryRepository();
   final TextEditingController _searchController = TextEditingController();
@@ -40,6 +42,10 @@ class _AdminProductsViewState extends State<AdminProductsView> {
   bool? _isActiveFilter; // null = الكل، true = ظاهرة، false = مخفية
   bool? _isFlashFilter; // null = الكل، true = عروض فلاش فقط، false = غير عروض فلاش
   String _sortMode = 'created_desc'; // created_desc, price_asc, price_desc
+
+  Future<void> _refreshPublicCatalog() async {
+    await refreshProductCatalogProviders(ref);
+  }
 
   @override
   void initState() {
@@ -113,7 +119,8 @@ class _AdminProductsViewState extends State<AdminProductsView> {
     final newValue = !product.isFlashDeal; // لم يعد هناك خطأ لأن الموديل تعرف عليه
 
     await _repo.setFlashDeal(productId: product.id, isFlashDeal: newValue);
-    // لا حاجة لإعادة الجلب، StreamBuilder سيلتقط التغيير تلقائياً
+    await _refreshProducts();
+    await _refreshPublicCatalog();
   }
 
   /// تفعيل / إخفاء المنتج من المتجر (soft delete) عبر is_active
@@ -121,6 +128,8 @@ class _AdminProductsViewState extends State<AdminProductsView> {
     final newValue = !product.isActive;
     try {
       await _repo.setActive(productId: product.id, isActive: newValue);
+      await _refreshProducts();
+      await _refreshPublicCatalog();
       if (!mounted) return;
       AppNotifier.showSuccess(
         context,
@@ -451,6 +460,8 @@ class _AdminProductsViewState extends State<AdminProductsView> {
       }
 
       if (!mounted) return;
+      await _refreshProducts();
+      await _refreshPublicCatalog();
       AppNotifier.showSuccess(context, 'تم حذف المنتج بنجاح.');
     } on PostgrestException catch (e) {
       if (!mounted) return;
@@ -523,10 +534,14 @@ class _AdminProductsViewState extends State<AdminProductsView> {
                     ),
                     title: const Text("منتج قياسي"),
                     subtitle: const Text("منتج بسعر واحد، مع خيارات ألوان ومقاسات."),
-                    onTap: () {
+                    onTap: () async {
                       Navigator.pop(context);
                       // إنشاء منتج جديد (بدون id)
-                      context.push('/admin/edit');
+                      final saved = await context.push('/admin/edit');
+                      if (saved == true) {
+                        await _refreshProducts();
+                        await _refreshPublicCatalog();
+                      }
                     },
                   ),
 
@@ -544,10 +559,17 @@ class _AdminProductsViewState extends State<AdminProductsView> {
                     ),
                     title: const Text("عرض كميات (Bundle)"),
                     subtitle: const Text("مثال: مخدة بـ 10، واثنتين بـ 15."),
-                    onTap: () {
+                    onTap: () async {
                       Navigator.pop(context);
                       // إنشاء منتج جديد بنظام العروض (بدون id)
-                      context.push('/admin/edit', extra: {'isOfferMode': true});
+                      final saved = await context.push(
+                        '/admin/edit',
+                        extra: {'isOfferMode': true},
+                      );
+                      if (saved == true) {
+                        await _refreshProducts();
+                        await _refreshPublicCatalog();
+                      }
                     },
                   ),
 
@@ -566,9 +588,16 @@ class _AdminProductsViewState extends State<AdminProductsView> {
                     subtitle: const Text(
                       "إضافة فرشات بنظام مقاسات مع تسعير احترافي بدون إدخال كل مقاس يدوياً.",
                     ),
-                    onTap: () {
+                    onTap: () async {
                       Navigator.pop(context);
-                      context.push('/admin/edit', extra: {'preset': 'mattress'});
+                      final saved = await context.push(
+                        '/admin/edit',
+                        extra: {'preset': 'mattress'},
+                      );
+                      if (saved == true) {
+                        await _refreshProducts();
+                        await _refreshPublicCatalog();
+                      }
                     },
                   ),
 
@@ -772,10 +801,14 @@ class _AdminProductsViewState extends State<AdminProductsView> {
                                                               IconButton(
                                                                 tooltip: 'تعديل',
                                                                 onPressed: () async {
-                                                                  await context.push(
+                                                                  final saved = await context.push(
                                                                     '/admin/edit?id=${product.id}',
                                                                     extra: product,
                                                                   );
+                                                                  if (saved == true) {
+                                                                    await _refreshProducts();
+                                                                    await _refreshPublicCatalog();
+                                                                  }
                                                                 },
                                                                 icon: const Icon(
                                                                   Icons.edit_outlined,

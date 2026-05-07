@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:doctor_store/shared/services/whatsapp_service.dart';
 import 'package:doctor_store/shared/utils/settings_provider.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
 import 'package:doctor_store/shared/widgets/app_network_image.dart';
@@ -170,7 +171,9 @@ class _OwnerImageFallback extends StatelessWidget {
 
 Future<void> _launchConsultation(String phone) async {
   const message = 'مرحباً دكتور، أرغب بتفصيل فرشة طبية وأحتاج استشارة لتحديد المناسب لي.';
-  final url = Uri.parse('https://wa.me/$phone?text=$message');
+  final normalizedPhone = WhatsAppService.normalizePhoneNumber(phone);
+  if (normalizedPhone.isEmpty) return;
+  final url = WhatsAppService.buildWhatsAppUrl(normalizedPhone, message);
   if (await canLaunchUrl(url)) {
     await launchUrl(url, mode: LaunchMode.externalApplication);
   }

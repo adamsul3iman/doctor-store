@@ -713,14 +713,24 @@ class _ProductSearchBottomSheetState
                           icon: Icons.local_offer_rounded,
                           label: 'عروض وتخفيضات',
                           isSelected: tempOffers,
-                          onTap: () => setModalState(() => tempOffers = !tempOffers),
+                          onTap: () {
+                            final newValue = !tempOffers;
+                            setModalState(() => tempOffers = newValue);
+                            setState(() => _onlyOnOffer = newValue);
+                            _triggerSearch();
+                          },
                           color: Colors.orange,
                         ),
                         _buildFilterChip(
                           icon: Icons.star_rounded,
                           label: 'منتجات مميزة',
                           isSelected: tempFeatured,
-                          onTap: () => setModalState(() => tempFeatured = !tempFeatured),
+                          onTap: () {
+                            final newValue = !tempFeatured;
+                            setModalState(() => tempFeatured = newValue);
+                            setState(() => _onlyFeatured = newValue);
+                            _triggerSearch();
+                          },
                           color: const Color(0xFF0A2647),
                         ),
                       ],
@@ -800,10 +810,58 @@ class _ProductSearchBottomSheetState
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _buildPricePreset('أقل من 50', '0', '50', tempMin, tempMax, setModalState),
-                        _buildPricePreset('50 - 100', '50', '100', tempMin, tempMax, setModalState),
-                        _buildPricePreset('100 - 200', '100', '200', tempMin, tempMax, setModalState),
-                        _buildPricePreset('200+', '200', '', tempMin, tempMax, setModalState),
+                        _buildPricePreset(
+                          'أقل من 50',
+                          '0',
+                          '50',
+                          tempMin,
+                          tempMax,
+                          onSelect: (selectedMin, selectedMax) {
+                            setModalState(() {
+                              tempMin = selectedMin;
+                              tempMax = selectedMax;
+                            });
+                          },
+                        ),
+                        _buildPricePreset(
+                          '50 - 100',
+                          '50',
+                          '100',
+                          tempMin,
+                          tempMax,
+                          onSelect: (selectedMin, selectedMax) {
+                            setModalState(() {
+                              tempMin = selectedMin;
+                              tempMax = selectedMax;
+                            });
+                          },
+                        ),
+                        _buildPricePreset(
+                          '100 - 200',
+                          '100',
+                          '200',
+                          tempMin,
+                          tempMax,
+                          onSelect: (selectedMin, selectedMax) {
+                            setModalState(() {
+                              tempMin = selectedMin;
+                              tempMax = selectedMax;
+                            });
+                          },
+                        ),
+                        _buildPricePreset(
+                          '200+',
+                          '200',
+                          '',
+                          tempMin,
+                          tempMax,
+                          onSelect: (selectedMin, selectedMax) {
+                            setModalState(() {
+                              tempMin = selectedMin;
+                              tempMax = selectedMax;
+                            });
+                          },
+                        ),
                       ],
                     ),
                     
@@ -854,6 +912,14 @@ class _ProductSearchBottomSheetState
                                 tempFeatured = false;
                                 tempOffers = false;
                               });
+                              setState(() {
+                                _onlyOnOffer = false;
+                                _onlyFeatured = false;
+                                _minPrice = null;
+                                _maxPrice = null;
+                              });
+                              Navigator.pop(context);
+                              _triggerSearch();
                             },
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.red[400],
@@ -987,15 +1053,15 @@ class _ProductSearchBottomSheetState
     String max,
     String currentMin,
     String currentMax,
-    Function(void Function()) setModalState,
+    {
+    required void Function(String min, String max) onSelect,
+  }
   ) {
     final isSelected = currentMin == min && (max.isEmpty ? currentMax.isEmpty : currentMax == max);
     
     return GestureDetector(
       onTap: () {
-        setModalState(() {
-          // Update temp values through parent callback
-        });
+        onSelect(min, max);
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

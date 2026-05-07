@@ -684,13 +684,21 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                                           });
                                                 } catch (e) {
                                                   if (mounted) {
-                                                    // ✅ حماية السياق
+                                                    final message = e
+                                                        .toString()
+                                                        .replaceFirst(
+                                                          'Exception: ',
+                                                          '',
+                                                        )
+                                                        .trim();
                                                     ScaffoldMessenger.of(
                                                             context)
                                                         .showSnackBar(
-                                                            const SnackBar(
+                                                            SnackBar(
                                                       content: Text(
-                                                        "حدث خطأ أثناء إتمام الطلب، حاول مرة أخرى. إذا استمر، تواصل معنا عبر واتساب.",
+                                                        message.isNotEmpty
+                                                            ? message
+                                                            : "تعذر فتح واتساب لإتمام الطلب. لم يتم تفريغ السلة.",
                                                       ),
                                                     ));
                                                   }

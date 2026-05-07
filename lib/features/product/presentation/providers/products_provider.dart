@@ -3,6 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/features/product/data/product_repository.dart';
 import 'package:doctor_store/features/product/domain/models/similar_products_query.dart';
+import 'package:doctor_store/features/product/presentation/providers/cached_products_provider.dart';
+import 'package:doctor_store/shared/services/product_cache_service.dart';
 
 final productRepositoryProvider = Provider<ProductRepository>((ref) {
   return ProductRepository();
@@ -136,3 +138,13 @@ final productByIdStreamProvider =
     return Product.fromJson(rows.first);
   });
 });
+
+Future<void> refreshProductCatalogProviders(WidgetRef ref) async {
+  await ProductCacheService().clearCache();
+  ref.invalidate(allProductsProvider);
+  ref.invalidate(allProductsStreamProvider);
+  ref.invalidate(allProductsAdminStreamProvider);
+  ref.invalidate(productsByCategoryStreamProvider);
+  ref.invalidate(productsByCategoryProvider);
+  await ref.read(cachedProductsProvider.notifier).loadProducts();
+}

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:doctor_store/shared/services/whatsapp_service.dart';
 
 // موديل بسيط للإعدادات
 class AppSettings {
@@ -24,7 +25,9 @@ class AppSettings {
 
   factory AppSettings.fromMap(Map<String, dynamic> map) {
     return AppSettings(
-      whatsapp: map['whatsapp_number'] ?? '',
+      whatsapp: WhatsAppService.normalizePhoneNumber(
+        (map['whatsapp_number'] ?? '').toString(),
+      ),
       facebook: map['facebook_url'] ?? '',
       instagram: map['instagram_url'] ?? '',
       tiktok: map['tiktok_url'] ?? '',

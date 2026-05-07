@@ -25,7 +25,7 @@ class AppNotifier {
     final entry = OverlayEntry(
       builder: (ctx) {
         final mediaQuery = MediaQuery.of(ctx);
-        final topPadding = mediaQuery.padding.top + 8;
+        final topPadding = mediaQuery.padding.top + kToolbarHeight + 12;
 
         return Positioned(
           top: topPadding,

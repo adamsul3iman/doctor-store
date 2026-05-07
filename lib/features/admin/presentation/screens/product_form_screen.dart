@@ -13,6 +13,7 @@ import 'package:doctor_store/shared/widgets/image_shimmer_placeholder.dart';
 import 'package:doctor_store/shared/widgets/app_network_image.dart';
 import 'package:doctor_store/features/auth/application/user_data_manager.dart';
 import 'package:doctor_store/features/admin/data/admin_product_repository.dart';
+import 'package:doctor_store/features/product/presentation/providers/products_provider.dart';
 
 enum _ProductFormPanel {
   basic,
@@ -1106,7 +1107,9 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("تم حفظ المنتج بنجاح")));
-        context.pop();
+        await refreshProductCatalogProviders(ref);
+        if (!mounted) return;
+        context.pop(true);
       }
     } catch (e) {
       if (!mounted) return;

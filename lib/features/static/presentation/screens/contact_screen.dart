@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import 'package:doctor_store/shared/services/whatsapp_service.dart';
 import 'package:doctor_store/shared/utils/settings_provider.dart';
 import 'package:doctor_store/shared/utils/static_page_provider.dart';
 import 'package:doctor_store/shared/utils/seo_pages_provider.dart';
@@ -91,7 +92,10 @@ class ContactScreen extends ConsumerWidget {
                                 : 'متوفر عبر الواتساب',
                             onTap: () async {
                               if (settings.whatsapp.isEmpty) return;
-                              final uri = Uri.parse('https://wa.me/${settings.whatsapp}');
+                              final uri = WhatsAppService.buildWhatsAppUrl(
+                                settings.whatsapp,
+                                'مرحباً، أود التواصل مع متجر الدكتور.',
+                              );
                               if (await canLaunchUrl(uri)) {
                                 await launchUrl(uri, mode: LaunchMode.externalApplication);
                               }

@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:doctor_store/shared/utils/image_compressor.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
+import 'package:doctor_store/shared/services/whatsapp_service.dart';
 import 'package:doctor_store/shared/widgets/app_network_image.dart';
 
 class AdminSettingsView extends StatefulWidget {
@@ -103,6 +104,10 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
   bool _freeShippingEnabled = true;
   final _freeShippingThresholdController = TextEditingController();
 
+  String _normalizeWhatsappInput(String value) {
+    return WhatsAppService.normalizePhoneNumber(value);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -129,7 +134,9 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
           .select()
           .eq('id', 1)
           .single();
-      _whatsappController.text = data['whatsapp_number'] ?? '';
+      _whatsappController.text = _normalizeWhatsappInput(
+        (data['whatsapp_number'] ?? '').toString(),
+      );
       _facebookController.text = data['facebook_url'] ?? '';
       _instagramController.text = data['instagram_url'] ?? '';
       _tiktokController.text = data['tiktok_url'] ?? '';
@@ -189,8 +196,20 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
       final thresholdText = _freeShippingThresholdController.text.trim();
       final threshold = double.tryParse(thresholdText);
 
+      final normalizedWhatsapp = _normalizeWhatsappInput(
+        _whatsappController.text,
+      );
+      if (_whatsappController.text != normalizedWhatsapp) {
+        _whatsappController.value = _whatsappController.value.copyWith(
+          text: normalizedWhatsapp,
+          selection: TextSelection.collapsed(
+            offset: normalizedWhatsapp.length,
+          ),
+        );
+      }
+
       await _supabase.from('app_settings').update({
-        'whatsapp_number': _whatsappController.text,
+        'whatsapp_number': normalizedWhatsapp,
         'facebook_url': _facebookController.text,
         'instagram_url': _instagramController.text,
         'tiktok_url': _tiktokController.text,
@@ -567,8 +586,20 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
       final thresholdText = _freeShippingThresholdController.text.trim();
       final threshold = double.tryParse(thresholdText);
 
+      final normalizedWhatsapp = _normalizeWhatsappInput(
+        _whatsappController.text,
+      );
+      if (_whatsappController.text != normalizedWhatsapp) {
+        _whatsappController.value = _whatsappController.value.copyWith(
+          text: normalizedWhatsapp,
+          selection: TextSelection.collapsed(
+            offset: normalizedWhatsapp.length,
+          ),
+        );
+      }
+
       await _supabase.from('app_settings').update({
-        'whatsapp_number': _whatsappController.text,
+        'whatsapp_number': normalizedWhatsapp,
         'facebook_url': _facebookController.text,
         'instagram_url': _instagramController.text,
         'tiktok_url': _tiktokController.text,
