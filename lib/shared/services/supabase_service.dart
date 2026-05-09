@@ -35,12 +35,21 @@ class SupabaseService {
     }
 
     try {
+      // الحصول على قائمة الأقسام النشطة أولاً
+      final activeCategories = await client
+          .from('categories')
+          .select('id')
+          .eq('is_active', true);
+      
+      final activeCategoryIds = activeCategories.map((cat) => cat['id'] as String).toList();
+
       final response = await client
           .from('products')
           .select(
               'id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
           .eq('is_featured', true)
           .eq('is_active', true)
+          .inFilter('category', activeCategoryIds)
           .neq('id', excludeId)
           .order('created_at', ascending: false)
           .limit(limit);
@@ -63,11 +72,20 @@ class SupabaseService {
     }
 
     try {
+      // الحصول على قائمة الأقسام النشطة أولاً
+      final activeCategories = await client
+          .from('categories')
+          .select('id')
+          .eq('is_active', true);
+      
+      final activeCategoryIds = activeCategories.map((cat) => cat['id'] as String).toList();
+
       final response = await client
           .from('products')
           .select(
               'id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
           .eq('is_active', true)
+          .inFilter('category', activeCategoryIds)
           .neq('id', excludeId)
           .order('created_at', ascending: false)
           .limit(limit);
@@ -87,11 +105,20 @@ class SupabaseService {
     }
 
     try {
+      // الحصول على قائمة الأقسام النشطة أولاً
+      final activeCategories = await client
+          .from('categories')
+          .select('id')
+          .eq('is_active', true);
+      
+      final activeCategoryIds = activeCategories.map((cat) => cat['id'] as String).toList();
+
       final response = await client
           .from('products')
           .select(
               'id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
           .eq('is_active', true)
+          .inFilter('category', activeCategoryIds)
           .order('created_at', ascending: false)
           .limit(limit);
 
@@ -112,12 +139,21 @@ class SupabaseService {
     }
 
     try {
+      // الحصول على قائمة الأقسام النشطة أولاً
+      final activeCategories = await client
+          .from('categories')
+          .select('id')
+          .eq('is_active', true);
+      
+      final activeCategoryIds = activeCategories.map((cat) => cat['id'] as String).toList();
+
       final response = await client
           .from('products')
           .select(
               'id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
           .eq('is_flash_deal', true)
           .eq('is_active', true)
+          .inFilter('category', activeCategoryIds)
           .order('created_at', ascending: false)
           .limit(limit);
 
@@ -200,11 +236,20 @@ class SupabaseService {
     }
 
     try {
+      // الحصول على قائمة الأقسام النشطة أولاً
+      final activeCategories = await client
+          .from('categories')
+          .select('id')
+          .eq('is_active', true);
+      
+      final activeCategoryIds = activeCategories.map((cat) => cat['id'] as String).toList();
+
       final response = await client
           .from('products')
           .select(
               'id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
           .eq('is_active', true)
+          .inFilter('category', activeCategoryIds)
           .order('created_at', ascending: false)
           .range(page * limit, (page + 1) * limit - 1);
       // Offload JSON parsing to background isolate to prevent UI blocking
@@ -228,6 +273,17 @@ class SupabaseService {
     }
 
     try {
+      // التحقق من أن القسم المطلوب نشط
+      final categoryCheck = await client
+          .from('categories')
+          .select('id, is_active')
+          .eq('id', categoryId)
+          .single();
+      
+      if (!(categoryCheck['is_active'] as bool? ?? true)) {
+        return []; // القسم مخفي، لا توجد نتائج
+      }
+
       final response = await client
           .from('products')
           .select(
@@ -257,6 +313,17 @@ class SupabaseService {
     }
 
     try {
+      // التحقق من أن القسم المطلوب نشط
+      final categoryCheck = await client
+          .from('categories')
+          .select('id, is_active')
+          .eq('id', categoryId)
+          .single();
+      
+      if (!(categoryCheck['is_active'] as bool? ?? true)) {
+        return []; // القسم مخفي، لا توجد نتائج
+      }
+
       final response = await client
           .from('products')
           .select(
@@ -266,6 +333,7 @@ class SupabaseService {
           .neq('id', excludeId)
           .order('created_at', ascending: false)
           .limit(limit);
+
       // Offload JSON parsing to background isolate to prevent UI blocking
       final products = await compute(_parseProducts, response as List<dynamic>);
       return products;

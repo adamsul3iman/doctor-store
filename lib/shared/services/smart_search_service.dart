@@ -2745,11 +2745,25 @@ class SmartSearchService {
   Future<List<Product>> _searchByTerm(String term) async {
     try {
       // البحث في العنوان والوصف والوسوم (tags)
+      // الحصول على قائمة الأقسام النشطة أولاً
+      final activeCategories = await _supabase
+          .from('categories')
+          .select('id')
+          .eq('is_active', true);
+      
+      final activeCategoryIds = activeCategories.map((cat) => cat['id'] as String).toList();
+      
       final data = await _supabase
           .from('products')
-          .select()
+          .select('''
+            id, title, price, old_price, image_url, category, sub_category_id,
+            is_featured, is_flash_deal, is_active, created_at, options, gallery,
+            variants, rating_average, rating_count, slug, short_description, tags
+          ''')
           .eq('is_active', true)
           .or('title.ilike.%$term%,description.ilike.%$term%,tags.cs.{"$term"}')
+          // استبعاد المنتجات من الأقسام المخفية
+          .inFilter('category', activeCategoryIds)
           .limit(30);
 
       return data.map((e) => Product.fromJson(e)).toList();
@@ -2770,11 +2784,25 @@ class SmartSearchService {
       // نأخذ أول 3-4 أحرف ونبحث بها
       final prefix = query.substring(0, query.length >= 4 ? 4 : 3);
 
+      // الحصول على قائمة الأقسام النشطة أولاً
+      final activeCategories = await _supabase
+          .from('categories')
+          .select('id')
+          .eq('is_active', true);
+      
+      final activeCategoryIds = activeCategories.map((cat) => cat['id'] as String).toList();
+      
       final data = await _supabase
           .from('products')
-          .select()
+          .select('''
+            id, title, price, old_price, image_url, category, sub_category_id,
+            is_featured, is_flash_deal, is_active, created_at, options, gallery,
+            variants, rating_average, rating_count, slug, short_description, tags
+          ''')
           .eq('is_active', true)
           .or('title.ilike.%$prefix%,description.ilike.%$prefix%,tags.cs.{"$prefix"}')
+          // استبعاد المنتجات من الأقسام المخفية
+          .inFilter('category', activeCategoryIds)
           .limit(20);
 
       return data.map((e) => Product.fromJson(e)).toList();
@@ -2789,9 +2817,24 @@ class SmartSearchService {
   /// البحث بالفئة (categories)
   Future<List<Product>> searchByCategory(String categoryId) async {
     try {
+      // التحقق من أن القسم المطلوب نشط
+      final categoryCheck = await _supabase
+          .from('categories')
+          .select('id, is_active')
+          .eq('id', categoryId)
+          .single();
+      
+      if (!(categoryCheck['is_active'] as bool? ?? true)) {
+        return []; // القسم مخفي، لا توجد نتائج
+      }
+      
       final data = await _supabase
           .from('products')
-          .select()
+          .select('''
+            id, title, price, old_price, image_url, category, sub_category_id,
+            is_featured, is_flash_deal, is_active, created_at, options, gallery,
+            variants, rating_average, rating_count, slug, short_description, tags
+          ''')
           .eq('is_active', true)
           .eq('category', categoryId)
           .limit(30);
@@ -2889,11 +2932,25 @@ class SmartSearchService {
     required int pageSize,
   }) async {
     try {
+      // الحصول على قائمة الأقسام النشطة أولاً
+      final activeCategories = await _supabase
+          .from('categories')
+          .select('id')
+          .eq('is_active', true);
+      
+      final activeCategoryIds = activeCategories.map((cat) => cat['id'] as String).toList();
+      
       final data = await _supabase
           .from('products')
-          .select()
+          .select('''
+            id, title, price, old_price, image_url, category, sub_category_id,
+            is_featured, is_flash_deal, is_active, created_at, options, gallery,
+            variants, rating_average, rating_count, slug, short_description, tags
+          ''')
           .eq('is_active', true)
           .or('title.ilike.%$term%,description.ilike.%$term%,tags.cs.{"$term"}')
+          // استبعاد المنتجات من الأقسام المخفية
+          .inFilter('category', activeCategoryIds)
           .order('created_at', ascending: false)
           .range(page * pageSize, (page + 1) * pageSize - 1);
 
@@ -2917,11 +2974,25 @@ class SmartSearchService {
 
       final prefix = query.substring(0, query.length >= 4 ? 4 : 3);
 
+      // الحصول على قائمة الأقسام النشطة أولاً
+      final activeCategories = await _supabase
+          .from('categories')
+          .select('id')
+          .eq('is_active', true);
+      
+      final activeCategoryIds = activeCategories.map((cat) => cat['id'] as String).toList();
+      
       final data = await _supabase
           .from('products')
-          .select()
+          .select('''
+            id, title, price, old_price, image_url, category, sub_category_id,
+            is_featured, is_flash_deal, is_active, created_at, options, gallery,
+            variants, rating_average, rating_count, slug, short_description, tags
+          ''')
           .eq('is_active', true)
           .or('title.ilike.%$prefix%,description.ilike.%$prefix%,tags.cs.{"$prefix"}')
+          // استبعاد المنتجات من الأقسام المخفية
+          .inFilter('category', activeCategoryIds)
           .order('created_at', ascending: false)
           .range(page * pageSize, (page + 1) * pageSize - 1);
 

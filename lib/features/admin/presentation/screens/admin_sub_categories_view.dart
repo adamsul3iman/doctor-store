@@ -360,38 +360,109 @@ class _AdminSubCategoriesViewState extends State<AdminSubCategoriesView> {
   }
 
   Future<void> _deleteSubCategory(Map<String, dynamic> sub) async {
+    final id = sub['id'] as String?;
     final name = sub['name'] as String? ?? '';
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('حذف فئة فرعية'),
-        content: Text(
-          'هل أنت متأكد من حذف الفئة الفرعية "$name"؟\n'
-          'تأكد من تحديث المنتجات المرتبطة بها إذا لزم الأمر.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('إلغاء'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('حذف', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (ok != true) return;
+    final isActive = (sub['is_active'] as bool?) ?? true;
+    
+    if (id == null) return;
 
     try {
-      await _supabase.from('sub_categories').delete().eq('id', sub['id']);
+      // التحقق من المنتجات المرتبطة
+      final productsCount = await _supabase
+          .from('products')
+          .select('id')
+          .eq('sub_category_id', id)
+          .count(CountOption.exact);
+
+      // إذا كانت الفئة الفرعية تحتوي على منتجات
+      if (productsCount.count > 0) {
+        final action = await showDialog<String>(
+          context: context,
+          builder: (dialogContext) {
+            return AlertDialog(
+              title: const Text('الفئة الفرعية تحتوي على منتجات'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('الفئة الفرعية "$name" تحتوي على ${productsCount.count} منتج/منتجات.'),
+                  const SizedBox(height: 16),
+                  const Text('لا يمكن حذف فئة فرعية تحتوي على منتجات.'),
+                  const Text('يمكنك إخفاؤها بدلاً من حذفها.'),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('إلغاء'),
+                ),
+                if (isActive)
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop('hide'),
+                    child: const Text('إخفاء الفئة الفرعية'),
+                  ),
+              ],
+            );
+          },
+        );
+
+        if (action == 'hide') {
+          await _hideSubCategory(id, name);
+        }
+        return;
+      }
+
+      // الفئة الفرعية فارغة - يمكن حذفها
+      final shouldDelete = await showDialog<bool>(
+        context: context,
+        builder: (ctx) {
+          return AlertDialog(
+            title: const Text('حذف فئة فرعية فارغة'),
+            content: Text('الفئة الفرعية "$name" فارغة ولا تحتوي على منتجات.\n'
+                'هل تريد حذفها نهائياً؟'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('إلغاء'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.redAccent,
+                ),
+                child: const Text('حذف نهائي'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (shouldDelete != true) return;
+
+      await _supabase.from('sub_categories').delete().eq('id', id);
       await _loadAll();
       if (!mounted) return;
-      AppNotifier.showSuccess(context, 'تم حذف الفئة الفرعية بنجاح');
+      AppNotifier.showSuccess(context, 'تم حذف الفئة الفرعية "$name" بنجاح');
     } catch (e) {
       if (!mounted) return;
-      AppNotifier.showError(context, 'خطأ في حذف الفئة الفرعية: $e');
+      AppNotifier.showError(context, 'حدث خطأ أثناء حذف الفئة الفرعية: $e');
+    }
+  }
+
+  /// إخفاء فئة فرعية (تعطيلها بدلاً من حذفها)
+  Future<void> _hideSubCategory(String id, String name) async {
+    try {
+      await _supabase
+          .from('sub_categories')
+          .update({'is_active': false})
+          .eq('id', id);
+      
+      await _loadAll();
+      if (!mounted) return;
+      AppNotifier.showSuccess(context, 'تم إخفاء الفئة الفرعية "$name" بنجاح');
+    } catch (e) {
+      if (!mounted) return;
+      AppNotifier.showError(context, 'حدث خطأ أثناء إخفاء الفئة الفرعية: $e');
     }
   }
 

@@ -41,22 +41,7 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
     }
   }
 
-  Future<void> _toggleActive(Map<String, dynamic> cat, bool value) async {
-    final id = cat['id'];
-    setState(() {
-      cat['is_active'] = value;
-    });
-    try {
-      await _supabase
-          .from('categories')
-          .update({'is_active': value}).eq('id', id);
-    } catch (e) {
-      if (mounted) {
-        AppNotifier.showError(context, 'خطأ في تحديث حالة القسم: $e');
-      }
-    }
-  }
-
+  
   /// استيراد أقسام افتراضية مبنية على الأقسام المستخدمة حالياً في المتجر.
   ///
   /// يتم حفظها في جدول `categories` باستخدام upsert حتى لا تتكرر.
@@ -153,42 +138,105 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
     }
   }
 
-  /// حذف قسم بعد تأكيد من المستخدم.
+  /// حذف قسم بعد التحقق من المنتجات والفئات الفرعية المرتبطة.
   Future<void> _confirmDeleteCategory(Map<String, dynamic> cat) async {
     final id = cat['id'] as String?;
     if (id == null) return;
 
     final name = (cat['name'] as String?) ?? id;
-
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('حذف القسم'),
-          content: Text('هل أنت متأكد من حذف القسم "$name"؟\n'
-              'تأكد من تحديث المنتجات المرتبطة به إذا لزم الأمر.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('إلغاء'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text(
-                'حذف',
-                style: TextStyle(color: Colors.redAccent),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (shouldDelete != true) return;
+    final isActive = (cat['is_active'] as bool?) ?? true;
 
     setState(() => _isLoading = true);
 
     try {
+      // التحقق من المنتجات المرتبطة
+      final productsCount = await _supabase
+          .from('products')
+          .select('id')
+          .eq('category', id)
+          .count(CountOption.exact);
+
+      // التحقق من الفئات الفرعية المرتبطة
+      final subCategoriesCount = await _supabase
+          .from('sub_categories')
+          .select('id')
+          .eq('parent_category_id', id)
+          .count(CountOption.exact);
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      // إذا كان القسم يحتوي على منتجات أو فئات فرعية
+      if (productsCount.count > 0 || subCategoriesCount.count > 0) {
+        final action = await showDialog<String>(
+          context: context,
+          builder: (dialogContext) {
+            return AlertDialog(
+              title: const Text('القسم يحتوي على بيانات مرتبطة'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('القسم "$name" يحتوي على:'),
+                  const SizedBox(height: 8),
+                  if (productsCount.count > 0)
+                    Text('• ${productsCount.count} منتج/منتجات'),
+                  if (subCategoriesCount.count > 0)
+                    Text('• ${subCategoriesCount.count} فئة فرعية'),
+                  const SizedBox(height: 16),
+                  const Text('لا يمكن حذف قسم يحتوي على منتجات أو فئات فرعية.'),
+                  const Text('يمكنك إخفاؤه بدلاً من حذفه.'),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('إلغاء'),
+                ),
+                if (isActive)
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop('hide'),
+                    child: const Text('إخفاء القسم'),
+                  ),
+              ],
+            );
+          },
+        );
+
+        if (action == 'hide') {
+          await _hideCategory(id, name);
+        }
+        return;
+      }
+
+      // القسم فارغ - يمكن حذفه
+      final shouldDelete = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) {
+          return AlertDialog(
+            title: const Text('حذف قسم فارغ'),
+            content: Text('القسم "$name" فارغ ولا يحتوي على منتجات أو فئات فرعية.\n'
+                'هل تريد حذفه نهائياً؟'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: const Text('إلغاء'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: const Text(
+                  'حذف نهائي',
+                  style: TextStyle(color: Colors.redAccent),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (shouldDelete != true) return;
+
+      setState(() => _isLoading = true);
       await _supabase.from('categories').delete().eq('id', id);
       if (!mounted) return;
       await _loadCategories();
@@ -199,6 +247,70 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
       if (!mounted) return;
       setState(() => _isLoading = false);
       AppNotifier.showError(context, 'حدث خطأ أثناء حذف القسم: $e');
+    }
+  }
+
+  /// إخفاء قسم (تعطيله بدلاً من حذفه)
+  Future<void> _hideCategory(String id, String name) async {
+    setState(() => _isLoading = true);
+
+    try {
+      await _supabase
+          .from('categories')
+          .update({'is_active': false})
+          .eq('id', id);
+      
+      if (!mounted) return;
+      await _loadCategories();
+      if (!mounted) return;
+
+      AppNotifier.showSuccess(context, 'تم إخفاء القسم "$name" بنجاح');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      AppNotifier.showError(context, 'حدث خطأ أثناء إخفاء القسم: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  /// إظهار قسم مفخول (تفعيله)
+  Future<void> _toggleCategoryActive(Map<String, dynamic> cat) async {
+    final id = cat['id'] as String?;
+    if (id == null) return;
+
+    final name = (cat['name'] as String?) ?? id;
+    final isActive = (cat['is_active'] as bool?) ?? true;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await _supabase
+          .from('categories')
+          .update({'is_active': !isActive})
+          .eq('id', id);
+      
+      if (!mounted) return;
+      await _loadCategories();
+      if (!mounted) return;
+
+      AppNotifier.showSuccess(
+        context,
+        isActive ? 'تم إخفاء القسم "$name" بنجاح' : 'تم إظهار القسم "$name" بنجاح',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      AppNotifier.showError(
+        context,
+        'حدث خطأ أثناء ${isActive ? 'إخفاء' : 'إظهار'} القسم: $e',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -590,7 +702,7 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
                                     ),
                                     Switch(
                                       value: isActive,
-                                      onChanged: (v) => _toggleActive(cat, v),
+                                      onChanged: (v) => _toggleCategoryActive(cat),
                                       activeThumbColor: const Color(0xFF0A2647),
                                     ),
                                     IconButton(
