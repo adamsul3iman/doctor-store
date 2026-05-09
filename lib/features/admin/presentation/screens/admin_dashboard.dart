@@ -5,21 +5,20 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// ✅ الآن هذا الملف موجود ولن يظهر خطأ
-import 'dashboard_home_view.dart';
+import 'dashboard_home_view.dart' deferred as dashboard_home_view;
 
 import 'admin_products_view.dart';
-import 'admin_banners_view.dart';
+import 'admin_banners_view.dart' deferred as admin_banners_view;
 import 'admin_orders_view.dart';
 import 'admin_clients_view.dart';
 import 'admin_reviews_view.dart';
-import 'analytics_view.dart';
+import 'analytics_view.dart' deferred as analytics_view;
 import 'admin_coupons_view.dart';
 import 'admin_categories_view.dart';
 import 'admin_delivery_zones_view.dart';
 import 'admin_sub_categories_view.dart';
 import 'shipping_costs_screen.dart'; // ✅ صفحة إدارة أسعار الشحن
-import 'admin_settings_view.dart';
+import 'admin_settings_view.dart' deferred as admin_settings_view;
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -34,24 +33,59 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   static const _kLastAdminTabKey = 'admin_last_tab';
 
+  Future<void>? _dashboardHomeLoad;
+  Future<void>? _analyticsLoad;
+  Future<void>? _bannersLoad;
+  Future<void>? _settingsLoad;
+
+  Future<void> _loadDashboardHome() {
+    return _dashboardHomeLoad ??= dashboard_home_view.loadLibrary();
+  }
+
+  Future<void> _loadAnalytics() {
+    return _analyticsLoad ??= analytics_view.loadLibrary();
+  }
+
+  Future<void> _loadBanners() {
+    return _bannersLoad ??= admin_banners_view.loadLibrary();
+  }
+
+  Future<void> _loadSettings() {
+    return _settingsLoad ??= admin_settings_view.loadLibrary();
+  }
+
   // القائمة البرمجية للصفحات
   List<Widget> get _views => [
-        DashboardHomeView(onNavigateToTab: (index) {
-          setState(() => _selectedIndex = index);
-          _saveLastTab(index);
-        }),
+        _DeferredAdminTab(
+          future: _loadDashboardHome,
+          builder: () => dashboard_home_view.DashboardHomeView(
+            onNavigateToTab: (index) {
+              setState(() => _selectedIndex = index);
+              _saveLastTab(index);
+            },
+          ),
+        ),
         const AdminOrdersView(),
         const AdminProductsView(),
         const AdminCategoriesView(),
         const AdminSubCategoriesView(),
         const AdminCouponsView(),
-        const AdminBannersView(),
+        _DeferredAdminTab(
+          future: _loadBanners,
+          builder: () => admin_banners_view.AdminBannersView(),
+        ),
         const AdminReviewsView(),
         const AdminClientsView(),
         const AdminDeliveryZonesView(),
         const ShippingCostsScreen(), // ✅ صفحة إدارة أسعار الشحن
-        const AnalyticsView(),
-        const AdminSettingsView(),
+        _DeferredAdminTab(
+          future: _loadAnalytics,
+          builder: () => analytics_view.AnalyticsView(),
+        ),
+        _DeferredAdminTab(
+          future: _loadSettings,
+          builder: () => admin_settings_view.AdminSettingsView(),
+        ),
       ];
 
   // بيانات عناصر القائمة
@@ -398,6 +432,33 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
 
     return content;
+  }
+}
+
+class _DeferredAdminTab extends StatelessWidget {
+  final Future<void> Function() future;
+  final Widget Function() builder;
+
+  const _DeferredAdminTab({
+    required this.future,
+    required this.builder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: future(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.error == null) {
+          return builder();
+        }
+
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
   }
 }
 

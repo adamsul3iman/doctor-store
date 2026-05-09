@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 // import 'package:google_fonts/google_fonts.dart'; // ⚠️ REMOVED for smaller bundle
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:image_picker/image_picker.dart' deferred as image_picker;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doctor_store/features/auth/application/user_data_manager.dart';
@@ -15,6 +15,12 @@ import 'package:doctor_store/shared/utils/image_url_helper.dart';
 import '../widgets/edit_profile_sheet.dart';
 
 // ignore_for_file: use_build_context_synchronously
+
+Future<void>? _imagePickerLoad;
+
+Future<void> _loadImagePicker() {
+  return _imagePickerLoad ??= image_picker.loadLibrary();
+}
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -728,9 +734,11 @@ class ProfileScreen extends ConsumerWidget {
       return;
     }
 
-    final picker = ImagePicker();
+    await _loadImagePicker();
+
+    final picker = image_picker.ImagePicker();
     final pickedImage = await picker.pickImage(
-      source: ImageSource.gallery,
+      source: image_picker.ImageSource.gallery,
     );
 
     if (pickedImage == null) return;
