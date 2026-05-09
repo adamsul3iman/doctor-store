@@ -25,7 +25,8 @@ class RecentActivitiesList extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.notifications_active, color: const Color(0xFFFF6F00), size: 24),
+                    Icon(Icons.notifications_active,
+                        color: const Color(0xFFFF6F00), size: 24),
                     const SizedBox(width: 8),
                     Text(
                       'آخر النشاطات',
@@ -54,7 +55,8 @@ class RecentActivitiesList extends StatelessWidget {
               const SizedBox(
                 height: 100,
                 child: Center(
-                  child: Text('لا توجد نشاطات حديثة', style: TextStyle(color: Colors.grey)),
+                  child: Text('لا توجد نشاطات حديثة',
+                      style: TextStyle(color: Colors.grey)),
                 ),
               )
             else

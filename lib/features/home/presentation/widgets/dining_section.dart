@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:doctor_store/features/product/domain/models/product_model.dart';
 import 'package:doctor_store/features/product/presentation/widgets/product_card.dart';
 
@@ -41,9 +41,9 @@ class _DiningSectionState extends State<DiningSection> {
 
     for (final p in widget.products) {
       // جمع كل النص للبحث فيه
-      final fullText = (
-        '${p.title} ${p.description} ${p.category} ${p.tags.join(' ')}'
-      ).toLowerCase();
+      final fullText =
+          ('${p.title} ${p.description} ${p.category} ${p.tags.join(' ')}')
+              .toLowerCase();
 
       // التحقق إذا كان المنتج طاولة سفرة
       final isDiningTable = _isDiningTableProduct(p, fullText);
@@ -66,19 +66,24 @@ class _DiningSectionState extends State<DiningSection> {
     // التحقق من التصنيف أولاً
     final category = p.category.toLowerCase();
     if (category == 'dining_table' || category == 'furniture') return true;
-    
+
     // التحقق من الكلمات المفتاحية
     final keywords = [
-      'طاولة سفرة', 'طاولة سفره', 'طاولة طعام', 'طاولة اكل',
-      'سفرة', 'سفره', 'dining table', 'dining'
+      'طاولة سفرة',
+      'طاولة سفره',
+      'طاولة طعام',
+      'طاولة اكل',
+      'سفرة',
+      'سفره',
+      'dining table',
+      'dining'
     ];
     return keywords.any((k) => fullText.contains(k));
   }
 
   @override
   Widget build(BuildContext context) {
-    final filteredProducts =
-        _isPorcelain ? _porcelainProducts : _woodProducts;
+    final filteredProducts = _isPorcelain ? _porcelainProducts : _woodProducts;
 
     // نستخدم لون خلفية التطبيق حتى يندمج القسم مع باقي الصفحة
     final backgroundColor = Theme.of(context).scaffoldBackgroundColor;

@@ -48,6 +48,7 @@ class _ProductVariantSelectorState extends State<ProductVariantSelector> {
     }
     return values.toList();
   }
+
   bool get _hasColors => _colors.isNotEmpty;
   bool get _hasSizes => _sizes.isNotEmpty;
 
@@ -170,7 +171,8 @@ class _ProductVariantSelectorState extends State<ProductVariantSelector> {
             const SizedBox(width: 8),
             if (isColor && _selectedColor != null)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(20),
@@ -224,7 +226,8 @@ class _ProductVariantSelectorState extends State<ProductVariantSelector> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isSelected ? primaryDark : Colors.grey.shade300,
+                          color:
+                              isSelected ? primaryDark : Colors.grey.shade300,
                           width: isSelected ? 2 : 1.2,
                         ),
                         boxShadow: isSelected
@@ -245,7 +248,8 @@ class _ProductVariantSelectorState extends State<ProductVariantSelector> {
                           color: color,
                         ),
                         child: isSelected
-                            ? const Icon(Icons.check, size: 18, color: Colors.white)
+                            ? const Icon(Icons.check,
+                                size: 18, color: Colors.white)
                             : null,
                       ),
                     ),
@@ -259,8 +263,10 @@ class _ProductVariantSelectorState extends State<ProductVariantSelector> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 11,
-                          color: isSelected ? primaryDark : Colors.grey.shade700,
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color:
+                              isSelected ? primaryDark : Colors.grey.shade700,
+                          fontWeight:
+                              isSelected ? FontWeight.w700 : FontWeight.w500,
                         ),
                       ),
                     ),
@@ -279,7 +285,8 @@ class _ProductVariantSelectorState extends State<ProductVariantSelector> {
                 onTap: () => _onSizeSelected(option),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                   decoration: BoxDecoration(
                     color: isSelected ? primaryDark : Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(10),
@@ -313,8 +320,14 @@ class _ProductVariantSelectorState extends State<ProductVariantSelector> {
       }
     }
     final fallbackColors = [
-      Colors.red, Colors.blue, Colors.green, Colors.yellow,
-      Colors.purple, Colors.orange, Colors.teal, Colors.pink,
+      Colors.red,
+      Colors.blue,
+      Colors.green,
+      Colors.yellow,
+      Colors.purple,
+      Colors.orange,
+      Colors.teal,
+      Colors.pink,
     ];
     return fallbackColors[index % fallbackColors.length];
   }
@@ -430,7 +443,8 @@ class _VariantSelectionDialogState extends State<VariantSelectionDialog> {
                 product: widget.product,
                 initialColor: _selectedColor,
                 initialSize: _selectedSize,
-                onColorChanged: (color) => setState(() => _selectedColor = color),
+                onColorChanged: (color) =>
+                    setState(() => _selectedColor = color),
                 onSizeChanged: (size) => setState(() => _selectedSize = size),
               ),
               const SizedBox(height: 16),

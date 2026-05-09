@@ -61,7 +61,8 @@ class _BundleSectionState extends ConsumerState<BundleSection> {
           backgroundColor: const Color(0xFFFF6F00),
           duration: const Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
       return;
@@ -250,8 +251,7 @@ class _BundleSectionState extends ConsumerState<BundleSection> {
                       placeholder: const ShimmerImagePlaceholder(),
                       errorWidget: Container(
                         color: Colors.grey[300],
-                        child:
-                            const Icon(Icons.image_not_supported, size: 30),
+                        child: const Icon(Icons.image_not_supported, size: 30),
                       ),
                     ),
                   ),
@@ -531,40 +531,41 @@ class _BundleSectionState extends ConsumerState<BundleSection> {
                     width: double.infinity,
                     height: 52,
                     child: ElevatedButton(
-                              onPressed: _isAdding ? null : _viewBundleProducts,
+                      onPressed: _isAdding ? null : _viewBundleProducts,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFFF6F00),
                         foregroundColor: Colors.white,
                         elevation: 3,
-                        shadowColor: const Color(0xFFFF6F00).withValues(alpha: 0.4),
+                        shadowColor:
+                            const Color(0xFFFF6F00).withValues(alpha: 0.4),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                                child: _isAdding
-                                    ? const SizedBox(
-                                        height: 24,
-                                        width: 24,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2.5,
-                                        ),
-                                      )
-                                    : Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            'عرض المنتجات (${_selectedProducts.length})',
-                                            style: const TextStyle(
-                                              fontFamily: 'Almarai',
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          const Icon(Icons.arrow_back, size: 20),
-                                        ],
-                                      ),
+                      child: _isAdding
+                          ? const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2.5,
+                              ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'عرض المنتجات (${_selectedProducts.length})',
+                                  style: const TextStyle(
+                                    fontFamily: 'Almarai',
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.arrow_back, size: 20),
+                              ],
+                            ),
                     ),
                   ),
                 ],

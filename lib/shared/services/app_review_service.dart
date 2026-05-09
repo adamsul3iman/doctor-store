@@ -2,7 +2,7 @@ import 'package:in_app_review/in_app_review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// خدمة إدارة نافذة تقييم التطبيق (In-App Review)
-/// 
+///
 /// تستخدم Google Play In-App Review API لعرض نافذة التقييم
 /// دون مغادرة التطبيق. يتم عرضها بعد فترات محددة من الاستخدام الإيجابي.
 class AppReviewService {
@@ -19,14 +19,15 @@ class AppReviewService {
   static const String _prefsKeyHasReviewed = 'app_review_completed';
 
   // Minimum requirements before showing review prompt
-  static const int _minLaunches = 5;              // 5 فتحات للتطبيق
-  static const int _minSuccessfulActions = 3;     // 3 إجراءات ناجحة (مشاهدة منتجات، إضافة للمفضلة)
-  static const int _daysBetweenPrompts = 30;      // 30 يوم بين كل محاولة
+  static const int _minLaunches = 5; // 5 فتحات للتطبيق
+  static const int _minSuccessfulActions =
+      3; // 3 إجراءات ناجحة (مشاهدة منتجات، إضافة للمفضلة)
+  static const int _daysBetweenPrompts = 30; // 30 يوم بين كل محاولة
 
   /// التحقق مما إذا كان يجب عرض نافذة التقييم
   Future<bool> shouldShowReviewPrompt() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     // إذا قيّم المستخدم من قبل، لا تعرض مرة أخرى
     final hasReviewed = prefs.getBool(_prefsKeyHasReviewed) ?? false;
     if (hasReviewed) return false;
@@ -43,7 +44,7 @@ class AppReviewService {
     final lastPrompt = prefs.getInt(_prefsKeyLastPrompt) ?? 0;
     final now = DateTime.now().millisecondsSinceEpoch;
     final daysSinceLastPrompt = (now - lastPrompt) / (1000 * 60 * 60 * 24);
-    
+
     if (daysSinceLastPrompt < _daysBetweenPrompts) return false;
 
     // التحقق من توفر خدمة التقييم
@@ -52,8 +53,8 @@ class AppReviewService {
   }
 
   /// عرض نافذة تقييم التطبيق
-  /// 
-  /// يتم استدعاؤها بعد تجربة إيجابية (مثل إضافة منتج للمفضلة، 
+  ///
+  /// يتم استدعاؤها بعد تجربة إيجابية (مثل إضافة منتج للمفضلة،
   /// أو مشاهدة تفاصيل منتج، أو فتح التطبيق عدة مرات)
   Future<void> requestReview() async {
     try {
@@ -88,7 +89,7 @@ class AppReviewService {
     final prefs = await SharedPreferences.getInstance();
     final current = prefs.getInt(_prefsKeySuccessfulActions) ?? 0;
     await prefs.setInt(_prefsKeySuccessfulActions, current + 1);
-    
+
     // محاولة عرض التقييم بعد الإجراء الناجح
     await requestReview();
   }

@@ -4,7 +4,8 @@ class AppTheme {
   // الألوان الأساسية (هوية المتجر)
   static const Color primary = Color(0xFF0A2647); // كحلي غامق (فخامة)
   static const Color secondary = Color(0xFFD4AF37); // ذهبي (تميز)
-  static const Color background = Color(0xFFFAFAFA); // أبيض مائل للرمادي (راحة للعين)
+  static const Color background =
+      Color(0xFFFAFAFA); // أبيض مائل للرمادي (راحة للعين)
   static const Color surface = Colors.white;
   static const Color error = Color(0xFFD32F2F);
 
@@ -21,14 +22,24 @@ class AppTheme {
         surface: surface,
         error: error,
       ),
-      
+
       // إعدادات النصوص (الخط العربي الموحد من ملف محلي لتفادي مشكلة المربعات على الويب)
       fontFamily: 'Almarai',
       textTheme: const TextTheme(
-        displayLarge: TextStyle(fontFamily: 'Almarai', color: primary, fontWeight: FontWeight.bold, fontSize: 24),
-        displayMedium: TextStyle(fontFamily: 'Almarai', color: primary, fontWeight: FontWeight.bold, fontSize: 20),
-        bodyLarge: TextStyle(fontFamily: 'Almarai', color: Colors.black87, fontSize: 16),
-        bodyMedium: TextStyle(fontFamily: 'Almarai', color: Colors.black54, fontSize: 14),
+        displayLarge: TextStyle(
+            fontFamily: 'Almarai',
+            color: primary,
+            fontWeight: FontWeight.bold,
+            fontSize: 24),
+        displayMedium: TextStyle(
+            fontFamily: 'Almarai',
+            color: primary,
+            fontWeight: FontWeight.bold,
+            fontSize: 20),
+        bodyLarge: TextStyle(
+            fontFamily: 'Almarai', color: Colors.black87, fontSize: 16),
+        bodyMedium: TextStyle(
+            fontFamily: 'Almarai', color: Colors.black54, fontSize: 14),
       ),
 
       // إعدادات الأزرار (موحدة في كل التطبيق)
@@ -38,8 +49,10 @@ class AppTheme {
           foregroundColor: Colors.white,
           elevation: 2,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: const TextStyle(fontFamily: 'Almarai', fontWeight: FontWeight.bold),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: const TextStyle(
+              fontFamily: 'Almarai', fontWeight: FontWeight.bold),
         ),
       ),
 
@@ -47,10 +60,17 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.grey[50],
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: primary, width: 1.5)),
-        errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: error)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: primary, width: 1.5)),
+        errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: error)),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
 
       // إعدادات البار العلوي

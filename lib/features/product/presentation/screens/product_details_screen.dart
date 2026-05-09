@@ -36,7 +36,8 @@ class ProductDetailsScreen extends ConsumerStatefulWidget {
   const ProductDetailsScreen({super.key, required this.product});
 
   @override
-  ConsumerState<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
+  ConsumerState<ProductDetailsScreen> createState() =>
+      _ProductDetailsScreenState();
 }
 
 class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
@@ -156,7 +157,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
         AppReviewService().recordSuccessfulAction();
       }
     });
-    
+
     final Set<String> uniqueImages = {};
     uniqueImages.add(widget.product.originalImageUrl);
     if (widget.product.gallery.isNotEmpty) {
@@ -224,7 +225,8 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
           _orderLines.clear();
         });
       } else {
-        AppNotifier.showError(context, 'تعذرت الإضافة للسلة (قد تكون الكمية أكبر من المخزون)');
+        AppNotifier.showError(
+            context, 'تعذرت الإضافة للسلة (قد تكون الكمية أكبر من المخزون)');
       }
       return;
     }
@@ -244,7 +246,8 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     if (ok) {
       AppNotifier.showSuccess(context, 'تمت الإضافة للسلة');
     } else {
-      AppNotifier.showError(context, 'تعذرت الإضافة للسلة (قد تكون الكمية أكبر من المخزون)');
+      AppNotifier.showError(
+          context, 'تعذرت الإضافة للسلة (قد تكون الكمية أكبر من المخزون)');
     }
   }
 
@@ -277,7 +280,8 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
               ),
             ),
             const SizedBox(width: 10),
-            if (widget.product.oldPrice != null && widget.product.oldPrice! > widget.product.price)
+            if (widget.product.oldPrice != null &&
+                widget.product.oldPrice! > widget.product.price)
               Text(
                 '${widget.product.oldPrice!.toStringAsFixed(2)} د.أ',
                 style: TextStyle(
@@ -318,11 +322,13 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                 });
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: isActive ? _primaryDark : Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: isActive ? _primaryDark : Colors.grey.shade300),
+                  border: Border.all(
+                      color: isActive ? _primaryDark : Colors.grey.shade300),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -539,13 +545,15 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     if (_variants.isNotEmpty) {
       _updateSelectedVariant();
       if (_selectedVariant == null) {
-        _showError("هذا الخيار غير متوفر حالياً، جرّب لوناً أو مقاساً مختلفاً.");
+        _showError(
+            "هذا الخيار غير متوفر حالياً، جرّب لوناً أو مقاساً مختلفاً.");
         return false;
       }
       // التحقق من توفر المخزون لهذا المتغير
       final stock = _selectedVariant!.stock;
       if (stock != null && _quantity > stock) {
-        _showError("الكمية المطلوبة أكبر من المتوفر حالياً ($stock ${widget.product.pricingUnitLabel})، قلّل الكمية أو تواصل معنا.");
+        _showError(
+            "الكمية المطلوبة أكبر من المتوفر حالياً ($stock ${widget.product.pricingUnitLabel})، قلّل الكمية أو تواصل معنا.");
         return false;
       }
     }
@@ -587,7 +595,8 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     // أولوية لعروض البكجات للحفاظ على التوافق مع البيانات القديمة
     if (widget.product.hasOffers) {
       try {
-        final offer = widget.product.offerTiers.firstWhere((tier) => tier.quantity == _quantity);
+        final offer = widget.product.offerTiers
+            .firstWhere((tier) => tier.quantity == _quantity);
         return offer.price;
       } catch (e) {
         return widget.product.price * _quantity;
@@ -625,7 +634,8 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
   }
 
   void _scrollToColorImage(String colorName) {
-    final matchingImageIndex = widget.product.gallery.indexWhere((img) => img.colorName == colorName);
+    final matchingImageIndex =
+        widget.product.gallery.indexWhere((img) => img.colorName == colorName);
     if (matchingImageIndex != -1) {
       final url = widget.product.gallery[matchingImageIndex].url;
       final actualIndex = _displayImages.indexOf(url);
@@ -741,7 +751,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     // تحميل مؤجل للـ ProductPosterDialog لتقليل حجم البندل الأساسي
     await poster.loadLibrary();
     if (!mounted) return;
-    
+
     showDialog(
       context: context,
       builder: (_) => poster.ProductPosterDialog(product: widget.product),
@@ -757,7 +767,8 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
 
     final currentProduct = ref
         .read(productByIdStreamProvider(widget.product.id))
-        .maybeWhen(data: (p) => p ?? widget.product, orElse: () => widget.product);
+        .maybeWhen(
+            data: (p) => p ?? widget.product, orElse: () => widget.product);
     final buffer = StringBuffer()
       ..writeln('مرحباً، لدي استفسار عن هذا المنتج من متجر الدكتور:')
       ..writeln('الاسم: ${currentProduct.title}')
@@ -814,174 +825,181 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
             onShare: _shareProduct,
           ),
           loading: () => const SizedBox.shrink(),
-          error: (_,__) => const SizedBox.shrink(),
+          error: (_, __) => const SizedBox.shrink(),
         ),
         body: CustomScrollView(
           slivers: [
-          // ================= App Bar & Image Gallery =================
-          SliverAppBar(
-            backgroundColor: _primaryDark,
-            expandedHeight: galleryHeight,
-            pinned: true,
-            automaticallyImplyLeading: false,
-            centerTitle: true,
-            title: CustomAppBarContent(
-              isHome: false,
-              centerWidget: const Text(
-                'تفاصيل المنتج',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+            // ================= App Bar & Image Gallery =================
+            SliverAppBar(
+              backgroundColor: _primaryDark,
+              expandedHeight: galleryHeight,
+              pinned: true,
+              automaticallyImplyLeading: false,
+              centerTitle: true,
+              title: CustomAppBarContent(
+                isHome: false,
+                centerWidget: const Text(
+                  'تفاصيل المنتج',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                showSearch: true,
+                onSearchTap: () => showSearch(
+                  context: context,
+                  delegate: ProductSearchDelegate(),
+                ),
+                onShareTap: () => _showPosterDialog(),
+                iconColor: Colors.white,
+              ),
+              flexibleSpace: FlexibleSpaceBar(
+                background: ProductImageGallery(
+                  key: _galleryKey,
+                  productId: widget.product.id,
+                  imageUrls: _displayImages,
+                  height: galleryHeight,
+                  isFeatured: widget.product.isFeatured,
+                  onImageTap: () {
+                    final currentIndex =
+                        _galleryKey.currentState?.currentIndex ?? 0;
+                    showDialog(
+                      context: context,
+                      builder: (_) => ProductFullscreenGallery(
+                        productId: widget.product.id,
+                        imageUrls: _displayImages,
+                        initialIndex: currentIndex,
+                      ),
+                    );
+                  },
                 ),
               ),
-              showSearch: true,
-              onSearchTap: () => showSearch(
-                context: context,
-                delegate: ProductSearchDelegate(),
-              ),
-              onShareTap: () => _showPosterDialog(),
-              iconColor: Colors.white,
             ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: ProductImageGallery(
-                key: _galleryKey,
-                productId: widget.product.id,
-                imageUrls: _displayImages,
-                height: galleryHeight,
-                isFeatured: widget.product.isFeatured,
-                onImageTap: () {
-                  final currentIndex = _galleryKey.currentState?.currentIndex ?? 0;
-                  showDialog(
-                    context: context,
-                    builder: (_) => ProductFullscreenGallery(
-                      productId: widget.product.id,
-                      imageUrls: _displayImages,
-                      initialIndex: currentIndex,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
 
-          // ================= Product Info Body =================
-          SliverToBoxAdapter(
-            child: Container(
-              decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
-              transform: Matrix4.translationValues(0, -25, 0),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildCategoryChip(isInteractive: true),
-                  _buildHeaderSection(),
-                  const SizedBox(height: 25),
-                  
-                  if (currentProduct.hasOffers) ...[
-                    _buildOffersSection(),
+            // ================= Product Info Body =================
+            SliverToBoxAdapter(
+              child: Container(
+                decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(30))),
+                transform: Matrix4.translationValues(0, -25, 0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildCategoryChip(isInteractive: true),
+                    _buildHeaderSection(),
+                    const SizedBox(height: 25),
+
+                    if (currentProduct.hasOffers) ...[
+                      _buildOffersSection(),
+                      const SizedBox(height: 30),
+                    ],
+
+                    if (_hasColors || _hasSizes) ...[
+                      _buildVariantOptionsSection(),
+                      const SizedBox(height: 24),
+                    ],
+
+                    _buildTrustSignals(),
+                    const SizedBox(height: 16),
+
+                    // قسم مساعدة قبل الشراء عبر الواتساب لزيادة الثقة والتحويل
+                    _WhatsAppHelpButton(onLaunch: _launchWhatsApp),
                     const SizedBox(height: 30),
-                  ],
 
-                  if (_hasColors || _hasSizes) ...[
-                    _buildVariantOptionsSection(),
-                    const SizedBox(height: 24),
-                  ],
+                    const Divider(color: Colors.grey),
+                    const SizedBox(height: 20),
 
-                  _buildTrustSignals(),
-                  const SizedBox(height: 16),
-
-                  // قسم مساعدة قبل الشراء عبر الواتساب لزيادة الثقة والتحويل
-                  _WhatsAppHelpButton(onLaunch: _launchWhatsApp),
-                  const SizedBox(height: 30),
-                  
-                  const Divider(color: Colors.grey),
-                  const SizedBox(height: 20),
-
-                  // المواصفات
-                  ExpansionTile(
-                    title: AutoSizeText(
-                      "المواصفات الفنية",
-                      maxLines: 1,
-                      minFontSize: 12,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                        color: _primaryDark,
-                      ),
-                    ),
-                    tilePadding: EdgeInsets.zero,
-                    childrenPadding: const EdgeInsets.only(bottom: 20),
-                    children: [
-                      _buildSpecRow("القسم", currentProduct.categoryArabic),
-                      _buildSpecRow("حالة المنتج", "أصلي 100%"),
-                      if (currentProduct.options['colors'] is List &&
-                          (currentProduct.options['colors'] as List).isNotEmpty)
-                        _buildSpecRow(
-                          "الألوان المتوفرة",
-                          (currentProduct.options['colors'] as List).join('، '),
+                    // المواصفات
+                    ExpansionTile(
+                      title: AutoSizeText(
+                        "المواصفات الفنية",
+                        maxLines: 1,
+                        minFontSize: 12,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                          color: _primaryDark,
                         ),
-                    ],
-                  ),
-                  const Divider(color: Colors.grey),
-
-                  // الوصف
-                  ExpansionTile(
-                    title: AutoSizeText(
-                      "تفاصيل المنتج",
-                      maxLines: 1,
-                      minFontSize: 12,
-                    ),
-                    children: <Widget>[
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (widget.product.isFeatured)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: _accentOrange.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                "منتج مميز",
-                                style: TextStyle(
-                                  color: _accentOrange,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ),
-                          if (widget.product.ratingCount == 0) ...[
-                            if (widget.product.isFeatured)
-                              const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade50,
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                "منتج جديد",
-                                style: TextStyle(
-                                  color: Colors.blue.shade700,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ],
                       ),
-                    ],
-                  ),
-                ],
+                      tilePadding: EdgeInsets.zero,
+                      childrenPadding: const EdgeInsets.only(bottom: 20),
+                      children: [
+                        _buildSpecRow("القسم", currentProduct.categoryArabic),
+                        _buildSpecRow("حالة المنتج", "أصلي 100%"),
+                        if (currentProduct.options['colors'] is List &&
+                            (currentProduct.options['colors'] as List)
+                                .isNotEmpty)
+                          _buildSpecRow(
+                            "الألوان المتوفرة",
+                            (currentProduct.options['colors'] as List)
+                                .join('، '),
+                          ),
+                      ],
+                    ),
+                    const Divider(color: Colors.grey),
+
+                    // الوصف
+                    ExpansionTile(
+                      title: AutoSizeText(
+                        "تفاصيل المنتج",
+                        maxLines: 1,
+                        minFontSize: 12,
+                      ),
+                      children: <Widget>[
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (widget.product.isFeatured)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: _accentOrange.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  "منتج مميز",
+                                  style: TextStyle(
+                                    color: _accentOrange,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ),
+                            if (widget.product.ratingCount == 0) ...[
+                              if (widget.product.isFeatured)
+                                const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  "منتج جديد",
+                                  style: TextStyle(
+                                    color: Colors.blue.shade700,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
           ],
         ),
       ),
@@ -1002,19 +1020,31 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
 
     // 2) خريطة بسيطة لأسماء ألوان شائعة بالعربية والإنجليزية
     final normalized = optionStr.toLowerCase().trim();
-    if (normalized.contains('أحمر') || normalized.contains('red')) return Colors.redAccent;
-    if (normalized.contains('أزرق') || normalized.contains('blue')) return Colors.blueAccent;
-    if (normalized.contains('أخضر') || normalized.contains('green')) return Colors.green;
-    if (normalized.contains('رمادي') || normalized.contains('رمادى') || normalized.contains('gray') || normalized.contains('grey')) {
+    if (normalized.contains('أحمر') || normalized.contains('red'))
+      return Colors.redAccent;
+    if (normalized.contains('أزرق') || normalized.contains('blue'))
+      return Colors.blueAccent;
+    if (normalized.contains('أخضر') || normalized.contains('green'))
+      return Colors.green;
+    if (normalized.contains('رمادي') ||
+        normalized.contains('رمادى') ||
+        normalized.contains('gray') ||
+        normalized.contains('grey')) {
       return Colors.grey.shade500;
     }
-    if (normalized.contains('أسود') || normalized.contains('black')) return Colors.black;
-    if (normalized.contains('أبيض') || normalized.contains('white')) return Colors.white;
-    if (normalized.contains('بيج') || normalized.contains('beige')) return const Color(0xFFF5F0E6);
-    if (normalized.contains('بنفسجي') || normalized.contains('purple') || normalized.contains('موف')) {
+    if (normalized.contains('أسود') || normalized.contains('black'))
+      return Colors.black;
+    if (normalized.contains('أبيض') || normalized.contains('white'))
+      return Colors.white;
+    if (normalized.contains('بيج') || normalized.contains('beige'))
+      return const Color(0xFFF5F0E6);
+    if (normalized.contains('بنفسجي') ||
+        normalized.contains('purple') ||
+        normalized.contains('موف')) {
       return Colors.purpleAccent;
     }
-    if (normalized.contains('ذهبي') || normalized.contains('gold')) return const Color(0xFFD4AF37);
+    if (normalized.contains('ذهبي') || normalized.contains('gold'))
+      return const Color(0xFFD4AF37);
 
     // 3) ألوان افتراضية متناسقة بناءً على الترتيب (index)
     const palette = [
@@ -1033,7 +1063,8 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
 class _ProductViewCounter extends ConsumerWidget {
   final String productId;
 
-  const _ProductViewCounter({Key? key, required this.productId}) : super(key: key);
+  const _ProductViewCounter({Key? key, required this.productId})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1067,14 +1098,15 @@ class _ProductViewCounter extends ConsumerWidget {
 class _WhatsAppHelpButton extends ConsumerWidget {
   final VoidCallback onLaunch;
 
-  const _WhatsAppHelpButton({Key? key, required this.onLaunch}) : super(key: key);
+  const _WhatsAppHelpButton({Key? key, required this.onLaunch})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final storePhone = ref.watch(settingsProvider).maybeWhen(
-      data: (settings) => settings.whatsapp,
-      orElse: () => '',
-    );
+          data: (settings) => settings.whatsapp,
+          orElse: () => '',
+        );
 
     return Container(
       width: double.infinity,

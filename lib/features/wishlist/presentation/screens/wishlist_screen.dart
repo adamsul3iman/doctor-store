@@ -136,7 +136,8 @@ class WishlistScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildWishlistGrid(BuildContext context, WidgetRef ref, List<WishlistItem> wishlist) {
+  Widget _buildWishlistGrid(
+      BuildContext context, WidgetRef ref, List<WishlistItem> wishlist) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = ResponsiveLayout.gridCountForWidth(
@@ -160,13 +161,15 @@ class WishlistScreen extends ConsumerWidget {
             final item = wishlist[index];
             return _WishlistItemCard(
               item: item,
-              onRemove: () =>
-                  ref.read(wishlistProvider.notifier).removeFromWishlist(item.product.id),
+              onRemove: () => ref
+                  .read(wishlistProvider.notifier)
+                  .removeFromWishlist(item.product.id),
               onMoveToCart: () {
                 ref.read(wishlistProvider.notifier).moveToCart(
-                  item.product.id,
-                  (product) => ref.read(cartProvider.notifier).addItem(product),
-                );
+                      item.product.id,
+                      (product) =>
+                          ref.read(cartProvider.notifier).addItem(product),
+                    );
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
@@ -222,7 +225,8 @@ class _WishlistItemCard extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(16)),
                   child: AspectRatio(
                     aspectRatio: 1,
                     child: AppNetworkImage(
@@ -260,7 +264,7 @@ class _WishlistItemCard extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             // معلومات المنتج
             Expanded(
               child: Padding(
@@ -310,7 +314,8 @@ class _WishlistItemCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        icon: const Icon(Icons.shopping_cart_outlined, size: 16),
+                        icon:
+                            const Icon(Icons.shopping_cart_outlined, size: 16),
                         label: Text(
                           'أضف للسلة',
                           style: TextStyle(

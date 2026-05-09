@@ -244,47 +244,11 @@ class _HomeScreenV2State extends ConsumerState<HomeScreenV2> {
       );
     }
 
-    // Combine multiple provider watches into single watch with memoization
-    final homeData = ref.watch(_homeDataProvider);
-    final sectionsConfig = homeData.$7.asData?.value;
-    
-    final orderedSectionKeys = _resolveOrderedHomeSectionKeys(sectionsConfig);
-
     return const Scaffold(
       backgroundColor: Color(0xFFF8F9FA),
       floatingActionButton: _HomeFloatingActionButton(),
       body: _HomeBody(),
     );
-  }
-
-  List<String> _resolveOrderedHomeSectionKeys(
-    Map<String, HomeSectionConfig>? config,
-  ) {
-    const defaultOrder = <String>[
-      HomeSectionKeys.hero,
-      HomeSectionKeys.categories,
-      HomeSectionKeys.flashSale,
-      HomeSectionKeys.latest,
-      HomeSectionKeys.middleBanner,
-      HomeSectionKeys.dining,
-      HomeSectionKeys.owner,
-      HomeSectionKeys.baby,
-    ];
-
-    if (config == null || config.isEmpty) return defaultOrder;
-
-    final configuredKeys = config.keys.toSet();
-    final keys = <String>[...configuredKeys];
-    keys.sort((a, b) {
-      final sa = config[a]?.sortOrder ?? 0;
-      final sb = config[b]?.sortOrder ?? 0;
-      return sa.compareTo(sb);
-    });
-
-    for (final k in defaultOrder) {
-      if (!keys.contains(k)) keys.add(k);
-    }
-    return keys;
   }
 
   void _precacheHomeImages(List<Product> products) {

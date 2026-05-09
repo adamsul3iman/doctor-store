@@ -131,7 +131,8 @@ class ProductBottomBar extends StatelessWidget {
                         // نستخدم لون الواتساب الرسمي مع حواف دائرية ليبدو مثل CTA واضح
                         backgroundColor: const Color(0xFF25D366),
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 8),
                         elevation: 3,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),

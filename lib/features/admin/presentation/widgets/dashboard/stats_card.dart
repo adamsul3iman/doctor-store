@@ -81,7 +81,7 @@ class StatsCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 18),
-              
+
               // القيمة الرئيسية
               Text(
                 value,
@@ -93,7 +93,7 @@ class StatsCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              
+
               // Subtitle والـ Trend
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

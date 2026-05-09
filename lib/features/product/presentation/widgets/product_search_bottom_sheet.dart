@@ -16,7 +16,7 @@ Future<void> showProductSearchBottomSheet(BuildContext context) async {
   await showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.transparent, 
+    backgroundColor: Colors.transparent,
     builder: (ctx) => const _ProductSearchBottomSheet(),
   );
 }
@@ -185,7 +185,8 @@ class _ProductSearchBottomSheetState
                       color: Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.close, color: Colors.black, size: 22),
+                    child:
+                        const Icon(Icons.close, color: Colors.black, size: 22),
                   ),
                 ),
               ],
@@ -218,7 +219,8 @@ class _ProductSearchBottomSheetState
                   onTap: _openSortSheet,
                 ),
                 Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   width: 1,
                   color: Colors.grey.shade300,
                 ),
@@ -261,7 +263,8 @@ class _ProductSearchBottomSheetState
 
                       return LayoutBuilder(
                         builder: (context, constraints) {
-                          final crossAxisCount = ResponsiveLayout.gridCountForWidth(
+                          final crossAxisCount =
+                              ResponsiveLayout.gridCountForWidth(
                             constraints.maxWidth,
                             desiredItemWidth: 120,
                             minCount: 3,
@@ -269,7 +272,8 @@ class _ProductSearchBottomSheetState
                           );
                           final isCompact = crossAxisCount >= 3;
                           const spacing = 12.0;
-                          final mainAxisExtent = ResponsiveLayout.productCardMainAxisExtent(
+                          final mainAxisExtent =
+                              ResponsiveLayout.productCardMainAxisExtent(
                             constraints.maxWidth,
                             crossAxisCount: crossAxisCount,
                             crossAxisSpacing: spacing,
@@ -278,7 +282,8 @@ class _ProductSearchBottomSheetState
 
                           return GridView.builder(
                             padding: const EdgeInsets.all(16),
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: crossAxisCount,
                               mainAxisExtent: mainAxisExtent,
                               crossAxisSpacing: spacing,
@@ -326,7 +331,8 @@ class _ProductSearchBottomSheetState
         child: Row(
           children: [
             Icon(icon,
-                size: 16, color: isActive ? Colors.white : Colors.grey.shade700),
+                size: 16,
+                color: isActive ? Colors.white : Colors.grey.shade700),
             const SizedBox(width: 6),
             Text(
               label,
@@ -382,13 +388,12 @@ class _ProductSearchBottomSheetState
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('أحدث عمليات البحث',
-                    style: TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.bold)),
+                    style:
+                        TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
                 TextButton(
                   onPressed: () => setState(() => _recentSearches.clear()),
                   child: Text('مسح',
-                      style: TextStyle(
-                          fontSize: 12, color: Colors.redAccent)),
+                      style: TextStyle(fontSize: 12, color: Colors.redAccent)),
                 ),
               ],
             ),
@@ -416,8 +421,8 @@ class _ProductSearchBottomSheetState
                         const Icon(Icons.history, size: 14, color: Colors.grey),
                         const SizedBox(width: 6),
                         Text(text,
-                            style: TextStyle(
-                                fontSize: 12, color: Colors.black87)),
+                            style:
+                                TextStyle(fontSize: 12, color: Colors.black87)),
                       ],
                     ),
                   ),
@@ -427,8 +432,7 @@ class _ProductSearchBottomSheetState
             const SizedBox(height: 24),
           ],
           Text('رائج الآن 🔥',
-              style: TextStyle(
-                  fontSize: 14, fontWeight: FontWeight.bold)),
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
           Wrap(
             spacing: 10,
@@ -447,8 +451,7 @@ class _ProductSearchBottomSheetState
                     size: 16, color: const Color(0xFF0A2647)),
                 label: Text(
                   tag['label'] as String,
-                  style: TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                 ),
                 onPressed: () {
                   final txt = tag['label'] as String;
@@ -473,7 +476,9 @@ class _ProductSearchBottomSheetState
           Text(
             'لا توجد نتائج لـ "$_query"',
             style: TextStyle(
-                fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black54),
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black54),
           ),
           Text(
             'حاول البحث بكلمة أخرى أو تصفح الأقسام',
@@ -591,8 +596,7 @@ class _ProductSearchBottomSheetState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('ترتيب النتائج حسب',
-                  style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               _buildSortOption('relevant', 'الأكثر صلة'),
               _buildSortOption('newest', 'الأحدث'),
@@ -608,8 +612,9 @@ class _ProductSearchBottomSheetState
   Widget _buildSortOption(String key, String label) {
     return ListTile(
       title: Text(label, style: TextStyle()),
-      trailing:
-          _sortBy == key ? const Icon(Icons.check, color: Color(0xFF0A2647)) : null,
+      trailing: _sortBy == key
+          ? const Icon(Icons.check, color: Color(0xFF0A2647))
+          : null,
       onTap: () {
         setState(() => _sortBy = key);
         Navigator.pop(context);
@@ -660,7 +665,7 @@ class _ProductSearchBottomSheetState
                         ),
                       ),
                     ),
-                    
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -692,7 +697,7 @@ class _ProductSearchBottomSheetState
                       ],
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Quick Filters Section
                     Text(
                       'خيارات سريعة',
@@ -703,7 +708,7 @@ class _ProductSearchBottomSheetState
                       ),
                     ),
                     const SizedBox(height: 12),
-                    
+
                     // Filter Chips
                     Wrap(
                       spacing: 10,
@@ -735,15 +740,16 @@ class _ProductSearchBottomSheetState
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 24),
                     const Divider(height: 1),
                     const SizedBox(height: 24),
-                    
+
                     // Price Range Section
                     Row(
                       children: [
-                        Icon(Icons.payments_outlined, size: 18, color: Colors.grey[600]),
+                        Icon(Icons.payments_outlined,
+                            size: 18, color: Colors.grey[600]),
                         const SizedBox(width: 8),
                         Text(
                           'نطاق السعر',
@@ -756,7 +762,7 @@ class _ProductSearchBottomSheetState
                       ],
                     ),
                     const SizedBox(height: 16),
-                    
+
                     Row(
                       children: [
                         Expanded(
@@ -769,7 +775,8 @@ class _ProductSearchBottomSheetState
                         ),
                         const SizedBox(width: 16),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
                             borderRadius: BorderRadius.circular(8),
@@ -794,9 +801,9 @@ class _ProductSearchBottomSheetState
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Quick Price Presets
                     Text(
                       'نطاقات سريعة',
@@ -864,9 +871,9 @@ class _ProductSearchBottomSheetState
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 32),
-                    
+
                     // Action Buttons
                     Row(
                       children: [
@@ -1040,7 +1047,8 @@ class _ProductSearchBottomSheetState
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Color(0xFF0A2647), width: 2),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
         ),
       ],
@@ -1052,13 +1060,12 @@ class _ProductSearchBottomSheetState
     String min,
     String max,
     String currentMin,
-    String currentMax,
-    {
+    String currentMax, {
     required void Function(String min, String max) onSelect,
-  }
-  ) {
-    final isSelected = currentMin == min && (max.isEmpty ? currentMax.isEmpty : currentMax == max);
-    
+  }) {
+    final isSelected = currentMin == min &&
+        (max.isEmpty ? currentMax.isEmpty : currentMax == max);
+
     return GestureDetector(
       onTap: () {
         onSelect(min, max);
@@ -1085,10 +1092,10 @@ class _ProductSearchBottomSheetState
   Future<List<Product>> _searchProducts(String term, String? catId) async {
     // استخدام SmartSearchService للبحث الذكي مع المرادفات
     final smartSearch = SmartSearchService.instance;
-    
+
     // الحصول على نتائج البحث الذكي
     var results = await smartSearch.smartSearch(term);
-    
+
     // تطبيق الفلاتر الإضافية
     if (catId != null) {
       results = results.where((p) => p.category == catId).toList();

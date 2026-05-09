@@ -11,7 +11,8 @@ class PersonalizedSection extends ConsumerStatefulWidget {
   const PersonalizedSection({super.key});
 
   @override
-  ConsumerState<PersonalizedSection> createState() => _PersonalizedSectionState();
+  ConsumerState<PersonalizedSection> createState() =>
+      _PersonalizedSectionState();
 }
 
 class _PersonalizedSectionState extends ConsumerState<PersonalizedSection> {
@@ -28,15 +29,15 @@ class _PersonalizedSectionState extends ConsumerState<PersonalizedSection> {
   Future<void> _loadPersonalizedProducts() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // قراءة آخر قسم تم تصفحه
       final lastCategory = prefs.getString('last_viewed_category');
-      
+
       List<Product> products = [];
-      
+
       // استراتيجية بسيطة: جلب جميع المنتجات وعرض عينة عشوائية
       final allProducts = await SupabaseService().getAllProducts();
-      
+
       if (allProducts.isNotEmpty) {
         // إذا كان هناك سجل تصفح، نحاول جلب منتجات من نفس القسم
         if (lastCategory != null && lastCategory.isNotEmpty) {
@@ -44,12 +45,12 @@ class _PersonalizedSectionState extends ConsumerState<PersonalizedSection> {
               .where((p) => p.category == lastCategory)
               .take(6)
               .toList();
-          
+
           if (products.isNotEmpty) {
             _reasonText = 'منتجات قد تعجبك';
           }
         }
-        
+
         // إذا لم نجد منتجات من القسم المحفوظ، نعرض عينة عشوائية
         if (products.isEmpty) {
           allProducts.shuffle(); // خلط عشوائي
@@ -131,7 +132,8 @@ class _PersonalizedSectionState extends ConsumerState<PersonalizedSection> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFF6F00).withValues(alpha: 0.2),
+                                color: const Color(0xFFFF6F00)
+                                    .withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Icon(
@@ -161,7 +163,7 @@ class _PersonalizedSectionState extends ConsumerState<PersonalizedSection> {
             ),
           ),
           const SizedBox(height: 16),
-          
+
           // المنتجات
           if (_isLoading)
             SizedBox(
@@ -207,28 +209,27 @@ class _PersonalizedSectionState extends ConsumerState<PersonalizedSection> {
       ),
     );
   }
-
 }
 
 /// دالة مساعدة لحفظ منتج في سجل التصفح (يمكن استدعاؤها من أي مكان)
 Future<void> saveProductToHistory(String productId, String category) async {
   try {
     final prefs = await SharedPreferences.getInstance();
-    
+
     // تحديث سجل التصفح
     List<String> history = prefs.getStringList('browsing_history') ?? [];
-    
+
     // إزالة المنتج إذا كان موجود مسبقاً
     history.remove(productId);
-    
+
     // إضافة المنتج في البداية
     history.insert(0, productId);
-    
+
     // الاحتفاظ بآخر 20 منتج فقط
     if (history.length > 20) {
       history = history.sublist(0, 20);
     }
-    
+
     await prefs.setStringList('browsing_history', history);
     await prefs.setString('last_viewed_category', category);
   } catch (e) {

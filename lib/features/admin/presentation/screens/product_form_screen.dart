@@ -381,7 +381,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         final wStep = m['width_step'];
         if (wMin is num) _mattressWidthMinCtrl.text = wMin.toInt().toString();
         if (wMax is num) _mattressWidthMaxCtrl.text = wMax.toInt().toString();
-        if (wStep is num) _mattressWidthStepCtrl.text = wStep.toInt().toString();
+        if (wStep is num)
+          _mattressWidthStepCtrl.text = wStep.toInt().toString();
 
         final widths = m['widths'];
         if (widths is List && widths.isNotEmpty) {
@@ -390,7 +391,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
 
         final lengths = m['lengths'];
         if (lengths is List && lengths.isNotEmpty) {
-          _mattressLengthsCtrl.text = lengths.map((e) => e.toString()).join(',');
+          _mattressLengthsCtrl.text =
+              lengths.map((e) => e.toString()).join(',');
         }
 
         final pricing = m['pricing'];
@@ -415,7 +417,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           final widthPrices = pMap['width_prices'];
           if (widthPrices is Map) {
             _mattressWidthPriceRows.clear();
-            final entries = Map<String, dynamic>.from(widthPrices).entries.toList();
+            final entries =
+                Map<String, dynamic>.from(widthPrices).entries.toList();
             // ترتيب حسب العرض
             entries.sort((a, b) {
               final wa = int.tryParse(a.key) ?? 0;
@@ -424,7 +427,9 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             });
             for (final e in entries) {
               final w = int.tryParse(e.key);
-              final price = e.value is num ? (e.value as num).toDouble() : double.tryParse(e.value.toString());
+              final price = e.value is num
+                  ? (e.value as num).toDouble()
+                  : double.tryParse(e.value.toString());
               if (w != null && price != null) {
                 _mattressWidthPriceRows.add(
                   _MattressWidthPriceRow(widthCm: w, price: price),
@@ -642,7 +647,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     try {
       if (isMain) {
         // صورة رئيسية واحدة فقط
-        final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+        final XFile? image =
+            await picker.pickImage(source: ImageSource.gallery);
         if (image == null) return;
 
         final originalBytes = await image.readAsBytes();
@@ -698,7 +704,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('تعذر معالجة الصورة، حاول مرة أخرى. (تفاصيل تقنية: $e)'),
+          content:
+              Text('تعذر معالجة الصورة، حاول مرة أخرى. (تفاصيل تقنية: $e)'),
         ),
       );
     }
@@ -944,7 +951,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                    content: Text("يوجد متغير مكرر: ${row.colorCtrl.text.trim()}/${row.sizeCtrl.text.trim()}/${row.unitCtrl.text.trim()}")),
+                    content: Text(
+                        "يوجد متغير مكرر: ${row.colorCtrl.text.trim()}/${row.sizeCtrl.text.trim()}/${row.unitCtrl.text.trim()}")),
               );
             }
             throw Exception('Duplicate variant');
@@ -982,7 +990,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
         final lengths = _parseCsvInts(_mattressLengthsCtrl.text);
 
         final baseFee = double.tryParse(_mattressBaseFeeCtrl.text.trim()) ?? 0;
-        final perSqm = double.tryParse(_mattressPricePerSqmCtrl.text.trim()) ?? 0;
+        final perSqm =
+            double.tryParse(_mattressPricePerSqmCtrl.text.trim()) ?? 0;
 
         // تسعير يدوي حسب العرض
         final widthPrices = _buildMattressWidthPrices();
@@ -1010,7 +1019,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content: Text('يرجى إدخال أطوال الفرشات (مثال: 190,195,200).')),
+                  content:
+                      Text('يرجى إدخال أطوال الفرشات (مثال: 190,195,200).')),
             );
           }
           setState(() => _isLoading = false);
@@ -1091,13 +1101,15 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           'inventory_policy': _inventoryPolicy,
           if (_inventoryPolicy == 'track_qty')
             'stock': int.tryParse(_baseStockController.text.trim()) ?? 0,
-          if (_inventoryPolicy == 'status_based') 'in_stock': _statusBasedInStock,
+          if (_inventoryPolicy == 'status_based')
+            'in_stock': _statusBasedInStock,
           'product_options': _dynamicOptions.map((e) => e.toJson()).toList(),
         },
       };
 
       // نرسل القائمة دائماً حتى يتم مسح المتغيرات القديمة عند إلغاء التفعيل أو حذف الصفوف.
-      productData['variants'] = _useAdvancedVariants ? variantsPayload : <Map<String, dynamic>>[];
+      productData['variants'] =
+          _useAdvancedVariants ? variantsPayload : <Map<String, dynamic>>[];
 
       await _adminProductRepo.upsertProduct(
         productData: productData,
@@ -1105,8 +1117,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("تم حفظ المنتج بنجاح")));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text("تم حفظ المنتج بنجاح")));
         await refreshProductCatalogProviders(ref);
         if (!mounted) return;
         context.pop(true);
@@ -1122,12 +1134,14 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
           errorText.contains('duplicate key value')) {
         message =
             "هناك منتج آخر يستخدم نفس الرابط (Slug)، يرجى اختيار رابط مختلف.";
-      } else if (errorText.contains('invalid input value for enum product_category') ||
+      } else if (errorText
+              .contains('invalid input value for enum product_category') ||
           errorText.contains('enum product_category')) {
         message =
             "القسم المختار غير متوافق مع إعدادات قاعدة البيانات. تأكد أن قيمة حقل القسم (id في جدول الأقسام) تطابق قيم enum product_category في Supabase، أو حدِّث enum لإضافة هذا القسم.";
       } else {
-        message = "خطأ غير متوقع أثناء حفظ المنتج، حاول مرة أخرى. (تفاصيل تقنية: $e)";
+        message =
+            "خطأ غير متوقع أثناء حفظ المنتج، حاول مرة أخرى. (تفاصيل تقنية: $e)";
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1195,7 +1209,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               const SizedBox(height: 16),
 
               ExpansionPanelList(
-                key: ValueKey<String>('$_selectedCategory-${_isMattressMode ? 'mattressOn' : 'mattressOff'}'),
+                key: ValueKey<String>(
+                    '$_selectedCategory-${_isMattressMode ? 'mattressOn' : 'mattressOff'}'),
                 elevation: 0,
                 expandedHeaderPadding: const EdgeInsets.symmetric(vertical: 6),
                 expansionCallback: (panelIndex, isExpanded) {
@@ -1207,7 +1222,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 children: [
                   ExpansionPanel(
                     canTapOnHeader: true,
-                    isExpanded: _expandedPanels.contains(_ProductFormPanel.basic),
+                    isExpanded:
+                        _expandedPanels.contains(_ProductFormPanel.basic),
                     headerBuilder: (context, isExpanded) {
                       return InkWell(
                         onTap: () => _togglePanel(_ProductFormPanel.basic),
@@ -1222,7 +1238,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   ),
                   ExpansionPanel(
                     canTapOnHeader: true,
-                    isExpanded: _expandedPanels.contains(_ProductFormPanel.pricing),
+                    isExpanded:
+                        _expandedPanels.contains(_ProductFormPanel.pricing),
                     headerBuilder: (context, isExpanded) {
                       return InkWell(
                         onTap: () => _togglePanel(_ProductFormPanel.pricing),
@@ -1235,12 +1252,15 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                     },
                     body: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 250),
-                      child: _isOfferMode ? _buildOffersCard() : _buildPricingCard(),
+                      child: _isOfferMode
+                          ? _buildOffersCard()
+                          : _buildPricingCard(),
                     ),
                   ),
                   ExpansionPanel(
                     canTapOnHeader: true,
-                    isExpanded: _expandedPanels.contains(_ProductFormPanel.inventory),
+                    isExpanded:
+                        _expandedPanels.contains(_ProductFormPanel.inventory),
                     headerBuilder: (context, isExpanded) {
                       return InkWell(
                         onTap: () => _togglePanel(_ProductFormPanel.inventory),
@@ -1255,7 +1275,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   ),
                   ExpansionPanel(
                     canTapOnHeader: true,
-                    isExpanded: _expandedPanels.contains(_ProductFormPanel.media),
+                    isExpanded:
+                        _expandedPanels.contains(_ProductFormPanel.media),
                     headerBuilder: (context, isExpanded) {
                       return InkWell(
                         onTap: () => _togglePanel(_ProductFormPanel.media),
@@ -1271,7 +1292,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   if (_selectedCategory == 'mattresses')
                     ExpansionPanel(
                       canTapOnHeader: true,
-                      isExpanded: _expandedPanels.contains(_ProductFormPanel.mattress),
+                      isExpanded:
+                          _expandedPanels.contains(_ProductFormPanel.mattress),
                       headerBuilder: (context, isExpanded) {
                         return InkWell(
                           onTap: () => _togglePanel(_ProductFormPanel.mattress),
@@ -1286,13 +1308,13 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                     ),
                   ExpansionPanel(
                     canTapOnHeader: true,
-                    isExpanded: _expandedPanels.contains(_ProductFormPanel.options),
+                    isExpanded:
+                        _expandedPanels.contains(_ProductFormPanel.options),
                     headerBuilder: (context, isExpanded) {
                       return InkWell(
                         onTap: () => _togglePanel(_ProductFormPanel.options),
                         child: const ListTile(
-                          leading:
-                              Icon(Icons.tune, color: Color(0xFF0A2647)),
+                          leading: Icon(Icons.tune, color: Color(0xFF0A2647)),
                           title: Text('الخيارات (السمات)'),
                         ),
                       );
@@ -1301,7 +1323,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   ),
                   ExpansionPanel(
                     canTapOnHeader: true,
-                    isExpanded: _expandedPanels.contains(_ProductFormPanel.variants),
+                    isExpanded:
+                        _expandedPanels.contains(_ProductFormPanel.variants),
                     headerBuilder: (context, isExpanded) {
                       return InkWell(
                         onTap: () => _togglePanel(_ProductFormPanel.variants),
@@ -1351,7 +1374,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   onTap: () async {
                     Navigator.pop(context);
                     final picker = ImagePicker();
-                    final image = await picker.pickImage(source: ImageSource.gallery);
+                    final image =
+                        await picker.pickImage(source: ImageSource.gallery);
                     if (image == null) return;
                     final originalBytes = await image.readAsBytes();
                     final originalExt = image.name.split('.').last;
@@ -1367,13 +1391,15 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                     });
                   },
                 ),
-                if (_mainImage?.serverUrl != null && _mainImage!.serverUrl!.isNotEmpty)
+                if (_mainImage?.serverUrl != null &&
+                    _mainImage!.serverUrl!.isNotEmpty)
                   ListTile(
                     leading: const Icon(Icons.star_outline),
                     title: const Text('استخدام الصورة الرئيسية'),
                     onTap: () {
                       setState(() {
-                        row.variantImage = _ImageWrapper(serverUrl: _mainImage!.serverUrl);
+                        row.variantImage =
+                            _ImageWrapper(serverUrl: _mainImage!.serverUrl);
                       });
                       Navigator.pop(context);
                     },
@@ -1393,7 +1419,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   ),
                 if (row.variantImage != null)
                   ListTile(
-                    leading: const Icon(Icons.delete_outline, color: Colors.red),
+                    leading:
+                        const Icon(Icons.delete_outline, color: Colors.red),
                     title: const Text('إزالة الصورة'),
                     onTap: () {
                       setState(() {
@@ -1443,7 +1470,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                                 variant: ImageVariant.thumbnail,
                                 fit: BoxFit.cover,
                                 placeholder: const ShimmerImagePlaceholder(),
-                                errorWidget: const Icon(Icons.image_not_supported_outlined),
+                                errorWidget: const Icon(
+                                    Icons.image_not_supported_outlined),
                               ),
                   ),
                 );
@@ -1486,7 +1514,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               style: TextStyle(fontSize: 11, color: Colors.grey),
             ),
             const Divider(),
-
             DropdownButtonFormField<String>(
               initialValue: _inventoryPolicy,
               isExpanded: true,
@@ -1525,9 +1552,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 setState(() => _inventoryPolicy = v);
               },
             ),
-
             const SizedBox(height: 10),
-
             if (_inventoryPolicy == 'track_qty')
               const Text(
                 'سيتم استخدام مخزون المنتج أو مخزون المتغيرات (إن وُجدت).',
@@ -1543,7 +1568,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 'سيتم حفظ حالة التوفر كقيمة (متوفر/غير متوفر) بدون مخزون رقمي.',
                 style: TextStyle(fontSize: 11, color: Colors.grey),
               ),
-
             const SizedBox(height: 10),
             if (_inventoryPolicy == 'track_qty') ...[
               TextFormField(
@@ -1555,7 +1579,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 ),
               ),
             ],
-
             if (_inventoryPolicy == 'status_based')
               SwitchListTile(
                 value: _statusBasedInStock,
@@ -1756,8 +1779,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                           ),
                         ),
                         IconButton(
-                          icon:
-                              const Icon(Icons.delete, color: Colors.red),
+                          icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () => _removeOfferTier(index),
                         ),
                       ],
@@ -2023,7 +2045,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             _buildDescriptionEditor(),
 
             const SizedBox(height: 12),
-            
+
             // ✅ حقل حجم الشحن
             DropdownButtonFormField<String>(
               initialValue: _shippingSize,
@@ -2048,7 +2070,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               ],
               onChanged: (v) => setState(() => _shippingSize = v!),
             ),
-            
+
             const SizedBox(height: 12),
             SwitchListTile(
               title: const Text("منتج مميز (Featured)"),
@@ -2141,7 +2163,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             const Text("الصور والألوان",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const Divider(),
-            
+
             // ✅ الصورة الرئيسية - أكبر وأوضح
             const Text(
               "الصورة الرئيسية:",
@@ -2157,7 +2179,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                     color: Colors.grey[100],
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.grey[300]!)),
-                    child: _mainImage == null
+                child: _mainImage == null
                     ? const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -2178,8 +2200,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                                 url: _mainImage!.serverUrl!,
                                 variant: ImageVariant.homeBanner,
                                 fit: BoxFit.cover,
-                                placeholder:
-                                    const ShimmerImagePlaceholder(),
+                                placeholder: const ShimmerImagePlaceholder(),
                                 errorWidget: const Icon(
                                   Icons.image_not_supported_outlined,
                                   color: Colors.grey,
@@ -2188,7 +2209,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // ✅ معرض الصور - شبكة واضحة
             Wrap(
               alignment: WrapAlignment.spaceBetween,
@@ -2211,13 +2232,13 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               ],
             ),
             const SizedBox(height: 8),
-            
+
             if (_isPickingGalleryImages)
               const Padding(
                 padding: EdgeInsets.only(top: 10, bottom: 6),
                 child: LinearProgressIndicator(minHeight: 3),
               ),
-            
+
             // ✅ شبكة الصور الجديدة - كل الصور مرئية
             if (_galleryImages.isNotEmpty)
               Container(
@@ -2232,19 +2253,23 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                     // شريط التلميح
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.blue[50],
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(11)),
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.info_outline, size: 14, color: Colors.blue),
+                          Icon(Icons.info_outline,
+                              size: 14, color: Colors.blue),
                           SizedBox(width: 6),
                           Expanded(
                             child: Text(
                               "اسحب الصور لتغيير الترتيب. اضغط على النجمة للأولوية.",
-                              style: TextStyle(fontSize: 10, color: Colors.blue),
+                              style:
+                                  TextStyle(fontSize: 10, color: Colors.blue),
                             ),
                           ),
                         ],
@@ -2310,24 +2335,24 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   width: index == 0 ? 2 : 1,
                 ),
               ),
-                child: ClipRRect(
+              child: ClipRRect(
                 borderRadius: BorderRadius.circular(7),
                 child: SizedBox.expand(
                   child: img.localBytes != null
-                    ? Image.memory(
-                        img.localBytes!,
-                        fit: BoxFit.cover,
-                      )
-                    : AppNetworkImage(
-                        url: img.serverUrl!,
-                        variant: ImageVariant.thumbnail,
-                        fit: BoxFit.cover,
-                        placeholder: const ShimmerImagePlaceholder(),
-                        errorWidget: const Icon(
-                          Icons.image_not_supported_outlined,
-                          color: Colors.grey,
+                      ? Image.memory(
+                          img.localBytes!,
+                          fit: BoxFit.cover,
+                        )
+                      : AppNetworkImage(
+                          url: img.serverUrl!,
+                          variant: ImageVariant.thumbnail,
+                          fit: BoxFit.cover,
+                          placeholder: const ShimmerImagePlaceholder(),
+                          errorWidget: const Icon(
+                            Icons.image_not_supported_outlined,
+                            color: Colors.grey,
+                          ),
                         ),
-                      ),
                 ),
               ),
             ),
@@ -2349,8 +2374,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 // سحب
                 ReorderableDragStartListener(
                   index: index,
-                  child: const Icon(Icons.drag_handle, 
-                    color: Colors.grey, size: 20),
+                  child: const Icon(Icons.drag_handle,
+                      color: Colors.grey, size: 20),
                 ),
                 // نجمة الأولوية
                 GestureDetector(
@@ -2407,7 +2432,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 hintText: "اسم اللون",
                 hintStyle: const TextStyle(fontSize: 9),
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(4),
                   borderSide: BorderSide(color: Colors.grey[300]!),
@@ -2503,7 +2529,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                                 removed.dispose();
                               });
                             },
-                            icon: const Icon(Icons.delete_outline, color: Colors.red),
+                            icon: const Icon(Icons.delete_outline,
+                                color: Colors.red),
                           ),
                         ],
                       ),
@@ -2644,7 +2671,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               'بدل إدخال قائمة طويلة من المقاسات وأسعارها.',
               style: TextStyle(fontSize: 11, color: Colors.grey),
             ),
-
             if (!_isMattressMode) ...[
               const SizedBox(height: 10),
               const Text(
@@ -2657,7 +2683,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   padding: const EdgeInsets.only(top: 6.0),
                   child: Text(
                     'سيتم توليد ${totalCombinations.toString()} مقاس تلقائياً (عروض: ${widthsCount ?? '-'} × أطوال: ${lengths.length}).',
-                    style: const TextStyle(fontSize: 11, color: Colors.blueGrey),
+                    style:
+                        const TextStyle(fontSize: 11, color: Colors.blueGrey),
                   ),
                 ),
               const Divider(height: 22),
@@ -2671,7 +2698,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 keyboardType: TextInputType.text,
                 decoration: const InputDecoration(
                   labelText: 'قائمة عروض مخصصة (اختياري)',
-                  hintText: 'مثال: 90,95,115,125,135,145,155,165,175,185,195,205,210,215,220',
+                  hintText:
+                      'مثال: 90,95,115,125,135,145,155,165,175,185,195,205,210,215,220',
                   isDense: true,
                   border: OutlineInputBorder(),
                 ),
@@ -2732,7 +2760,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
-
               const SizedBox(height: 14),
               const Text(
                 '٢) نظام التسعير',
@@ -2762,7 +2789,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 ],
               ),
               const SizedBox(height: 8),
-
               if (_mattressPricingMode == 'per_sqm') ...[
                 const Text(
                   'هذا الوضع يحسب السعر حسب مساحة الفرشة (م²).',
@@ -2840,7 +2866,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                     if (_mattressWidthPriceRows.isNotEmpty)
                       Text(
                         'عدد الأسعار: ${_mattressWidthPriceRows.length}',
-                        style: const TextStyle(fontSize: 11, color: Colors.grey),
+                        style:
+                            const TextStyle(fontSize: 11, color: Colors.grey),
                       ),
                   ],
                 ),
@@ -2880,7 +2907,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.red),
+                          icon: const Icon(Icons.delete_outline,
+                              color: Colors.red),
                           onPressed: () {
                             setState(() {
                               _mattressWidthPriceRows.remove(row);
@@ -2893,7 +2921,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   );
                 }),
               ],
-
               if (example != null) ...[
                 const SizedBox(height: 10),
                 Text(
@@ -2952,7 +2979,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     final widths = _deriveMattressWidthsFromInputs();
     if (widths.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('أدخل العروض (قائمة أو min/max/step) أولاً.')),
+        const SnackBar(
+            content: Text('أدخل العروض (قائمة أو min/max/step) أولاً.')),
       );
       return;
     }
@@ -3113,14 +3141,13 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                   if (_variantRows.isNotEmpty)
                     TextButton(
                       onPressed: () {
-                        final base = double.tryParse(
-                            _priceController.text.trim());
+                        final base =
+                            double.tryParse(_priceController.text.trim());
                         if (base == null) return;
                         setState(() {
                           for (final row in _variantRows) {
                             if (row.priceCtrl.text.trim().isEmpty) {
-                              row.priceCtrl.text =
-                                  base.toStringAsFixed(2);
+                              row.priceCtrl.text = base.toStringAsFixed(2);
                             }
                           }
                         });
@@ -3157,7 +3184,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: const Color(0xFF0A2647),
                     borderRadius: BorderRadius.circular(20),
@@ -3173,7 +3201,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                  icon: const Icon(Icons.delete_outline,
+                      color: Colors.red, size: 20),
                   onPressed: () {
                     setState(() {
                       _variantRows.removeAt(index);
@@ -3184,7 +3213,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // صف 1: اللون والمقاس والوحدة
             Row(
               children: [
@@ -3246,7 +3275,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // صف 2: السعر والمخزون
             Row(
               children: [
@@ -3277,7 +3306,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         labelText: "المخزون",
-                        prefixIcon: const Icon(Icons.inventory_2_outlined, size: 18),
+                        prefixIcon:
+                            const Icon(Icons.inventory_2_outlined, size: 18),
                         isDense: true,
                         filled: true,
                         fillColor: Colors.grey[50],
@@ -3309,7 +3339,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // صف 3: صورة المتغير
             Row(
               children: [
@@ -3449,12 +3479,10 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
     final dynOptions = _dynamicOptions
         .where((o) => o.nameCtrl.text.trim().isNotEmpty && o.values.isNotEmpty)
         .toList();
-    final supportedDynOptions = dynOptions
-        .where((o) {
-          final key = _normalizeVariantOptionKey(o.nameCtrl.text);
-          return key == 'color' || key == 'size';
-        })
-        .toList();
+    final supportedDynOptions = dynOptions.where((o) {
+      final key = _normalizeVariantOptionKey(o.nameCtrl.text);
+      return key == 'color' || key == 'size';
+    }).toList();
 
     // المصدر 2 (القديم): ألوان المعرض + مقاسات legacy
     final availableColors = _galleryImages
@@ -3568,13 +3596,13 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                       ),
                       const SizedBox(height: 12),
                     ],
-
                     if (supportedDynOptions.isNotEmpty) ...[
                       const Text('خيارات إضافية',
                           style: TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 6),
                       ...supportedDynOptions.map((opt) {
-                        final name = _normalizeVariantOptionKey(opt.nameCtrl.text);
+                        final name =
+                            _normalizeVariantOptionKey(opt.nameCtrl.text);
                         final values = opt.values;
                         final selectedSet = selectedDyn[name] ?? <String>{};
                         return Padding(
@@ -3614,7 +3642,6 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                       }),
                       const SizedBox(height: 12),
                     ],
-
                     const Divider(),
                     const SizedBox(height: 8),
                     TextField(
@@ -3913,7 +3940,10 @@ class _DynamicOptionRow {
   factory _DynamicOptionRow.fromJson(Map<String, dynamic> json) {
     final rawValues = json['values'];
     final parsedValues = rawValues is List
-        ? rawValues.map((e) => e.toString()).where((e) => e.trim().isNotEmpty).toList()
+        ? rawValues
+            .map((e) => e.toString())
+            .where((e) => e.trim().isNotEmpty)
+            .toList()
         : <String>[];
     return _DynamicOptionRow(
       nameCtrl: TextEditingController(text: json['name']?.toString() ?? ''),
@@ -3982,10 +4012,9 @@ class _VariantRow {
       stockCtrl: TextEditingController(text: v.stock?.toString() ?? ''),
       skuCtrl: TextEditingController(text: v.sku ?? ''),
       attributes: Map<String, String>.from(v.attributes),
-      variantImage:
-          (v.imageUrl != null && v.imageUrl!.trim().isNotEmpty)
-              ? _ImageWrapper(serverUrl: v.imageUrl)
-              : null,
+      variantImage: (v.imageUrl != null && v.imageUrl!.trim().isNotEmpty)
+          ? _ImageWrapper(serverUrl: v.imageUrl)
+          : null,
     );
   }
 

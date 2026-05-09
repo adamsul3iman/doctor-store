@@ -47,7 +47,8 @@ class _HomeSectionToggle extends StatelessWidget {
           activeThumbColor: const Color(0xFF0A2647),
         ),
         Padding(
-          padding: const EdgeInsetsDirectional.only(start: 16, end: 16, bottom: 8),
+          padding:
+              const EdgeInsetsDirectional.only(start: 16, end: 16, bottom: 8),
           child: Align(
             alignment: AlignmentDirectional.centerStart,
             child: TextButton.icon(
@@ -129,11 +130,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
 
   Future<void> _loadSettings() async {
     try {
-      final data = await _supabase
-          .from('app_settings')
-          .select()
-          .eq('id', 1)
-          .single();
+      final data =
+          await _supabase.from('app_settings').select().eq('id', 1).single();
       _whatsappController.text = _normalizeWhatsappInput(
         (data['whatsapp_number'] ?? '').toString(),
       );
@@ -146,7 +144,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
 
       _freeShippingEnabled = (data['free_shipping_enabled'] as bool?) ?? true;
       _freeShippingThresholdController.text =
-          (data['free_shipping_threshold'] as num?)?.toDouble().toString() ?? '';
+          (data['free_shipping_threshold'] as num?)?.toDouble().toString() ??
+              '';
 
       // Add change listeners for auto-save
       _setupAutoSaveListeners();
@@ -330,9 +329,10 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
     }
 
     final titleController = TextEditingController(
-      text: existing != null && (existing['title'] as String?)?.isNotEmpty == true
-          ? existing['title'] as String
-          : defaultTitle,
+      text:
+          existing != null && (existing['title'] as String?)?.isNotEmpty == true
+              ? existing['title'] as String
+              : defaultTitle,
     );
     final descController = TextEditingController(
       text: existing != null ? (existing['description'] as String? ?? '') : '',
@@ -357,7 +357,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                       TextField(
                         controller: titleController,
                         decoration: const InputDecoration(
-                          labelText: 'عنوان الصفحة (يظهر في شريط المتصفح ونتائج البحث)',
+                          labelText:
+                              'عنوان الصفحة (يظهر في شريط المتصفح ونتائج البحث)',
                           border: OutlineInputBorder(),
                         ),
                       ),
@@ -369,7 +370,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                           labelText: 'وصف SEO (meta description)',
                           alignLabelWithHint: true,
                           border: OutlineInputBorder(),
-                          hintText: 'اكتب وصفاً قصيراً يشجع الزائر على الدخول من نتائج البحث.',
+                          hintText:
+                              'اكتب وصفاً قصيراً يشجع الزائر على الدخول من نتائج البحث.',
                         ),
                       ),
                     ],
@@ -401,13 +403,15 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                             if (!mounted) return;
                             Navigator.pop(ctx);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('تم حفظ إعدادات SEO بنجاح')),
+                              const SnackBar(
+                                  content: Text('تم حفظ إعدادات SEO بنجاح')),
                             );
                           } catch (e) {
                             setState(() => isSaving = false);
                             if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('خطأ في حفظ إعدادات SEO: $e')),
+                              SnackBar(
+                                  content: Text('خطأ في حفظ إعدادات SEO: $e')),
                             );
                           }
                         },
@@ -415,7 +419,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
                         )
                       : const Icon(Icons.save),
                   label: const Text('حفظ'),
@@ -472,7 +477,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
     _persistHomeSectionsOrder();
   }
 
-  Future<void> _openHomeSectionTextsEditor(String key, String adminTitle) async {
+  Future<void> _openHomeSectionTextsEditor(
+      String key, String adminTitle) async {
     final currentTitle = _homeSectionsTitle[key] ?? '';
     final currentSubtitle = _homeSectionsSubtitle[key] ?? '';
 
@@ -546,13 +552,15 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
 
                             Navigator.pop(ctx);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('تم حفظ نصوص القسم بنجاح')),
+                              const SnackBar(
+                                  content: Text('تم حفظ نصوص القسم بنجاح')),
                             );
                           } catch (e) {
                             setState(() => isSaving = false);
                             if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('خطأ في حفظ نص القسم: $e')),
+                              SnackBar(
+                                  content: Text('خطأ في حفظ نص القسم: $e')),
                             );
                           }
                         },
@@ -639,9 +647,10 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
     }
 
     final titleController = TextEditingController(
-      text: existing != null && (existing['title'] as String?)?.isNotEmpty == true
-          ? existing['title'] as String
-          : defaultTitle,
+      text:
+          existing != null && (existing['title'] as String?)?.isNotEmpty == true
+              ? existing['title'] as String
+              : defaultTitle,
     );
     final contentController = TextEditingController(
       text: existing != null ? (existing['content'] as String? ?? '') : '',
@@ -678,7 +687,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                           labelText: 'محتوى الصفحة',
                           alignLabelWithHint: true,
                           border: OutlineInputBorder(),
-                          hintText: 'يمكنك كتابة النص الكامل للصفحة هنا، مع استخدام أسطر جديدة للفقرات.',
+                          hintText:
+                              'يمكنك كتابة النص الكامل للصفحة هنا، مع استخدام أسطر جديدة للفقرات.',
                         ),
                       ),
                     ],
@@ -696,8 +706,9 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                       : () async {
                           setState(() => isSaving = true);
                           try {
-                            final title =
-                                titleController.text.trim().isEmpty ? defaultTitle : titleController.text.trim();
+                            final title = titleController.text.trim().isEmpty
+                                ? defaultTitle
+                                : titleController.text.trim();
                             final content = contentController.text.trim();
 
                             await _supabase.from('static_pages').upsert({
@@ -723,7 +734,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                       ? const SizedBox(
                           width: 18,
                           height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
                         )
                       : const Icon(Icons.save),
                   label: const Text('حفظ الصفحة'),
@@ -767,7 +779,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                 centerTitle: true,
                 iconTheme: const IconThemeData(color: Color(0xFF0A2647)),
                 bottom: PreferredSize(
-                  preferredSize: const Size.fromHeight(64), // زيادة الارتفاع لتجنب overflow
+                  preferredSize: const Size.fromHeight(
+                      64), // زيادة الارتفاع لتجنب overflow
                   child: Material(
                     color: Colors.white,
                     elevation: 0,
@@ -808,7 +821,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
             ];
           },
           body: TabBarView(
-            physics: const NeverScrollableScrollPhysics(), // ✅ منع TabBarView من إنشاء ScrollPosition منفصلة
+            physics:
+                const NeverScrollableScrollPhysics(), // ✅ منع TabBarView من إنشاء ScrollPosition منفصلة
             children: [
               _buildContactAndOwnerTab(),
               _buildStaticPagesTab(),
@@ -878,8 +892,11 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                                 : 'تم الحفظ'),
                     style: TextStyle(
                       fontSize: 13,
-                      color: _hasUnsavedChanges ? Colors.orange : Colors.grey[600],
-                      fontWeight: _hasUnsavedChanges ? FontWeight.w600 : FontWeight.normal,
+                      color:
+                          _hasUnsavedChanges ? Colors.orange : Colors.grey[600],
+                      fontWeight: _hasUnsavedChanges
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                   ),
                 ],
@@ -903,7 +920,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0A2647),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -917,7 +935,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFF0A2647),
                   side: const BorderSide(color: Color(0xFF0A2647)),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -936,7 +955,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
       children: [
         Card(
           elevation: 1,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -967,7 +987,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
         const SizedBox(height: 12),
         Card(
           elevation: 1,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -999,7 +1020,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                 const SizedBox(height: 8),
                 TextField(
                   controller: _freeShippingThresholdController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
                     labelText: 'حد الشحن المجاني (دينار)',
                     border: OutlineInputBorder(),
@@ -1013,7 +1035,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
         const SizedBox(height: 12),
         Card(
           elevation: 1,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -1045,7 +1068,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                                       url: _ownerImageUrl,
                                       variant: ImageVariant.homeBanner,
                                       fit: BoxFit.cover,
-                                      placeholder: Container(color: Colors.grey[200]),
+                                      placeholder:
+                                          Container(color: Colors.grey[200]),
                                       errorWidget: Container(
                                         color: Colors.grey[200],
                                         child: const Icon(
@@ -1267,8 +1291,7 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                   subtitle: const Text(
                     "عنوان ووصف السيو لصفحة من نحن",
                   ),
-                  onTap: () =>
-                      _openSeoEditor('about', 'من نحن - متجر الدكتور'),
+                  onTap: () => _openSeoEditor('about', 'من نحن - متجر الدكتور'),
                   trailing: const Icon(Icons.chevron_left),
                 ),
                 const SizedBox(height: 8),
@@ -1390,7 +1413,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                     _HomeSectionToggle(
                       sectionKey: 'owner_section',
                       title: 'قسم صاحب المتجر / خدمة التفصيل',
-                      subtitle: 'الكارت الذي يحتوي صورة صاحب المتجر وزر الاستشارة',
+                      subtitle:
+                          'الكارت الذي يحتوي صورة صاحب المتجر وزر الاستشارة',
                     ),
                     _HomeSectionToggle(
                       sectionKey: 'baby_section',
@@ -1460,8 +1484,7 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
                             }
 
                             return Card(
-                              margin:
-                                  const EdgeInsets.symmetric(vertical: 4),
+                              margin: const EdgeInsets.symmetric(vertical: 4),
                               child: ListTile(
                                 dense: true,
                                 leading: const Icon(Icons.drag_indicator),
@@ -1523,9 +1546,9 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
 
       final path =
           'owner/owner_${DateTime.now().millisecondsSinceEpoch}.${compressed.extension}';
-      await _supabase.storage
-          .from('assets')
-          .uploadBinary(path, compressed.bytes, fileOptions: const FileOptions(upsert: true));
+      await _supabase.storage.from('assets').uploadBinary(
+          path, compressed.bytes,
+          fileOptions: const FileOptions(upsert: true));
       final url = _supabase.storage.from('assets').getPublicUrl(path);
 
       if (!mounted) return;
@@ -1534,7 +1557,7 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم تحديث صورة صاحب المتجر بنجاح')), 
+        const SnackBar(content: Text('تم تحديث صورة صاحب المتجر بنجاح')),
       );
     } catch (e) {
       if (!mounted) return;
@@ -1544,7 +1567,8 @@ class _AdminSettingsViewState extends State<AdminSettingsView> {
     }
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {IconData? icon, int maxLines = 1}) {
+  Widget _buildTextField(String label, TextEditingController controller,
+      {IconData? icon, int maxLines = 1}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: TextField(

@@ -35,7 +35,8 @@ class OrderRepository {
     final client = _getClientOrNull();
     if (client == null) return [];
 
-    final data = await client.from('order_items').select().eq('order_id', orderId);
+    final data =
+        await client.from('order_items').select().eq('order_id', orderId);
     return (data as List).map((json) => OrderItem.fromJson(json)).toList();
   }
 
@@ -54,8 +55,7 @@ class OrderRepository {
     try {
       await client
           .from('orders')
-          .update({'status': statusString})
-          .eq('id', orderId);
+          .update({'status': statusString}).eq('id', orderId);
       debugPrint('Order status updated successfully');
     } catch (e) {
       debugPrint('Error updating order status in repository: $e');

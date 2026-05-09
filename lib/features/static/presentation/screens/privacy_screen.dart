@@ -62,7 +62,8 @@ class PrivacyScreen extends ConsumerWidget {
                     return const _DefaultPrivacyContent();
                   }
                   return _DynamicStaticPageContent(
-                    title: page.title.isNotEmpty ? page.title : 'سياسة الخصوصية',
+                    title:
+                        page.title.isNotEmpty ? page.title : 'سياسة الخصوصية',
                     content: page.content,
                   );
                 },
@@ -104,7 +105,8 @@ class _DefaultPrivacyContent extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _sectionTitle('المعلومات التي نقوم بجمعها'),
-        _sectionBody('• بيانات التواصل (الاسم، رقم الهاتف، البريد الإلكتروني إن وجد).\n'
+        _sectionBody(
+            '• بيانات التواصل (الاسم، رقم الهاتف، البريد الإلكتروني إن وجد).\n'
             '• بيانات الطلبات وعناوين التوصيل.\n'
             '• بيانات الاستخدام الأساسية لتحسين أداء الموقع وتجربة المستخدم.'),
         const SizedBox(height: 16),
@@ -115,10 +117,12 @@ class _DefaultPrivacyContent extends StatelessWidget {
             '• تحسين منتجاتنا وخدماتنا بناءً على تفضيلات العملاء.'),
         const SizedBox(height: 16),
         _sectionTitle('مشاركة المعلومات مع أطراف ثالثة'),
-        _sectionBody('لا نقوم ببيع أو مشاركة بياناتك مع أي جهة تجارية خارجية، ويقتصر استخدامها على مزودي خدمات الشحن أو الدفع عند الحاجة لإتمام طلبك فقط.'),
+        _sectionBody(
+            'لا نقوم ببيع أو مشاركة بياناتك مع أي جهة تجارية خارجية، ويقتصر استخدامها على مزودي خدمات الشحن أو الدفع عند الحاجة لإتمام طلبك فقط.'),
         const SizedBox(height: 16),
         _sectionTitle('حقوقك'),
-        _sectionBody('يمكنك دائماً التواصل معنا لتحديث بياناتك، أو طلب توضيح حول طريقة استخدامها، أو إلغاء الاشتراك من الرسائل التسويقية.'),
+        _sectionBody(
+            'يمكنك دائماً التواصل معنا لتحديث بياناتك، أو طلب توضيح حول طريقة استخدامها، أو إلغاء الاشتراك من الرسائل التسويقية.'),
       ],
     );
   }

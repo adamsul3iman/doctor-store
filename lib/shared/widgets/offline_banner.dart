@@ -9,8 +9,7 @@ class OfflineBanner extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statusAsync = ref.watch(networkStatusProvider);
-    final isOffline =
-        statusAsync.asData?.value == NetworkStatus.offline;
+    final isOffline = statusAsync.asData?.value == NetworkStatus.offline;
 
     if (!isOffline) return const SizedBox.shrink();
 

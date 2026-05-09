@@ -54,7 +54,9 @@ class RecentlyViewedScreen extends ConsumerWidget {
                       ),
                       TextButton(
                         onPressed: () {
-                          ref.read(recentlyViewedProvider.notifier).clearRecentlyViewed();
+                          ref
+                              .read(recentlyViewedProvider.notifier)
+                              .clearRecentlyViewed();
                           Navigator.pop(context);
                         },
                         child: Text(
@@ -130,7 +132,8 @@ class RecentlyViewedScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildProductGrid(BuildContext context, WidgetRef ref, List<Product> products) {
+  Widget _buildProductGrid(
+      BuildContext context, WidgetRef ref, List<Product> products) {
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
@@ -225,7 +228,8 @@ class _RecentlyViewedItemCard extends StatelessWidget {
           children: [
             // Product Image
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16)),
               child: AspectRatio(
                 aspectRatio: 1,
                 child: Stack(

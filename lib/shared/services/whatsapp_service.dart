@@ -75,7 +75,8 @@ class WhatsAppService {
     final buffer = StringBuffer();
 
     buffer.writeln("🧾 *طلب جديد - متجر الدكتور*");
-    buffer.writeln("🔹 رقم الطلب: #${orderId.substring(0, orderId.length < 5 ? orderId.length : 5)}");
+    buffer.writeln(
+        "🔹 رقم الطلب: #${orderId.substring(0, orderId.length < 5 ? orderId.length : 5)}");
     buffer.writeln("================================");
 
     buffer.writeln("👤 *العميل:* $customerName");
@@ -101,7 +102,8 @@ class WhatsAppService {
 
       buffer.writeln("   🔢 الكمية: $quantity$unitLabel");
       buffer.writeln("   💵 سعر الوحدة: ${unitPrice.toStringAsFixed(2)} د.أ");
-      buffer.writeln("   💰 إجمالي هذا المنتج: ${lineTotal.toStringAsFixed(2)} د.أ");
+      buffer.writeln(
+          "   💰 إجمالي هذا المنتج: ${lineTotal.toStringAsFixed(2)} د.أ");
 
       buffer.writeln("   🖼️ رابط الصورة: ${item['image_url']}");
       buffer.writeln(""); // مسافة بين المنتجات
@@ -109,10 +111,12 @@ class WhatsAppService {
 
     buffer.writeln("================================");
     buffer.writeln("💳 *ملخص الفاتورة:*");
-    buffer.writeln("🧾 مجموع المنتجات: ${productsTotal.toStringAsFixed(2)} د.أ");
+    buffer
+        .writeln("🧾 مجموع المنتجات: ${productsTotal.toStringAsFixed(2)} د.أ");
 
     if (discountAmount != null && discountAmount > 0) {
-      buffer.writeln("🎟️ إجمالي الخصم: -${discountAmount.toStringAsFixed(2)} د.أ");
+      buffer.writeln(
+          "🎟️ إجمالي الخصم: -${discountAmount.toStringAsFixed(2)} د.أ");
       if (coupon != null) {
         buffer.writeln("   (كوبون: ${coupon.code})");
       }
@@ -122,9 +126,10 @@ class WhatsAppService {
     }
 
     if (deliveryFee != null && deliveryFee > 0) {
-      final zoneLabel = deliveryZoneName != null && deliveryZoneName.trim().isNotEmpty
-          ? " (${deliveryZoneName.trim()})"
-          : "";
+      final zoneLabel =
+          deliveryZoneName != null && deliveryZoneName.trim().isNotEmpty
+              ? " (${deliveryZoneName.trim()})"
+              : "";
       buffer.writeln(
         "🚚 رسوم التوصيل$zoneLabel: ${deliveryFee.toStringAsFixed(2)} د.أ",
       );
@@ -132,7 +137,8 @@ class WhatsAppService {
     }
 
     buffer.writeln("================================");
-    buffer.writeln("💰 *المجموع النهائي المستحق:* ${finalTotal.toStringAsFixed(2)} د.أ");
+    buffer.writeln(
+        "💰 *المجموع النهائي المستحق:* ${finalTotal.toStringAsFixed(2)} د.أ");
 
     if (notes != null && notes.trim().isNotEmpty) {
       buffer.writeln("================================");
@@ -195,9 +201,8 @@ class WhatsAppService {
   static Future<WhatsAppLaunchResult> launchWhatsApp(Uri url) async {
     try {
       // For web, use platform-specific launch mode
-      final LaunchMode mode = kIsWeb
-          ? LaunchMode.platformDefault
-          : LaunchMode.externalApplication;
+      final LaunchMode mode =
+          kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication;
 
       if (await canLaunchUrl(url)) {
         final success = await launchUrl(url, mode: mode);

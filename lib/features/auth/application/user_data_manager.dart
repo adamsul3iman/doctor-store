@@ -67,7 +67,8 @@ class UserProfile {
 }
 
 // ✅ البروفايدر الرئيسي
-final userProfileProvider = StateNotifierProvider<UserProfileNotifier, UserProfile>((ref) {
+final userProfileProvider =
+    StateNotifierProvider<UserProfileNotifier, UserProfile>((ref) {
   return UserProfileNotifier();
 });
 
@@ -129,7 +130,7 @@ class UserProfileNotifier extends StateNotifier<UserProfile> {
         if (data != null) {
           Map<String, dynamic> map;
           map = data;
-        
+
           final updatedProfile = state.copyWith(
             id: user.id,
             email: user.email ?? state.email,
@@ -163,7 +164,8 @@ class UserProfileNotifier extends StateNotifier<UserProfile> {
   }
 
   // 3. تحديث البيانات (تعديل البروفايل)
-  Future<void> updateProfile({String? name, String? phone, String? address}) async {
+  Future<void> updateProfile(
+      {String? name, String? phone, String? address}) async {
     final client = _getClientOrNull();
     if (client == null) return;
 
@@ -177,7 +179,7 @@ class UserProfileNotifier extends StateNotifier<UserProfile> {
 
     // 1. تحديث الواجهة فوراً (Optimistic UI)
     state = state.copyWith(name: newName, phone: newPhone, address: newAddress);
-    
+
     // 2. تحديث السيرفر
     try {
       await client.from('profiles').update({
@@ -185,10 +187,9 @@ class UserProfileNotifier extends StateNotifier<UserProfile> {
         'phone': newPhone,
         'address': newAddress,
       }).eq('id', user.id);
-      
+
       // 3. تحديث الكاش
       await _saveToPrefs(state);
-      
     } catch (e) {
       debugPrint("Update Error: $e");
       await refreshProfile(); // في حال الفشل، نعود للبيانات الحقيقية

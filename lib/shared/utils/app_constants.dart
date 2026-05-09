@@ -30,7 +30,8 @@ class AppConstants {
   static const String catBaby = 'baby_supplies';
   static const String catDecor = 'home_decor';
   static const String catTowels = 'towels'; // أضيفت بناء على SQL
-  static const String catCurtains = 'curtains'; // تأكدت من إضافتها للـ enum في Postgres
+  static const String catCurtains =
+      'curtains'; // تأكدت من إضافتها للـ enum في Postgres
 
   // حالات الطلب
   static const String statusNew = 'new';

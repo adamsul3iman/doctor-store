@@ -19,9 +19,8 @@ class MattressSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // نتأكد أن القائمة تحتوي فعلياً على فرشات
-    final mattresses = products
-        .where((p) => p.category == 'mattresses')
-        .toList();
+    final mattresses =
+        products.where((p) => p.category == 'mattresses').toList();
 
     if (mattresses.isEmpty) {
       return const SizedBox.shrink();
@@ -170,10 +169,11 @@ class _MattressHeroCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 10),
                     Container(
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 8),
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.secondary.withValues(alpha: 0.12),
+                        color:
+                            theme.colorScheme.secondary.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(

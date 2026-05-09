@@ -5,6 +5,7 @@ class Product {
   final String id;
   final String title;
   final String description;
+
   /// السعر الأساسي للمنتج (يُستخدم كباك أب في حال عدم وجود متغير محدد)
   final double price;
   final double? oldPrice;
@@ -12,7 +13,7 @@ class Product {
   /// رابط الصورة الخام كما هو مخزَّن في قاعدة البيانات (image_url).
   /// يتم إخفاؤه خلف getter [imageUrl] الذي يضيف معاملات التحسين عند الحاجة.
   final String? _originalImageUrl;
- 
+
   /// كود القسم الرئيسي للمنتج.
   ///
   /// مهم جداً:
@@ -23,28 +24,31 @@ class Product {
   /// - أي قيمة جديدة (مثل curtains) يجب إضافتها أولاً للـ enum في Postgres عبر Migration
   ///   قبل استخدامها في التطبيق أو في لوحة التحكم.
   final String category;
+
   /// معرّف الفئة الفرعية الديناميكية (اختياري)
   final String? subCategoryId;
+
   /// حقل مرن لتخزين إعدادات إضافية مثل: الألوان، المقاسات، نوع التسعير، الخ.
   final Map<String, dynamic> options;
   final List<ProductImage> gallery;
+
   /// قائمة المتغيرات المتقدمة (لون + مقاس + وحدة + سعر + مخزون + SKU)
   final List<ProductVariant> variants;
-  final double ratingAverage; 
+  final double ratingAverage;
   final int ratingCount;
   final bool isFeatured;
-  
+
   /// هل المنتج مفعّل/ظاهر في المتجر أم مخفي (soft delete)
   final bool isActive;
-  
+
   final String? slug;
-  
+
   // وصف قصير مخصص للسيو والمشاركة
   final String? shortDescription;
 
   // قائمة وسوم المنتج (Tags) لاستخدامها في البحث والسيو
   final List<String> tags;
-  
+
   // ✅ الحقل الجديد لعروض الفلاش
   final bool isFlashDeal;
 
@@ -52,7 +56,7 @@ class Product {
   final DateTime? createdAt;
   final List<String>? imageUrls;
   final String? categoryId;
-  final String? shippingSize; 
+  final String? shippingSize;
 
   Product({
     required this.id,
@@ -149,7 +153,8 @@ class Product {
           tiers.add(OfferTier.fromJson(item));
         } catch (e) {
           // نتجاهل العناصر التالفة ولا نكسر الواجهة لكن نطبع الخطأ للتتبّع
-          debugPrint('Handled Error (OfferTier.fromJson map<String,dynamic>): $e');
+          debugPrint(
+              'Handled Error (OfferTier.fromJson map<String,dynamic>): $e');
         }
       } else if (item is Map) {
         try {
@@ -414,7 +419,7 @@ class Product {
   }
 
   /// إيجاد المتغير المطابق لاختيارات العميل (لون + مقاس + وحدة).
-  /// 
+  ///
   /// التحسينات:
   /// - يبحث عن مطابق تام أولاً
   /// - إذا لم يجد، يبحث عن مطابق جزئي (حسب ما هو محدد فقط)
@@ -427,7 +432,8 @@ class Product {
     if (variants.isEmpty) return null;
 
     // ✅ Normalize inputs - treat empty strings as null
-    final normalizedColor = (color?.trim().isEmpty ?? true) ? null : color!.trim();
+    final normalizedColor =
+        (color?.trim().isEmpty ?? true) ? null : color!.trim();
     final normalizedSize = (size?.trim().isEmpty ?? true) ? null : size!.trim();
     final normalizedUnit = (unit?.trim().isEmpty ?? true) ? null : unit!.trim();
 
@@ -486,7 +492,8 @@ class Product {
     // ✅ Third pass: If only color is selected, return first variant with that color
     if (normalizedColor != null && normalizedSize == null) {
       for (final v in variants) {
-        final vColor = (v.color?.trim().isEmpty ?? true) ? null : v.color!.trim();
+        final vColor =
+            (v.color?.trim().isEmpty ?? true) ? null : v.color!.trim();
         if (vColor == normalizedColor) return v;
       }
     }
@@ -512,11 +519,13 @@ class Product {
           try {
             galleryList.add(ProductImage.fromJson(item));
           } catch (e) {
-            debugPrint('Handled Error (ProductImage.fromJson map<String,dynamic>): $e');
+            debugPrint(
+                'Handled Error (ProductImage.fromJson map<String,dynamic>): $e');
           }
         } else if (item is Map) {
           try {
-            galleryList.add(ProductImage.fromJson(Map<String, dynamic>.from(item)));
+            galleryList
+                .add(ProductImage.fromJson(Map<String, dynamic>.from(item)));
           } catch (e) {
             debugPrint('Handled Error (ProductImage.fromJson Map): $e');
           }
@@ -533,11 +542,13 @@ class Product {
           try {
             variantsList.add(ProductVariant.fromJson(item));
           } catch (e) {
-            debugPrint('Handled Error (ProductVariant.fromJson map<String,dynamic>): $e');
+            debugPrint(
+                'Handled Error (ProductVariant.fromJson map<String,dynamic>): $e');
           }
         } else if (item is Map) {
           try {
-            variantsList.add(ProductVariant.fromJson(Map<String, dynamic>.from(item)));
+            variantsList
+                .add(ProductVariant.fromJson(Map<String, dynamic>.from(item)));
           } catch (e) {
             debugPrint('Handled Error (ProductVariant.fromJson Map): $e');
           }
@@ -639,15 +650,17 @@ class ProductImage {
   final String colorName;
   final int colorValue;
 
-  ProductImage({required this.url, required this.colorName, this.colorValue = 0xFFFFFFFF});
+  ProductImage(
+      {required this.url,
+      required this.colorName,
+      this.colorValue = 0xFFFFFFFF});
 
   factory ProductImage.fromJson(Map<String, dynamic> json) {
     final dynamic rawColor = json['color_value'];
-    final int resolvedColor =
-        rawColor is num ? rawColor.toInt() : 0xFFFFFFFF;
+    final int resolvedColor = rawColor is num ? rawColor.toInt() : 0xFFFFFFFF;
 
     return ProductImage(
-      url: cleanImageUrl(json['url'] as String?), 
+      url: cleanImageUrl(json['url'] as String?),
       colorName: (json['color_name'] as String?) ?? '',
       colorValue: resolvedColor,
     );
@@ -657,18 +670,24 @@ class ProductImage {
 class ProductVariant {
   /// معرف داخلي للمتغير (يمكن استخدامه في الفوترة أو التكاملات الأخرى)
   final String id;
+
   /// كود SKU فريد (اختياري)
   final String? sku;
+
   /// لون المتغير (نصي، مثل "أزرق ملكي")
   final String? color;
+
   /// المقاس (مثل "200x200")
   final String? size;
+
   /// تسمية الوحدة ("حبة"، "متر"، ...)
   final String? unit;
   final String? imageUrl;
   final Map<String, String> attributes;
+
   /// سعر الوحدة لهذا المتغير
   final double price;
+
   /// مخزون هذا المتغير (اختياري)
   final int? stock;
 
@@ -694,7 +713,8 @@ class ProductVariant {
     Map<String, String> attrs = const <String, String>{};
     final rawAttrs = json['attributes'];
     if (rawAttrs is Map<String, dynamic>) {
-      attrs = rawAttrs.map((k, v) => MapEntry(k.toString(), v?.toString() ?? ''))
+      attrs = rawAttrs
+          .map((k, v) => MapEntry(k.toString(), v?.toString() ?? ''))
         ..removeWhere((k, v) => k.trim().isEmpty || v.trim().isEmpty);
     } else if (rawAttrs is Map) {
       attrs = Map<String, dynamic>.from(rawAttrs)
@@ -717,7 +737,9 @@ class ProductVariant {
         : rawId;
 
     return ProductVariant(
-      id: generatedId.isEmpty ? DateTime.now().millisecondsSinceEpoch.toString() : generatedId,
+      id: generatedId.isEmpty
+          ? DateTime.now().millisecondsSinceEpoch.toString()
+          : generatedId,
       sku: json['sku']?.toString(),
       color: color,
       size: size,

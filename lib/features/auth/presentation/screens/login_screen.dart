@@ -93,7 +93,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       if (raw.isEmpty) {
         msg = 'فشل تسجيل الدخول: تأكد من البريد الإلكتروني وكلمة المرور.';
       } else if (raw.toLowerCase().contains('invalid login credentials')) {
-        msg = 'بيانات الدخول غير صحيحة. تأكد من البريد الإلكتروني وكلمة المرور.';
+        msg =
+            'بيانات الدخول غير صحيحة. تأكد من البريد الإلكتروني وكلمة المرور.';
       } else {
         msg = raw;
       }
@@ -185,8 +186,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
                             try {
                               final client = Supabase.instance.client;
-                              final origin = Uri.base
-                                  .origin; // مثال: https://doctorstore.com
+                              final origin = Uri
+                                  .base.origin; // مثال: https://doctorstore.com
                               await client.auth.resetPasswordForEmail(
                                 email,
                                 redirectTo: '$origin/reset-password',
@@ -247,7 +248,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           OAuthProvider.google,
         );
       } else {
-        debugPrint('[_signInWithGoogle] Using mobile OAuth with redirectTo doctorstore://login-callback');
+        debugPrint(
+            '[_signInWithGoogle] Using mobile OAuth with redirectTo doctorstore://login-callback');
         await Supabase.instance.client.auth.signInWithOAuth(
           OAuthProvider.google,
           redirectTo: 'doctorstore://login-callback',
@@ -262,7 +264,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       AppNotifier.showError(context, msg);
     } catch (_) {
       if (!mounted) return;
-      const msg = 'حدث خطأ غير متوقع أثناء محاولة تسجيل الدخول عبر Google، حاول لاحقاً.';
+      const msg =
+          'حدث خطأ غير متوقع أثناء محاولة تسجيل الدخول عبر Google، حاول لاحقاً.';
       _setFormError(msg);
       AppNotifier.showError(context, msg);
     } finally {
@@ -351,7 +354,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
                 ),
                 const SizedBox(height: 18),
-
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -406,7 +408,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     child: const Text('نسيت كلمة المرور؟'),
                   ),
                 ),
-
                 if (_formError != null) ...[
                   const SizedBox(height: 8),
                   Container(
@@ -429,7 +430,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   ),
                 ],
                 const SizedBox(height: 14),
-
                 SizedBox(
                   height: 48,
                   child: ElevatedButton(
@@ -461,13 +461,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   ),
                 ),
                 const SizedBox(height: 12),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text('ليس لديك حساب؟ '),
                     TextButton(
-                      onPressed: _isLoading ? null : () => context.go('/signup'),
+                      onPressed:
+                          _isLoading ? null : () => context.go('/signup'),
                       child: const Text('إنشاء حساب'),
                     ),
                   ],

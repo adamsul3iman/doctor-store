@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ✅ الآن هذا الملف موجود ولن يظهر خطأ
-import 'dashboard_home_view.dart'; 
+import 'dashboard_home_view.dart';
 
 import 'admin_products_view.dart';
 import 'admin_banners_view.dart';
@@ -36,23 +36,23 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   // القائمة البرمجية للصفحات
   List<Widget> get _views => [
-    DashboardHomeView(onNavigateToTab: (index) {
-      setState(() => _selectedIndex = index);
-      _saveLastTab(index);
-    }),
-    const AdminOrdersView(),
-    const AdminProductsView(),
-    const AdminCategoriesView(),
-    const AdminSubCategoriesView(),
-    const AdminCouponsView(),
-    const AdminBannersView(),
-    const AdminReviewsView(),
-    const AdminClientsView(),
-    const AdminDeliveryZonesView(),
-    const ShippingCostsScreen(), // ✅ صفحة إدارة أسعار الشحن
-    const AnalyticsView(),
-    const AdminSettingsView(),
-  ];
+        DashboardHomeView(onNavigateToTab: (index) {
+          setState(() => _selectedIndex = index);
+          _saveLastTab(index);
+        }),
+        const AdminOrdersView(),
+        const AdminProductsView(),
+        const AdminCategoriesView(),
+        const AdminSubCategoriesView(),
+        const AdminCouponsView(),
+        const AdminBannersView(),
+        const AdminReviewsView(),
+        const AdminClientsView(),
+        const AdminDeliveryZonesView(),
+        const ShippingCostsScreen(), // ✅ صفحة إدارة أسعار الشحن
+        const AnalyticsView(),
+        const AdminSettingsView(),
+      ];
 
   // بيانات عناصر القائمة
   final List<_AdminMenuItem> _menuItems = [
@@ -177,7 +177,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text('لوحة التحكم', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text('لوحة التحكم',
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: Colors.white)),
         centerTitle: true,
         backgroundColor: const Color(0xFF0A2647),
         actions: [
@@ -209,7 +211,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text(_menuItems[_selectedIndex].title, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Text(_menuItems[_selectedIndex].title,
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
         centerTitle: true,
         backgroundColor: const Color(0xFF0A2647),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -246,7 +249,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
     final grouped = <_AdminMenuGroup, List<MapEntry<int, _AdminMenuItem>>>{};
     for (var i = 0; i < _menuItems.length; i++) {
-      grouped.putIfAbsent(_menuItems[i].group, () => []).add(MapEntry(i, _menuItems[i]));
+      grouped
+          .putIfAbsent(_menuItems[i].group, () => [])
+          .add(MapEntry(i, _menuItems[i]));
     }
 
     Widget groupHeader(String title) {
@@ -277,7 +282,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 item.title,
                 style: TextStyle(
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                  color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.9),
+                  color: isSelected
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.9),
                   fontSize: 14,
                 ),
               )
@@ -299,7 +306,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
               child: Row(
                 children: [
-                  const Icon(Icons.local_hospital, color: Colors.white, size: 26),
+                  const Icon(Icons.local_hospital,
+                      color: Colors.white, size: 26),
                   if (_isExtended || isDrawer) ...[
                     const SizedBox(width: 10),
                     Expanded(
@@ -318,12 +326,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     IconButton(
                       tooltip: _isExtended ? 'تصغير' : 'توسيع',
                       icon: Icon(
-                        _isExtended
-                            ? Icons.chevron_right
-                            : Icons.chevron_left,
+                        _isExtended ? Icons.chevron_right : Icons.chevron_left,
                         color: Colors.white70,
                       ),
-                      onPressed: () => setState(() => _isExtended = !_isExtended),
+                      onPressed: () =>
+                          setState(() => _isExtended = !_isExtended),
                     ),
                 ],
               ),
@@ -334,22 +341,28 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                 children: [
                   groupHeader('نظرة عامة'),
-                  for (final entry in grouped[_AdminMenuGroup.overview] ?? const [])
+                  for (final entry
+                      in grouped[_AdminMenuGroup.overview] ?? const [])
                     navTile(entry.key, entry.value),
                   groupHeader('الطلبات'),
-                  for (final entry in grouped[_AdminMenuGroup.orders] ?? const [])
+                  for (final entry
+                      in grouped[_AdminMenuGroup.orders] ?? const [])
                     navTile(entry.key, entry.value),
                   groupHeader('الكتالوج'),
-                  for (final entry in grouped[_AdminMenuGroup.catalog] ?? const [])
+                  for (final entry
+                      in grouped[_AdminMenuGroup.catalog] ?? const [])
                     navTile(entry.key, entry.value),
                   groupHeader('التسويق'),
-                  for (final entry in grouped[_AdminMenuGroup.marketing] ?? const [])
+                  for (final entry
+                      in grouped[_AdminMenuGroup.marketing] ?? const [])
                     navTile(entry.key, entry.value),
                   groupHeader('العمليات'),
-                  for (final entry in grouped[_AdminMenuGroup.operations] ?? const [])
+                  for (final entry
+                      in grouped[_AdminMenuGroup.operations] ?? const [])
                     navTile(entry.key, entry.value),
                   groupHeader('الإعدادات'),
-                  for (final entry in grouped[_AdminMenuGroup.settings] ?? const [])
+                  for (final entry
+                      in grouped[_AdminMenuGroup.settings] ?? const [])
                     navTile(entry.key, entry.value),
                 ],
               ),

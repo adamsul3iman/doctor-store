@@ -212,9 +212,11 @@ class _UrgencyDealsSectionState extends ConsumerState<UrgencyDealsSection> {
   }
 
   Widget _buildDealCard(BuildContext context, Product product) {
-    final discount = product.oldPrice != null && product.oldPrice! > product.price
-        ? ((product.oldPrice! - product.price) / product.oldPrice! * 100).round()
-        : 0;
+    final discount =
+        product.oldPrice != null && product.oldPrice! > product.price
+            ? ((product.oldPrice! - product.price) / product.oldPrice! * 100)
+                .round()
+            : 0;
 
     return GestureDetector(
       onTap: () => context.push(

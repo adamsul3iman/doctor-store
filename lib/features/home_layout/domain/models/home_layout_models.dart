@@ -187,7 +187,8 @@ class DisplayCondition {
   static const specificTime = DisplayCondition._('specific_time', 'وقت محدد');
   static const deviceMobile =
       DisplayCondition._('device_mobile', 'جهاز محمول فقط');
-  static const deviceDesktop = DisplayCondition._('device_desktop', 'كمبيوتر فقط');
+  static const deviceDesktop =
+      DisplayCondition._('device_desktop', 'كمبيوتر فقط');
 
   static const List<DisplayCondition> values = [
     always,
@@ -353,8 +354,7 @@ class HomeLayout {
       name: json['name'] as String,
       sections: (json['sections'] as List<dynamic>?)
               ?.map(
-                (e) =>
-                    HomeSectionConfig.fromJson(e as Map<String, dynamic>),
+                (e) => HomeSectionConfig.fromJson(e as Map<String, dynamic>),
               )
               .toList() ??
           const [],

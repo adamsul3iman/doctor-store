@@ -46,7 +46,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
       final List<Map<String, dynamic>> orders = [];
       for (final item in data) {
         orders.add(item);
-            }
+      }
       return orders;
     } catch (e) {
       debugPrint('Error fetching orders: $e');
@@ -74,15 +74,17 @@ class _OrdersScreenState extends State<OrdersScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          
+
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.shopping_bag_outlined, size: 80, color: Colors.grey[300]),
+                  Icon(Icons.shopping_bag_outlined,
+                      size: 80, color: Colors.grey[300]),
                   const SizedBox(height: 20),
-                  Text("لا توجد طلبات سابقة", style: TextStyle(fontSize: 18, color: Colors.grey)),
+                  Text("لا توجد طلبات سابقة",
+                      style: TextStyle(fontSize: 18, color: Colors.grey)),
                 ],
               ),
             );
@@ -103,7 +105,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
       ),
     );
   }
-
 }
 
 /// كرت واحد لعرض تفاصيل طلب معيّن (يُستخدم في الشاشة وفي الاختبارات).

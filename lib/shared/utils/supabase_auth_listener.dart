@@ -20,7 +20,8 @@ class SupabaseAuthListener extends ConsumerStatefulWidget {
   const SupabaseAuthListener({super.key, required this.child});
 
   @override
-  ConsumerState<SupabaseAuthListener> createState() => _SupabaseAuthListenerState();
+  ConsumerState<SupabaseAuthListener> createState() =>
+      _SupabaseAuthListenerState();
 }
 
 class _SupabaseAuthListenerState extends ConsumerState<SupabaseAuthListener> {

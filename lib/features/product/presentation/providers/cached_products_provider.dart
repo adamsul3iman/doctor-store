@@ -55,7 +55,8 @@ class ProductsNotifier extends StateNotifier<ProductsState> {
 
   /// تحميل المنتجات مع دعم الكاش
   Future<void> loadProducts() async {
-    state = state.copyWith(isLoading: true, hasError: false, errorMessage: null);
+    state =
+        state.copyWith(isLoading: true, hasError: false, errorMessage: null);
 
     try {
       // محاولة جلب من Supabase
@@ -87,7 +88,9 @@ class ProductsNotifier extends StateNotifier<ProductsState> {
         isLoading: false,
         isOffline: !isConnected,
         hasError: !isConnected,
-        errorMessage: isConnected ? null : 'لا يوجد اتصال بالإنترنت. يتم عرض المنتجات المخزنة مؤقتاً.',
+        errorMessage: isConnected
+            ? null
+            : 'لا يوجد اتصال بالإنترنت. يتم عرض المنتجات المخزنة مؤقتاً.',
       );
     } else {
       state = ProductsState(
@@ -113,6 +116,7 @@ class ProductsNotifier extends StateNotifier<ProductsState> {
 }
 
 /// Provider للمنتجات مع دعم الكاش
-final cachedProductsProvider = StateNotifierProvider<ProductsNotifier, ProductsState>((ref) {
+final cachedProductsProvider =
+    StateNotifierProvider<ProductsNotifier, ProductsState>((ref) {
   return ProductsNotifier();
 });

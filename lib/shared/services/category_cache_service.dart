@@ -4,7 +4,8 @@ import 'package:doctor_store/shared/utils/categories_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CategoryCacheService {
-  static final CategoryCacheService _instance = CategoryCacheService._internal();
+  static final CategoryCacheService _instance =
+      CategoryCacheService._internal();
   factory CategoryCacheService() => _instance;
   CategoryCacheService._internal();
 
@@ -42,7 +43,8 @@ class CategoryCacheService {
     }
   }
 
-  Future<bool> isCacheValid({Duration maxAge = const Duration(hours: 24)}) async {
+  Future<bool> isCacheValid(
+      {Duration maxAge = const Duration(hours: 24)}) async {
     await init();
     final timestamp = _prefs?.getInt('categories_cache_timestamp');
     if (timestamp == null) return false;

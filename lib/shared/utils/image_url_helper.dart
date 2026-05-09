@@ -9,8 +9,8 @@ enum ImageVariant {
 }
 
 /// يُزيل جميع معاملات الاستعلام من رابط URL، ويعيد الرابط النظيف.
-/// 
-/// يُستخدم لتنظيف الروابط الملوثة التي قد تحتوي على معاملات 
+///
+/// يُستخدم لتنظيف الروابط الملوثة التي قد تحتوي على معاملات
 /// Supabase transformation مكررة (مثل ?format=webp&quality=80...).
 String cleanImageUrl(String? url) {
   if (url == null || url.isEmpty) return '';

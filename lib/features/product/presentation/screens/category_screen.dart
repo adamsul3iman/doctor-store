@@ -23,8 +23,8 @@ class CategoryScreen extends ConsumerStatefulWidget {
   final Color themeColor;
 
   const CategoryScreen({
-    super.key, 
-    required this.categoryId, 
+    super.key,
+    required this.categoryId,
     required this.categoryName,
     required this.themeColor,
   });
@@ -72,15 +72,16 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
         if (!_loadLogged) {
           _loadLogged = true;
           final durationMs = DateTime.now().millisecondsSinceEpoch - _startMs;
-          
+
           // تتبع زيارة صفحة القسم
           AnalyticsService.instance.trackSiteVisit(
             pageUrl: '/category/${widget.categoryId}',
             deviceType: _detectDeviceType(),
             country: 'Kuwait',
           );
-          
-          AnalyticsService.instance.trackEvent('category_products_loaded', props: {
+
+          AnalyticsService.instance
+              .trackEvent('category_products_loaded', props: {
             'duration_ms': durationMs,
             'count': products.length,
             'category': widget.categoryId,
@@ -108,9 +109,9 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
         if (_searchQuery.trim().isNotEmpty) {
           final q = _searchQuery.trim().toLowerCase();
           filteredProducts = filteredProducts.where((p) {
-            final text = (
-              '${p.title} ${p.description} ${p.categoryArabic} ${p.tags.join(' ')}'
-            ).toLowerCase();
+            final text =
+                ('${p.title} ${p.description} ${p.categoryArabic} ${p.tags.join(' ')}')
+                    .toLowerCase();
             return text.contains(q);
           }).toList();
         }
@@ -178,7 +179,8 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                   );
                   final isCompact = crossAxisCount >= 3;
                   const spacing = 12.0;
-                  final mainAxisExtent = ResponsiveLayout.productCardMainAxisExtent(
+                  final mainAxisExtent =
+                      ResponsiveLayout.productCardMainAxisExtent(
                     constraints.crossAxisExtent,
                     crossAxisCount: crossAxisCount,
                     crossAxisSpacing: spacing,
@@ -222,7 +224,8 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                 );
                 final isCompact = crossAxisCount >= 3;
                 const spacing = 12.0;
-                final mainAxisExtent = ResponsiveLayout.productCardMainAxisExtent(
+                final mainAxisExtent =
+                    ResponsiveLayout.productCardMainAxisExtent(
                   constraints.crossAxisExtent,
                   crossAxisCount: crossAxisCount,
                   crossAxisSpacing: spacing,
@@ -281,8 +284,7 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
               title: widget.categoryName,
               showSearch: false,
               sharePath: '/category/${widget.categoryId}',
-              shareTitle:
-                  'تصفح قسم ${widget.categoryName} في متجر الدكتور',
+              shareTitle: 'تصفح قسم ${widget.categoryName} في متجر الدكتور',
               iconColor: Colors.white,
             ),
             flexibleSpace: FlexibleSpaceBar(
@@ -401,11 +403,10 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                       // صف مختصر يعرض الترتيب الحالي
                       Row(
                         children: [
-                          const Icon(Icons.sort,
-                              size: 18, color: Colors.grey),
+                          const Icon(Icons.sort, size: 18, color: Colors.grey),
                           const SizedBox(width: 6),
                           Text(
-'ترتيب حسب: $_currentSortLabel',
+                            'ترتيب حسب: $_currentSortLabel',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -436,7 +437,8 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                                   ),
                                   selected: _selectedSubCategoryId == null,
                                   onSelected: (_) {
-                                    setState(() => _selectedSubCategoryId = null);
+                                    setState(
+                                        () => _selectedSubCategoryId = null);
                                   },
                                   selectedColor: widget.themeColor,
                                   backgroundColor: Colors.grey.shade100,
@@ -463,9 +465,10 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                                           Icon(
                                             Icons.label_rounded,
                                             size: 16,
-                                            color: _selectedSubCategoryId == s.id
-                                                ? Colors.white
-                                                : widget.themeColor,
+                                            color:
+                                                _selectedSubCategoryId == s.id
+                                                    ? Colors.white
+                                                    : widget.themeColor,
                                           ),
                                           const SizedBox(width: 4),
                                           Text(s.name),
@@ -477,9 +480,8 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                                             _selectedSubCategoryId = s.id);
                                       },
                                       selectedColor: widget.themeColor,
-                                      backgroundColor:
-                                          widget.themeColor.withValues(
-                                              alpha: 0.05),
+                                      backgroundColor: widget.themeColor
+                                          .withValues(alpha: 0.05),
                                       labelStyle: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
@@ -559,7 +561,8 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                 ),
               ],
             ),
-            child: Icon(FontAwesomeIcons.shapes, size: 18, color: widget.themeColor),
+            child: Icon(FontAwesomeIcons.shapes,
+                size: 18, color: widget.themeColor),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -600,7 +603,9 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                hasFilter ? 'مع تطبيق فلاتر مخصصة' : 'يمكنك استخدام الفلاتر بالأعلى',
+                hasFilter
+                    ? 'مع تطبيق فلاتر مخصصة'
+                    : 'يمكنك استخدام الفلاتر بالأعلى',
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey.shade600,
@@ -635,7 +640,8 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
       barrierDismissible: true,
       builder: (ctx) {
         return Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          insetPadding:
+              const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -698,8 +704,8 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                             ChoiceChip(
                               label: const Text('الأعلى سعراً'),
                               selected: tempSortBy == 'price_high',
-                              onSelected: (_) =>
-                                  setModalState(() => tempSortBy = 'price_high'),
+                              onSelected: (_) => setModalState(
+                                  () => tempSortBy = 'price_high'),
                             ),
                           ],
                         ),
@@ -718,16 +724,16 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                             FilterChip(
                               label: const Text('منتجات مميزة'),
                               selected: tempOnlyFeatured,
-                              onSelected: (val) => setModalState(
-                                  () => tempOnlyFeatured = val),
+                              onSelected: (val) =>
+                                  setModalState(() => tempOnlyFeatured = val),
                               avatar: const Icon(Icons.star_rounded,
                                   size: 16, color: Colors.amber),
                             ),
                             FilterChip(
                               label: const Text('عروض وتخفيضات'),
                               selected: tempOnlyOnOffer,
-                              onSelected: (val) => setModalState(
-                                  () => tempOnlyOnOffer = val),
+                              onSelected: (val) =>
+                                  setModalState(() => tempOnlyOnOffer = val),
                               avatar: const Icon(Icons.local_offer_rounded,
                                   size: 16, color: Colors.redAccent),
                             ),
@@ -762,8 +768,8 @@ class _CategoryScreenState extends ConsumerState<CategoryScreen> {
                                       label: Text(s.name),
                                       selected:
                                           tempSelectedSubCategoryId == s.id,
-                                      onSelected: (_) => setModalState(
-                                          () => tempSelectedSubCategoryId = s.id),
+                                      onSelected: (_) => setModalState(() =>
+                                          tempSelectedSubCategoryId = s.id),
                                     ),
                                   ),
                                 ),

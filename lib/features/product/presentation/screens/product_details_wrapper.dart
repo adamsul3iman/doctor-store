@@ -12,10 +12,12 @@ class ProductDetailsWrapper extends ConsumerStatefulWidget {
   final String? productId;
   final String? productSlug; // ✅ متغير جديد
 
-  const ProductDetailsWrapper({super.key, this.productObj, this.productId, this.productSlug});
+  const ProductDetailsWrapper(
+      {super.key, this.productObj, this.productId, this.productSlug});
 
   @override
-  ConsumerState<ProductDetailsWrapper> createState() => _ProductDetailsWrapperState();
+  ConsumerState<ProductDetailsWrapper> createState() =>
+      _ProductDetailsWrapperState();
 }
 
 class _ProductDetailsWrapperState extends ConsumerState<ProductDetailsWrapper> {
@@ -71,9 +73,11 @@ class _ProductDetailsWrapperState extends ConsumerState<ProductDetailsWrapper> {
     if (widget.productObj != null) {
       // Add to recently viewed
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(recentlyViewedProvider.notifier).addToRecentlyViewed(widget.productObj!);
+        ref
+            .read(recentlyViewedProvider.notifier)
+            .addToRecentlyViewed(widget.productObj!);
       });
-      
+
       return ProductDetailsScreen(product: widget.productObj!);
     }
 
@@ -89,7 +93,8 @@ class _ProductDetailsWrapperState extends ConsumerState<ProductDetailsWrapper> {
                 children: [
                   CircularProgressIndicator(color: Color(0xFF0A2647)),
                   SizedBox(height: 20),
-                  Text("جاري تحضير المنتج...", style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text("جاري تحضير المنتج...",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
             );
@@ -105,7 +110,8 @@ class _ProductDetailsWrapperState extends ConsumerState<ProductDetailsWrapper> {
                   const Text("عذراً، هذا المنتج لم يعد متوفراً أو الرابط خاطئ"),
                   const SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: () => context.go('/'), // العودة للرئيسية باستخدام GoRouter لضمان سلاسة التنقل
+                    onPressed: () => context.go(
+                        '/'), // العودة للرئيسية باستخدام GoRouter لضمان سلاسة التنقل
                     child: const Text("الذهاب للمتجر"),
                   )
                 ],
@@ -115,12 +121,14 @@ class _ProductDetailsWrapperState extends ConsumerState<ProductDetailsWrapper> {
 
           // تم تحميل البيانات بنجاح، اعرض الصفحة
           final product = snapshot.data!;
-          
+
           // Add to recently viewed
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            ref.read(recentlyViewedProvider.notifier).addToRecentlyViewed(product);
+            ref
+                .read(recentlyViewedProvider.notifier)
+                .addToRecentlyViewed(product);
           });
-          
+
           return ProductDetailsScreen(product: product);
         },
       ),

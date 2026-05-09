@@ -14,13 +14,55 @@ class ModernCategorySection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // قائمة الأقسام الافتراضية (تُستخدم في حال عدم توفر بيانات من Supabase)
     final defaultCategories = [
-      {'id': 'bedding', 'name': 'بياضات ومفارش', 'subtitle': 'راحة وفخامة', 'icon': FontAwesomeIcons.bed, 'color': const Color(0xFF5C6BC0)},
-      {'id': 'dining_table', 'name': 'طاولات سفرة', 'subtitle': 'تجمعات العائلة', 'icon': Icons.table_restaurant_rounded, 'color': const Color(0xFF8D6E63)},
-      {'id': 'baby_supplies', 'name': 'عالم الأطفال', 'subtitle': 'أمان وراحة', 'icon': FontAwesomeIcons.baby, 'color': const Color(0xFFEC407A)},
-      {'id': 'carpets', 'name': 'سجاد فاخر', 'subtitle': 'لمسة دافئة', 'icon': FontAwesomeIcons.rug, 'color': const Color(0xFF26A69A)},
-      {'id': 'pillows', 'name': 'وسائد طبية', 'subtitle': 'نوم صحي', 'icon': FontAwesomeIcons.cloud, 'color': const Color(0xFF78909C)},
-      {'id': 'furniture', 'name': 'أثاث منزلي', 'subtitle': 'تجديد شامل', 'icon': FontAwesomeIcons.couch, 'color': const Color(0xFFFFA726)},
-      {'id': 'home_decor', 'name': 'ديكورات', 'subtitle': 'لمسات فنية', 'icon': FontAwesomeIcons.leaf, 'color': const Color(0xFF66BB6A)},
+      {
+        'id': 'bedding',
+        'name': 'بياضات ومفارش',
+        'subtitle': 'راحة وفخامة',
+        'icon': FontAwesomeIcons.bed,
+        'color': const Color(0xFF5C6BC0)
+      },
+      {
+        'id': 'dining_table',
+        'name': 'طاولات سفرة',
+        'subtitle': 'تجمعات العائلة',
+        'icon': Icons.table_restaurant_rounded,
+        'color': const Color(0xFF8D6E63)
+      },
+      {
+        'id': 'baby_supplies',
+        'name': 'عالم الأطفال',
+        'subtitle': 'أمان وراحة',
+        'icon': FontAwesomeIcons.baby,
+        'color': const Color(0xFFEC407A)
+      },
+      {
+        'id': 'carpets',
+        'name': 'سجاد فاخر',
+        'subtitle': 'لمسة دافئة',
+        'icon': FontAwesomeIcons.rug,
+        'color': const Color(0xFF26A69A)
+      },
+      {
+        'id': 'pillows',
+        'name': 'وسائد طبية',
+        'subtitle': 'نوم صحي',
+        'icon': FontAwesomeIcons.cloud,
+        'color': const Color(0xFF78909C)
+      },
+      {
+        'id': 'furniture',
+        'name': 'أثاث منزلي',
+        'subtitle': 'تجديد شامل',
+        'icon': FontAwesomeIcons.couch,
+        'color': const Color(0xFFFFA726)
+      },
+      {
+        'id': 'home_decor',
+        'name': 'ديكورات',
+        'subtitle': 'لمسات فنية',
+        'icon': FontAwesomeIcons.leaf,
+        'color': const Color(0xFF66BB6A)
+      },
     ];
 
     final categoriesAsync = ref.watch(categoriesConfigProvider);
@@ -95,17 +137,23 @@ class ModernCategorySection extends ConsumerWidget {
                   ),
                 ],
               ),
-              
+
               // زر نصي أنيق وصغير
               InkWell(
                 onTap: () => context.push('/all_products'),
                 borderRadius: BorderRadius.circular(20),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: Row(
                     children: [
-                      Text("الكل", style: TextStyle(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.bold)),
-                      const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey),
+                      Text("الكل",
+                          style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.bold)),
+                      const Icon(Icons.arrow_forward_ios,
+                          size: 12, color: Colors.grey),
                     ],
                   ),
                 ),
@@ -113,7 +161,7 @@ class ModernCategorySection extends ConsumerWidget {
             ],
           ),
         ),
-        
+
         // 2. القائمة الأفقية
         SizedBox(
           height: 150,
@@ -136,8 +184,10 @@ class ModernCategorySection extends ConsumerWidget {
 
               return _buildCategoriesList(context, mapped);
             },
-            loading: () => _buildDefaultCategoriesList(context, defaultCategories),
-            error: (_, __) => _buildDefaultCategoriesList(context, defaultCategories),
+            loading: () =>
+                _buildDefaultCategoriesList(context, defaultCategories),
+            error: (_, __) =>
+                _buildDefaultCategoriesList(context, defaultCategories),
           ),
         ),
       ],
@@ -194,26 +244,38 @@ class ModernCategorySection extends ConsumerWidget {
   Widget _buildCategoryCard(BuildContext context, Map<String, dynamic> cat) {
     return GestureDetector(
       onTap: () {
-        context.push('/category/${cat['id']}', extra: {'name': cat['name'], 'color': cat['color']});
+        context.push('/category/${cat['id']}',
+            extra: {'name': cat['name'], 'color': cat['color']});
       },
       child: Container(
         width: 120,
         margin: const EdgeInsets.only(right: 12, bottom: 10),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [(cat['color'] as Color).withValues(alpha: 0.8), (cat['color'] as Color)],
-            begin: Alignment.topLeft, end: Alignment.bottomRight,
+            colors: [
+              (cat['color'] as Color).withValues(alpha: 0.8),
+              (cat['color'] as Color)
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: (cat['color'] as Color).withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))],
+          boxShadow: [
+            BoxShadow(
+                color: (cat['color'] as Color).withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4))
+          ],
         ),
         child: Stack(
           children: [
             Positioned(
-              right: -15, bottom: -15,
+              right: -15,
+              bottom: -15,
               child: Transform.rotate(
                 angle: -0.2,
-                child: Icon(cat['icon'] as IconData, size: 80, color: Colors.white.withValues(alpha: 0.15)),
+                child: Icon(cat['icon'] as IconData,
+                    size: 80, color: Colors.white.withValues(alpha: 0.15)),
               ),
             ),
             Positioned(
@@ -248,8 +310,11 @@ class ModernCategorySection extends ConsumerWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.2), shape: BoxShape.circle),
-                    child: Icon(cat['icon'] as IconData, color: Colors.white, size: 16),
+                    decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        shape: BoxShape.circle),
+                    child: Icon(cat['icon'] as IconData,
+                        color: Colors.white, size: 16),
                   ),
                   const Spacer(),
                   AutoSizeText(
@@ -294,8 +359,11 @@ class ModernCategorySection extends ConsumerWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF0A2647).withValues(alpha: 0.1), width: 1),
-          boxShadow: [BoxShadow(color: Colors.grey.withValues(alpha: 0.05), blurRadius: 5)],
+          border: Border.all(
+              color: const Color(0xFF0A2647).withValues(alpha: 0.1), width: 1),
+          boxShadow: [
+            BoxShadow(color: Colors.grey.withValues(alpha: 0.05), blurRadius: 5)
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -306,12 +374,18 @@ class ModernCategorySection extends ConsumerWidget {
                 color: const Color(0xFF0A2647).withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.grid_view_rounded, color: Color(0xFF0A2647)),
+              child:
+                  const Icon(Icons.grid_view_rounded, color: Color(0xFF0A2647)),
             ),
             const SizedBox(height: 12),
-            Text("عرض الكل", style: TextStyle(color: const Color(0xFF0A2647), fontWeight: FontWeight.bold, fontSize: 14)),
+            Text("عرض الكل",
+                style: TextStyle(
+                    color: const Color(0xFF0A2647),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14)),
             const SizedBox(height: 4),
-            Text("تصفح الجميع", style: TextStyle(color: Colors.grey, fontSize: 10)),
+            Text("تصفح الجميع",
+                style: TextStyle(color: Colors.grey, fontSize: 10)),
           ],
         ),
       ),

@@ -17,9 +17,7 @@ class PillowCarousel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final pillows = products
-        .where((p) => p.category == 'pillows')
-        .toList();
+    final pillows = products.where((p) => p.category == 'pillows').toList();
 
     if (pillows.isEmpty) {
       return const SizedBox.shrink();

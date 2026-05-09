@@ -28,23 +28,26 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       await ref.read(userProfileProvider.notifier).updateProfile(
-        name: _nameCtrl.text,
-        phone: _phoneCtrl.text,
-        address: _addressCtrl.text,
-      );
-      
+            name: _nameCtrl.text,
+            phone: _phoneCtrl.text,
+            address: _addressCtrl.text,
+          );
+
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("تم تحديث البيانات بنجاح"), backgroundColor: Colors.green));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("تم تحديث البيانات بنجاح"),
+            backgroundColor: Colors.green));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("فشل التحديث، حاول لاحقاً")));
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("فشل التحديث، حاول لاحقاً")));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -54,7 +57,8 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+      padding: EdgeInsets.fromLTRB(
+          20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
@@ -65,17 +69,22 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)))),
+            Center(
+                child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2)))),
             const SizedBox(height: 20),
-            Text("تعديل بياناتي", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text("تعديل بياناتي",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
-            
             _buildField(_nameCtrl, "الاسم الكامل", Icons.person),
             const SizedBox(height: 15),
             _buildField(_phoneCtrl, "رقم الهاتف", Icons.phone, isNumber: true),
             const SizedBox(height: 15),
             _buildField(_addressCtrl, "العنوان التفصيلي", Icons.location_on),
-            
             const SizedBox(height: 25),
             SizedBox(
               width: double.infinity,
@@ -85,11 +94,16 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0A2647),
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
-                child: _isLoading 
-                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text("حفظ التغييرات"),
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2))
+                    : const Text("حفظ التغييرات"),
               ),
             ),
           ],
@@ -98,7 +112,8 @@ class _EditProfileSheetState extends ConsumerState<EditProfileSheet> {
     );
   }
 
-  Widget _buildField(TextEditingController ctrl, String label, IconData icon, {bool isNumber = false}) {
+  Widget _buildField(TextEditingController ctrl, String label, IconData icon,
+      {bool isNumber = false}) {
     return TextFormField(
       controller: ctrl,
       keyboardType: isNumber ? TextInputType.phone : TextInputType.text,

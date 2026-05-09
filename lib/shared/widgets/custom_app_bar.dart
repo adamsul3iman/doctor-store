@@ -24,8 +24,10 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final String? shareTitle;
   final VoidCallback? onShareTap;
   final Color iconColor;
+
   /// تحكم في إظهار زر المشاركة من عدمه (افتراضياً ظاهر للحفاظ على السلوك القديم)
   final bool showShare;
+
   /// في بعض الشاشات (مثل كل المجموعات) نريد وضع أيقونة السلة بجانب البحث في الجهة اليسرى (RTL)
   final bool moveCartNextToSearch;
 
@@ -182,14 +184,15 @@ class CustomAppBarContent extends ConsumerWidget {
                           PhosphorIcons.shareNetwork(),
                           color: iconColor,
                         ),
-                        onPressed: onShareTap ?? () {
-                          if (sharePath != null && shareTitle != null) {
-                            shareAppPage(
-                              path: sharePath!,
-                              title: shareTitle!,
-                            );
-                          }
-                        },
+                        onPressed: onShareTap ??
+                            () {
+                              if (sharePath != null && shareTitle != null) {
+                                shareAppPage(
+                                  path: sharePath!,
+                                  title: shareTitle!,
+                                );
+                              }
+                            },
                       ),
                     if (!isRecentlyViewedRoute && recentlyViewedCount > 0)
                       InkWell(

@@ -17,7 +17,7 @@ class CartItem {
   final double? variantPrice;
 
   CartItem({
-    required this.product, 
+    required this.product,
     this.quantity = 1,
     this.selectedColor,
     this.selectedSize,
@@ -64,10 +64,14 @@ class CartItem {
 class Coupon {
   final String id;
   final String code;
-  final String type; 
+  final String type;
   final double value;
 
-  Coupon({required this.id, required this.code, required this.type, required this.value});
+  Coupon(
+      {required this.id,
+      required this.code,
+      required this.type,
+      required this.value});
 
   factory Coupon.fromRpc(Map<String, dynamic> json, String code) {
     final String id = json['id']?.toString() ?? '';
@@ -203,7 +207,8 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
   }
 
   /// ✅ Helper: Get available stock for a product variant
-  int? _getAvailableStock(Product product, String? selectedColor, String? selectedSize) {
+  int? _getAvailableStock(
+      Product product, String? selectedColor, String? selectedSize) {
     final variant = product.findMatchingVariant(
       color: selectedColor,
       size: selectedSize,
@@ -213,7 +218,8 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
   }
 
   /// ✅ Helper: Get total quantity of an item already in cart
-  int _getCurrentCartQuantity(Product product, String? selectedColor, String? selectedSize) {
+  int _getCurrentCartQuantity(
+      Product product, String? selectedColor, String? selectedSize) {
     final existingItem = state.firstWhere(
       (item) =>
           item.product.id == product.id &&
@@ -224,15 +230,22 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     return existingItem.quantity;
   }
 
-  Future<bool> addItem(Product product, {int quantity = 1, String? selectedColor, String? selectedSize, double? variantPrice}) async {
+  Future<bool> addItem(Product product,
+      {int quantity = 1,
+      String? selectedColor,
+      String? selectedSize,
+      double? variantPrice}) async {
     // ✅ Stock validation: Check if adding exceeds available stock
-    final availableStock = _getAvailableStock(product, selectedColor, selectedSize);
+    final availableStock =
+        _getAvailableStock(product, selectedColor, selectedSize);
     if (availableStock != null) {
-      final currentQty = _getCurrentCartQuantity(product, selectedColor, selectedSize);
+      final currentQty =
+          _getCurrentCartQuantity(product, selectedColor, selectedSize);
       final totalRequested = currentQty + quantity;
-      
+
       if (totalRequested > availableStock) {
-        debugPrint('❌ Stock limit exceeded: requested $totalRequested, available $availableStock');
+        debugPrint(
+            '❌ Stock limit exceeded: requested $totalRequested, available $availableStock');
         return false; // Cannot add more than available
       }
     }
@@ -273,7 +286,8 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
 
   void incrementQuantity(CartItem item) {
     // ✅ Stock validation before incrementing
-    final availableStock = _getAvailableStock(item.product, item.selectedColor, item.selectedSize);
+    final availableStock =
+        _getAvailableStock(item.product, item.selectedColor, item.selectedSize);
     if (availableStock != null && item.quantity >= availableStock) {
       debugPrint('❌ Cannot increment: stock limit reached ($availableStock)');
       return; // Already at max stock
@@ -285,20 +299,22 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     if (item.quantity > 1) {
       updateQuantity(item, item.quantity - 1);
     } else {
-      removeItem(item); 
+      removeItem(item);
     }
   }
 
   void updateQuantity(CartItem item, int newQuantity) {
     if (newQuantity < 1) return;
-    
+
     // ✅ Stock validation: Cannot exceed available stock
-    final availableStock = _getAvailableStock(item.product, item.selectedColor, item.selectedSize);
+    final availableStock =
+        _getAvailableStock(item.product, item.selectedColor, item.selectedSize);
     if (availableStock != null && newQuantity > availableStock) {
-      debugPrint('❌ Cannot update: requested $newQuantity, available $availableStock');
+      debugPrint(
+          '❌ Cannot update: requested $newQuantity, available $availableStock');
       newQuantity = availableStock; // Cap at available stock
     }
-    
+
     state = [
       for (final i in state)
         if (i == item)
@@ -350,7 +366,8 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     // نبني عناصر الفاتورة دائماً من حالة السلة الحالية (النسخة الثابتة)
     final List<Map<String, dynamic>> invoiceItems = [];
     for (final item in itemsSnapshot) {
-      final specificImageUrl = WhatsAppService.getCorrectImageUrl(item.product, item.selectedColor);
+      final specificImageUrl =
+          WhatsAppService.getCorrectImageUrl(item.product, item.selectedColor);
 
       final variant = item.product.findMatchingVariant(
         color: item.selectedColor,
@@ -405,16 +422,20 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     () async {
       // نحفظ طلبات السلة للضيوف أيضًا حتى تظهر في لوحة التحكم.
       try {
-        final orderRes = await supabase.from('orders').insert({
-          'customer_name': customerName,
-          'customer_phone': customerPhone,
-          'customer_address':
-              'منطقة التوصيل: $deliveryZoneName (رسوم: ${deliveryFee.toStringAsFixed(2)} د.أ)',
-          'total_amount': totalAmount,
-          'platform': 'whatsapp',
-          'status': 'new',
-          'user_id': user?.id,
-        }).select().single();
+        final orderRes = await supabase
+            .from('orders')
+            .insert({
+              'customer_name': customerName,
+              'customer_phone': customerPhone,
+              'customer_address':
+                  'منطقة التوصيل: $deliveryZoneName (رسوم: ${deliveryFee.toStringAsFixed(2)} د.أ)',
+              'total_amount': totalAmount,
+              'platform': 'whatsapp',
+              'status': 'new',
+              'user_id': user?.id,
+            })
+            .select()
+            .single();
 
         final dynamic orderIdRaw = orderRes['id'];
         orderIdLabel = orderIdRaw.toString();
@@ -423,7 +444,8 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
         // بعد الحصول على رقم الطلب، نحاول حفظ عناصر السلة (من النسخة الثابتة)
         var savedItemsCount = 0;
         for (final item in itemsSnapshot) {
-          final specificImageUrl = WhatsAppService.getCorrectImageUrl(item.product, item.selectedColor);
+          final specificImageUrl = WhatsAppService.getCorrectImageUrl(
+              item.product, item.selectedColor);
           try {
             await supabase.from('order_items').insert({
               'order_id': orderIdRaw,
@@ -544,16 +566,20 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     // 2) بعد فتح الواتساب نحفظ الطلب في Supabase في الخلفية
     () async {
       try {
-        final orderRes = await supabase.from('orders').insert({
-          'customer_name': customerName,
-          'customer_phone': customerPhone,
-          'customer_address':
-              'منطقة التوصيل: $deliveryZoneName (رسوم: ${deliveryFee.toStringAsFixed(2)} د.أ)',
-          'total_amount': total,
-          'status': 'new',
-          'platform': 'whatsapp',
-          'user_id': user?.id,
-        }).select().single();
+        final orderRes = await supabase
+            .from('orders')
+            .insert({
+              'customer_name': customerName,
+              'customer_phone': customerPhone,
+              'customer_address':
+                  'منطقة التوصيل: $deliveryZoneName (رسوم: ${deliveryFee.toStringAsFixed(2)} د.أ)',
+              'total_amount': total,
+              'status': 'new',
+              'platform': 'whatsapp',
+              'user_id': user?.id,
+            })
+            .select()
+            .single();
 
         final dynamic orderIdRaw = orderRes['id'];
         orderIdLabel = orderIdRaw.toString();
@@ -631,7 +657,8 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     // بناء عناصر الفاتورة لاستخدامها في رسالة الواتساب
     final List<Map<String, dynamic>> invoiceItems = [];
     for (final item in items) {
-      final specificImageUrl = WhatsAppService.getCorrectImageUrl(item.product, item.selectedColor);
+      final specificImageUrl =
+          WhatsAppService.getCorrectImageUrl(item.product, item.selectedColor);
 
       final variant = item.product.findMatchingVariant(
         color: item.selectedColor,
@@ -678,22 +705,27 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     // 2) بعد فتح الواتساب نحفظ الطلب في Supabase في الخلفية
     () async {
       try {
-        final orderRes = await supabase.from('orders').insert({
-          'customer_name': customerName,
-          'customer_phone': customerPhone,
-          'customer_address':
-              'منطقة التوصيل: $deliveryZoneName (رسوم: ${deliveryFee.toStringAsFixed(2)} د.أ)',
-          'total_amount': total,
-          'status': 'new',
-          'platform': 'whatsapp',
-          'user_id': user?.id,
-        }).select().single();
+        final orderRes = await supabase
+            .from('orders')
+            .insert({
+              'customer_name': customerName,
+              'customer_phone': customerPhone,
+              'customer_address':
+                  'منطقة التوصيل: $deliveryZoneName (رسوم: ${deliveryFee.toStringAsFixed(2)} د.أ)',
+              'total_amount': total,
+              'status': 'new',
+              'platform': 'whatsapp',
+              'user_id': user?.id,
+            })
+            .select()
+            .single();
 
         final dynamic orderIdRaw = orderRes['id'];
         orderIdLabel = orderIdRaw.toString();
 
         for (final item in items) {
-          final specificImageUrl = WhatsAppService.getCorrectImageUrl(item.product, item.selectedColor);
+          final specificImageUrl = WhatsAppService.getCorrectImageUrl(
+              item.product, item.selectedColor);
           try {
             await supabase.from('order_items').insert({
               'order_id': orderIdRaw,
@@ -742,32 +774,35 @@ class CustomCheckoutItem {
 }
 
 // الدوال المساعدة العامة
-Future<String?> validateCoupon(WidgetRef ref, String code, {String? phone}) async {
+Future<String?> validateCoupon(WidgetRef ref, String code,
+    {String? phone}) async {
   try {
     final userProfile = ref.read(userProfileProvider);
-    final customerPhone =
-        (phone != null && phone.trim().isNotEmpty) ? phone.trim() : userProfile.phone;
-    final response = await Supabase.instance.client.rpc('verify_and_apply_coupon', params: {
+    final customerPhone = (phone != null && phone.trim().isNotEmpty)
+        ? phone.trim()
+        : userProfile.phone;
+    final response =
+        await Supabase.instance.client.rpc('verify_and_apply_coupon', params: {
       'p_code': code,
       'p_phone': customerPhone,
     });
-    
+
     final data = response as Map<String, dynamic>;
 
     if (data['valid'] == true) {
       final coupon = Coupon.fromRpc(data, code);
       ref.read(couponProvider.notifier).state = coupon;
-      return null; 
+      return null;
     } else {
       return data['message'] ?? "الكوبون غير صالح";
     }
-
   } catch (e) {
     return "خطأ في الاتصال";
   }
 }
 
-Future<void> registerCouponUsage(String couponId, String orderId, String phone) async {
+Future<void> registerCouponUsage(
+    String couponId, String orderId, String phone) async {
   try {
     await Supabase.instance.client.rpc('register_coupon_usage', params: {
       'p_coupon_id': couponId,

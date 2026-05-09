@@ -74,8 +74,8 @@ class _ReviewsSectionState extends State<ReviewsSection> {
       final list = raw;
       for (final item in list) {
         data.add(item);
-            }
-      
+      }
+
       Map<int, int> counts = {5: 0, 4: 0, 3: 0, 2: 0, 1: 0};
       for (var r in data) {
         final rawRating = r['rating'];
@@ -121,32 +121,36 @@ class _ReviewsSectionState extends State<ReviewsSection> {
 
     showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          return Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            child: ConstrainedDialog(
-              maxWidth: 550,
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+      builder: (ctx) => StatefulBuilder(builder: (context, setDialogState) {
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: ConstrainedDialog(
+            maxWidth: 550,
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   Container(
                     padding: const EdgeInsets.all(15),
                     decoration: BoxDecoration(
                       color: const Color(0xFF0A2647).withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.rate_review_outlined, color: Color(0xFF0A2647), size: 30),
+                    child: const Icon(Icons.rate_review_outlined,
+                        color: Color(0xFF0A2647), size: 30),
                   ),
                   const SizedBox(height: 15),
-                  Text("رأيك يهمنا! ✨", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text("رأيك يهمنا! ✨",
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
                   Text(
                     "نود سماع تجربتك. يرجى كتابة اسمك وبريدك الإلكتروني لتوثيق التقييم.",
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 13, height: 1.5),
+                    style: TextStyle(
+                        color: Colors.grey[600], fontSize: 13, height: 1.5),
                   ),
                   const SizedBox(height: 20),
                   TextField(
@@ -154,7 +158,8 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                     decoration: InputDecoration(
                       labelText: "الاسم",
                       prefixIcon: const Icon(Icons.person_outline),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -164,7 +169,8 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                     decoration: InputDecoration(
                       labelText: "البريد الإلكتروني",
                       prefixIcon: const Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -172,41 +178,56 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                     width: double.infinity,
                     height: 45,
                     child: ElevatedButton(
-                      onPressed: isLoading ? null : () async {
-                        if (nameCtrl.text.isEmpty || !emailCtrl.text.contains('@')) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("يرجى إدخال بيانات صحيحة")));
-                          return;
-                        }
+                      onPressed: isLoading
+                          ? null
+                          : () async {
+                              if (nameCtrl.text.isEmpty ||
+                                  !emailCtrl.text.contains('@')) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content:
+                                            Text("يرجى إدخال بيانات صحيحة")));
+                                return;
+                              }
 
-                        setDialogState(() => isLoading = true);
+                              setDialogState(() => isLoading = true);
 
-                        // حفظ البيانات محلياً
-                        final prefs = await SharedPreferences.getInstance();
-                        await prefs.setString('user_name', nameCtrl.text.trim());
-                        await prefs.setString('user_email', emailCtrl.text.trim());
+                              // حفظ البيانات محلياً
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              await prefs.setString(
+                                  'user_name', nameCtrl.text.trim());
+                              await prefs.setString(
+                                  'user_email', emailCtrl.text.trim());
 
-                        if (!mounted) return;
+                              if (!mounted) return;
 
-                        Navigator.pop(context); // إغلاق النافذة
-                        _showReviewBottomSheet(nameCtrl.text.trim(), emailCtrl.text.trim()); // فتح التقييم
-                      },
+                              Navigator.pop(context); // إغلاق النافذة
+                              _showReviewBottomSheet(nameCtrl.text.trim(),
+                                  emailCtrl.text.trim()); // فتح التقييم
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF0A2647),
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
                       ),
-                      child: isLoading 
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text("متابعة للتقييم", style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                  color: Colors.white, strokeWidth: 2))
+                          : const Text("متابعة للتقييم",
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
-                  ],
-                ),
+                ],
               ),
             ),
-          );
-        }
-      ),
+          ),
+        );
+      }),
     );
   }
 
@@ -218,13 +239,19 @@ class _ReviewsSectionState extends State<ReviewsSection> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 20, left: 20, right: 20, top: 20),
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            left: 20,
+            right: 20,
+            top: 20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text("كيف كانت تجربتك يا $userName؟", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text("كيف كانت تجربتك يا $userName؟",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             RatingBar.builder(
               initialRating: 0,
@@ -233,7 +260,8 @@ class _ReviewsSectionState extends State<ReviewsSection> {
               allowHalfRating: false,
               itemCount: 5,
               itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
-              itemBuilder: (context, _) => const Icon(Icons.star, color: Color(0xFFD4AF37)),
+              itemBuilder: (context, _) =>
+                  const Icon(Icons.star, color: Color(0xFFD4AF37)),
               onRatingUpdate: (rating) {
                 userRating = rating;
               },
@@ -253,31 +281,37 @@ class _ReviewsSectionState extends State<ReviewsSection> {
               child: ElevatedButton(
                 onPressed: () async {
                   if (userRating == 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("يرجى اختيار عدد النجوم")));
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text("يرجى اختيار عدد النجوم")));
                     return;
                   }
-                  
-                  try {
-                        await Supabase.instance.client.from('reviews').insert({
-                          'product_id': widget.productId,
-                          'rating': userRating.toInt(),
-                          'comment': commentCtrl.text,
-                          'user_name': userName,
-                          'user_email': userEmail,
-                          // التقييمات الجديدة تبدأ كـ "بانتظار المراجعة" حتى يعتمدها الأدمن
-                          'is_approved': false,
-                        });
-                        
-                        if (!mounted) return;
 
-                        Navigator.pop(context);
-                        _fetchReviews(); // تحديث القائمة فوراً
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("شكراً لتقييمك! تم النشر بنجاح")));
+                  try {
+                    await Supabase.instance.client.from('reviews').insert({
+                      'product_id': widget.productId,
+                      'rating': userRating.toInt(),
+                      'comment': commentCtrl.text,
+                      'user_name': userName,
+                      'user_email': userEmail,
+                      // التقييمات الجديدة تبدأ كـ "بانتظار المراجعة" حتى يعتمدها الأدمن
+                      'is_approved': false,
+                    });
+
+                    if (!mounted) return;
+
+                    Navigator.pop(context);
+                    _fetchReviews(); // تحديث القائمة فوراً
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                        content: Text("شكراً لتقييمك! تم النشر بنجاح")));
                   } catch (e) {
-                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("حدث خطأ: $e")));
+                    if (mounted)
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(SnackBar(content: Text("حدث خطأ: $e")));
                   }
                 },
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0A2647), foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0A2647),
+                    foregroundColor: Colors.white),
                 child: const Text("نشر التقييم"),
               ),
             ),
@@ -295,11 +329,10 @@ class _ReviewsSectionState extends State<ReviewsSection> {
         const Divider(height: 40),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text("تقييمات العملاء", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          child: Text("تقييمات العملاء",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         ),
-        
         const SizedBox(height: 20),
-
         if (widget.ratingCount > 0)
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -314,16 +347,22 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                   children: [
                     Text(
                       widget.averageRating.toStringAsFixed(1),
-                      style: TextStyle(fontSize: 45, fontWeight: FontWeight.bold, color: const Color(0xFF0A2647)),
+                      style: TextStyle(
+                          fontSize: 45,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF0A2647)),
                     ),
                     RatingBarIndicator(
                       rating: widget.averageRating,
-                      itemBuilder: (context, index) => const Icon(Icons.star, color: Color(0xFFD4AF37)),
+                      itemBuilder: (context, index) =>
+                          const Icon(Icons.star, color: Color(0xFFD4AF37)),
                       itemCount: 5,
                       itemSize: 18.0,
                     ),
                     const SizedBox(height: 5),
-                    Text("${widget.ratingCount} تقييم", style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                    Text("${widget.ratingCount} تقييم",
+                        style:
+                            TextStyle(color: Colors.grey[600], fontSize: 12)),
                   ],
                 ),
                 const SizedBox(width: 20),
@@ -347,16 +386,16 @@ class _ReviewsSectionState extends State<ReviewsSection> {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  Icon(Icons.rate_review_outlined, size: 50, color: Colors.grey[300]),
+                  Icon(Icons.rate_review_outlined,
+                      size: 50, color: Colors.grey[300]),
                   const SizedBox(height: 10),
-                  const Text("كن أول من يقيم هذا المنتج!", style: TextStyle(color: Colors.grey)),
+                  const Text("كن أول من يقيم هذا المنتج!",
+                      style: TextStyle(color: Colors.grey)),
                 ],
               ),
             ),
           ),
-
         const SizedBox(height: 20),
-
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: SizedBox(
@@ -373,25 +412,19 @@ class _ReviewsSectionState extends State<ReviewsSection> {
             ),
           ),
         ),
-
         const SizedBox(height: 20),
-
         if (_reviews.isNotEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: _buildSortChips(),
           ),
-
         const SizedBox(height: 20),
-
         if (_isLoading)
           const Center(child: CircularProgressIndicator())
         else if (_reviews.isNotEmpty) ...[
           _buildReviewsList(),
-        ]
-        else
+        ] else
           const SizedBox.shrink(),
-
         const SizedBox(height: 50),
       ],
     );
@@ -458,7 +491,8 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                 fontWeight: FontWeight.w700,
                 color: isSelected ? Colors.white : const Color(0xFF0A2647),
               ),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
             ),
           );
         }).toList(),
@@ -577,7 +611,11 @@ class _ReviewsSectionState extends State<ReviewsSection> {
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Text("$star", style: TextStyle(color: Colors.grey[600], fontSize: 12, fontWeight: FontWeight.bold)),
+          Text("$star",
+              style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold)),
           const Icon(Icons.star, size: 10, color: Colors.grey),
           const SizedBox(width: 8),
           Expanded(
@@ -630,7 +668,8 @@ class _ReviewsSectionState extends State<ReviewsSection> {
                 backgroundColor: Colors.grey[200],
                 child: () {
                   final rawName = review['user_name']?.toString() ?? '';
-                  final safeName = rawName.trim().isNotEmpty ? rawName.trim() : 'عميل';
+                  final safeName =
+                      rawName.trim().isNotEmpty ? rawName.trim() : 'عميل';
                   final firstLetter = safeName[0].toUpperCase();
                   return Text(
                     firstLetter,
@@ -657,7 +696,8 @@ class _ReviewsSectionState extends State<ReviewsSection> {
           const SizedBox(height: 8),
           RatingBarIndicator(
             rating: (review['rating'] as num?)?.toDouble() ?? 0.0,
-            itemBuilder: (context, index) => const Icon(Icons.star, color: Color(0xFFD4AF37)),
+            itemBuilder: (context, index) =>
+                const Icon(Icons.star, color: Color(0xFFD4AF37)),
             itemCount: 5,
             itemSize: 14.0,
           ),

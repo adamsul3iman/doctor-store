@@ -10,10 +10,12 @@ import 'package:doctor_store/shared/services/smart_search_service.dart';
 import 'package:doctor_store/shared/utils/responsive_layout.dart';
 
 class ProductSearchDelegate extends SearchDelegate {
-  
   // قائمة بسيطة للاحتفاظ بآخر عمليات البحث خلال جلسة الاستخدام الحالية فقط
   static final List<String> _recentQueries = [];
-  
+
+  String? _lastQuery;
+  Future<List<Product>>? _lastSearchFuture;
+
   // تخصيص مظهر شريط البحث (كما في تصميمك)
   @override
   ThemeData appBarTheme(BuildContext context) {
@@ -35,7 +37,8 @@ class ProductSearchDelegate extends SearchDelegate {
           borderRadius: BorderRadius.circular(15),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       ),
       textTheme: TextTheme(
         titleLarge: TextStyle(
@@ -131,8 +134,8 @@ class ProductSearchDelegate extends SearchDelegate {
                       color: Colors.white.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.search,
-                        color: Colors.white, size: 22),
+                    child:
+                        const Icon(Icons.search, color: Colors.white, size: 22),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -186,20 +189,25 @@ class ProductSearchDelegate extends SearchDelegate {
               children: popularTags.map((tag) {
                 return ActionChip(
                   elevation: 0,
-                backgroundColor: Colors.white,
-                side: BorderSide(color: Colors.grey.shade200),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                avatar: Icon(tag['icon'] as IconData, size: 16, color: const Color(0xFF0A2647)),
-                label: Text(
-                  tag['label'] as String,
-                  style: TextStyle(color: const Color(0xFF0A2647), fontWeight: FontWeight.w600),
-                ),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                onPressed: () {
-                  query = tag['label'] as String;
-                  showResults(context);
-                },
-              );
+                  backgroundColor: Colors.white,
+                  side: BorderSide(color: Colors.grey.shade200),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  avatar: Icon(tag['icon'] as IconData,
+                      size: 16, color: const Color(0xFF0A2647)),
+                  label: Text(
+                    tag['label'] as String,
+                    style: TextStyle(
+                        color: const Color(0xFF0A2647),
+                        fontWeight: FontWeight.w600),
+                  ),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  onPressed: () {
+                    query = tag['label'] as String;
+                    showResults(context);
+                  },
+                );
               }).toList(),
             ),
             const SizedBox(height: 24),
@@ -226,16 +234,16 @@ class ProductSearchDelegate extends SearchDelegate {
                 runSpacing: 8,
                 children: _recentQueries.map((q) {
                   return InputChip(
-                  label: Text(
-                    q,
-                    style: TextStyle(fontSize: 13),
-                  ),
-                  backgroundColor: Colors.white,
-                  onPressed: () {
-                    query = q;
-                    showResults(context);
-                  },
-                );
+                    label: Text(
+                      q,
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    backgroundColor: Colors.white,
+                    onPressed: () {
+                      query = q;
+                      showResults(context);
+                    },
+                  );
                 }).toList(),
               ),
             ],
@@ -253,10 +261,15 @@ class ProductSearchDelegate extends SearchDelegate {
     }
 
     // حفظ آخر عمليات البحث (بدون تكرار) لعرضها كاقتراحات ذكية لاحقاً
-    if (!_recentQueries.contains(cleanedQuery)) {
-      _recentQueries.insert(0, cleanedQuery);
-      if (_recentQueries.length > 8) {
-        _recentQueries.removeLast();
+    if (_lastQuery != cleanedQuery) {
+      _lastQuery = cleanedQuery;
+      _lastSearchFuture = SmartSearchService.instance.smartSearch(cleanedQuery);
+
+      if (!_recentQueries.contains(cleanedQuery)) {
+        _recentQueries.insert(0, cleanedQuery);
+        if (_recentQueries.length > 8) {
+          _recentQueries.removeLast();
+        }
       }
     }
 
@@ -264,7 +277,7 @@ class ProductSearchDelegate extends SearchDelegate {
       color: Colors.grey[50], // خلفية فاتحة
       child: FutureBuilder<List<Product>>(
         // ✅ البحث الذكي مع تصحيح الأخطاء والمرادفات
-        future: SmartSearchService.instance.smartSearch(cleanedQuery),
+        future: _lastSearchFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return _buildLoadingSkeleton();
@@ -279,7 +292,8 @@ class ProductSearchDelegate extends SearchDelegate {
                 children: [
                   const Icon(Icons.wifi_off, size: 60, color: Colors.redAccent),
                   const SizedBox(height: 10),
-                  Text("تعذر تحميل نتائج البحث، تأكد من اتصالك بالإنترنت", style: TextStyle()),
+                  Text("تعذر تحميل نتائج البحث، تأكد من اتصالك بالإنترنت",
+                      style: TextStyle()),
                 ],
               ),
             );
@@ -308,9 +322,9 @@ class ProductSearchDelegate extends SearchDelegate {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildLoadingSkeleton();
         }
-        
+
         final suggestions = snapshot.data ?? [];
-        
+
         return SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -326,7 +340,8 @@ class ProductSearchDelegate extends SearchDelegate {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.lightbulb_outline, color: Colors.blue.shade700, size: 24),
+                    Icon(Icons.lightbulb_outline,
+                        color: Colors.blue.shade700, size: 24),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -342,7 +357,7 @@ class ProductSearchDelegate extends SearchDelegate {
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               // عرض المنتجات المقترحة
               if (suggestions.isNotEmpty)
                 LayoutBuilder(
@@ -355,7 +370,8 @@ class ProductSearchDelegate extends SearchDelegate {
                     );
                     final isCompact = crossAxisCount >= 3;
                     const spacing = 12.0;
-                    final mainAxisExtent = ResponsiveLayout.productCardMainAxisExtent(
+                    final mainAxisExtent =
+                        ResponsiveLayout.productCardMainAxisExtent(
                       constraints.maxWidth,
                       crossAxisCount: crossAxisCount,
                       crossAxisSpacing: spacing,
@@ -475,7 +491,7 @@ class ProductSearchDelegate extends SearchDelegate {
   Future<List<Product>> _getRandomProducts() async {
     try {
       final supabase = Supabase.instance.client;
-      
+
       // نجلب منتجات عشوائية (أول 12 منتج)
       final data = await supabase
           .from('products')

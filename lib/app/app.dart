@@ -22,18 +22,19 @@ class _DoctorStoreAppState extends ConsumerState<DoctorStoreApp> {
   @override
   void initState() {
     super.initState();
-    
+
     // ✅ قراءة URL المتصفح وتهيئة الـ Router به
     String initialLocation = '/';
     if (kIsWeb) {
-      initialLocation = Uri.base.path + (Uri.base.hasQuery ? '?${Uri.base.query}' : '');
+      initialLocation =
+          Uri.base.path + (Uri.base.hasQuery ? '?${Uri.base.query}' : '');
       if (initialLocation.isEmpty) initialLocation = '/';
-      
+
       // استخدام print بدلاً من debugPrint للإنتاج
       // ignore: avoid_print
       print('🌐 Initial location from browser: $initialLocation');
     }
-    
+
     _router = createAppRouterWithLocation(initialLocation);
   }
 

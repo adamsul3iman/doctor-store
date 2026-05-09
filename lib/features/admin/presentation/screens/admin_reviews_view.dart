@@ -36,9 +36,7 @@ class _AdminReviewsViewState extends State<AdminReviewsView> {
       if (mounted) {
         final list = raw;
         setState(() {
-          _reviews = list
-              .whereType<Map<String, dynamic>>()
-              .toList();
+          _reviews = list.whereType<Map<String, dynamic>>().toList();
           _isLoading = false;
           _selectedReviewIds.removeWhere(
             (id) => !_reviews.any((r) => r['id']?.toString() == id),
@@ -144,10 +142,7 @@ class _AdminReviewsViewState extends State<AdminReviewsView> {
 
     try {
       for (final id in _selectedReviewIds) {
-        await Supabase.instance.client
-            .from('reviews')
-            .delete()
-            .eq('id', id);
+        await Supabase.instance.client.from('reviews').delete().eq('id', id);
       }
 
       if (!mounted) return;
@@ -311,11 +306,10 @@ class _AdminReviewsViewState extends State<AdminReviewsView> {
                             await Supabase.instance.client
                                 .from('reviews')
                                 .update({
-                                  'admin_reply': text,
-                                  'admin_replied_at':
-                                      DateTime.now().toUtc().toIso8601String(),
-                                })
-                                .eq('id', id);
+                              'admin_reply': text,
+                              'admin_replied_at':
+                                  DateTime.now().toUtc().toIso8601String(),
+                            }).eq('id', id);
 
                             if (mounted) {
                               Navigator.of(ctx).pop();
@@ -333,8 +327,7 @@ class _AdminReviewsViewState extends State<AdminReviewsView> {
                             });
                           } catch (e) {
                             setState(() {
-                              error =
-                                  'تعذر حفظ الرد حالياً، حاول لاحقاً. ($e)';
+                              error = 'تعذر حفظ الرد حالياً، حاول لاحقاً. ($e)';
                             });
                           } finally {
                             setState(() {
@@ -476,9 +469,13 @@ class _AdminReviewsViewState extends State<AdminReviewsView> {
                     final productData = review['products'];
                     final String productTitle;
                     if (productData is Map<String, dynamic>) {
-                      productTitle = (productData['title'] ?? 'منتج محذوف').toString();
+                      productTitle =
+                          (productData['title'] ?? 'منتج محذوف').toString();
                     } else if (productData is Map) {
-                      productTitle = (Map<String, dynamic>.from(productData)['title'] ?? 'منتج محذوف').toString();
+                      productTitle =
+                          (Map<String, dynamic>.from(productData)['title'] ??
+                                  'منتج محذوف')
+                              .toString();
                     } else {
                       productTitle = 'منتج محذوف';
                     }
@@ -537,15 +534,16 @@ class _AdminReviewsViewState extends State<AdminReviewsView> {
                                   radius: 18,
                                   backgroundColor:
                                       Colors.blue.withValues(alpha: 0.1),
-                                  backgroundImage:
-                                      client?['avatar_url'] != null
-                                          ? NetworkImage(
-                                              client!['avatar_url'].toString(),
-                                            )
-                                          : null,
+                                  backgroundImage: client?['avatar_url'] != null
+                                      ? NetworkImage(
+                                          client!['avatar_url'].toString(),
+                                        )
+                                      : null,
                                   child: client?['avatar_url'] == null
                                       ? Text(
-                                          userName.substring(0, 1).toUpperCase(),
+                                          userName
+                                              .substring(0, 1)
+                                              .toUpperCase(),
                                           style: const TextStyle(
                                             color: Colors.blue,
                                           ),
@@ -584,10 +582,13 @@ class _AdminReviewsViewState extends State<AdminReviewsView> {
                                       try {
                                         dt = DateTime.parse(rawDate);
                                       } catch (_) {
-                                        dt = DateTime.fromMillisecondsSinceEpoch(0);
+                                        dt =
+                                            DateTime.fromMillisecondsSinceEpoch(
+                                                0);
                                       }
                                     } else {
-                                      dt = DateTime.fromMillisecondsSinceEpoch(0);
+                                      dt = DateTime.fromMillisecondsSinceEpoch(
+                                          0);
                                     }
                                     return timeago.format(dt, locale: 'ar');
                                   }(),
@@ -669,7 +670,9 @@ class _AdminReviewsViewState extends State<AdminReviewsView> {
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        isApproved ? 'معتمد' : 'بانتظار المراجعة',
+                                        isApproved
+                                            ? 'معتمد'
+                                            : 'بانتظار المراجعة',
                                         style: TextStyle(
                                           fontSize: 11,
                                           color: isApproved
@@ -690,15 +693,14 @@ class _AdminReviewsViewState extends State<AdminReviewsView> {
                                   ),
                                   label: const Text(
                                     'رد الإدارة',
-                                    style:
-                                        TextStyle(color: Color(0xFF0A2647)),
+                                    style: TextStyle(color: Color(0xFF0A2647)),
                                   ),
                                 ),
                                 TextButton.icon(
-                                  onPressed:
-                                      _updatingReviewId == review['id']?.toString()
-                                          ? null
-                                          : () => _toggleApproval(review),
+                                  onPressed: _updatingReviewId ==
+                                          review['id']?.toString()
+                                      ? null
+                                      : () => _toggleApproval(review),
                                   icon: Icon(
                                     isApproved
                                         ? Icons.visibility_off
@@ -710,8 +712,7 @@ class _AdminReviewsViewState extends State<AdminReviewsView> {
                                   ),
                                 ),
                                 TextButton.icon(
-                                  onPressed: () =>
-                                      _deleteReview(review['id']),
+                                  onPressed: () => _deleteReview(review['id']),
                                   icon: const Icon(
                                     Icons.delete_forever,
                                     color: Colors.red,

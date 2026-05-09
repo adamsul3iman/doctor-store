@@ -5,7 +5,9 @@ import 'package:doctor_store/features/product/domain/models/product_model.dart';
 /// Helper function to parse product JSON in background isolate
 /// This prevents UI jank when parsing large lists of products
 List<Product> _parseProducts(List<dynamic> jsonList) {
-  return jsonList.map((e) => Product.fromJson(e as Map<String, dynamic>)).toList();
+  return jsonList
+      .map((e) => Product.fromJson(e as Map<String, dynamic>))
+      .toList();
 }
 
 class SupabaseService {
@@ -35,7 +37,8 @@ class SupabaseService {
     try {
       final response = await client
           .from('products')
-          .select('id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
+          .select(
+              'id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
           .eq('is_featured', true)
           .eq('is_active', true)
           .neq('id', excludeId)
@@ -62,7 +65,8 @@ class SupabaseService {
     try {
       final response = await client
           .from('products')
-          .select('id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
+          .select(
+              'id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
           .eq('is_active', true)
           .neq('id', excludeId)
           .order('created_at', ascending: false)
@@ -85,7 +89,8 @@ class SupabaseService {
     try {
       final response = await client
           .from('products')
-          .select('id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
+          .select(
+              'id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
           .eq('is_active', true)
           .order('created_at', ascending: false)
           .limit(limit);
@@ -109,7 +114,8 @@ class SupabaseService {
     try {
       final response = await client
           .from('products')
-          .select('id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
+          .select(
+              'id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
           .eq('is_flash_deal', true)
           .eq('is_active', true)
           .order('created_at', ascending: false)
@@ -135,15 +141,14 @@ class SupabaseService {
       return client
           .from('products')
           .stream(primaryKey: ['id']) // يجب تحديد المفتاح الأساسي
-          .eq('is_active', true) // فلترة المنتجات غير الفعّالة مباشرة في Supabase
+          .eq('is_active',
+              true) // فلترة المنتجات غير الفعّالة مباشرة في Supabase
           .order('created_at', ascending: false)
           .limit(6)
-          .map((data) => data
-              .map((json) => Product.fromJson(json))
-              .toList())
+          .map((data) => data.map((json) => Product.fromJson(json)).toList())
           .handleError((error, stackTrace) {
-        // في حال انقطاع الانترنت أو خطأ من Supabase لا ننهار
-      });
+            // في حال انقطاع الانترنت أو خطأ من Supabase لا ننهار
+          });
     } catch (_) {
       // في حالة استثناء متزامن (نادر) نرجع Stream فارغ
       return const Stream.empty();
@@ -168,23 +173,22 @@ class SupabaseService {
           .order('created_at', ascending: false)
           .limit(20) // نزيد العدد قليلاً لضمان وجود منتجات بعد الفلترة
           .map((data) {
-            final products = data
-                .map((json) => Product.fromJson(json))
-                .toList();
+            final products =
+                data.map((json) => Product.fromJson(json)).toList();
             // الفلترة يدوياً هنا لضمان الدقة
             return products
-                .where((p) =>
-                    ['dining_table', 'furniture'].contains(p.category))
+                .where(
+                    (p) => ['dining_table', 'furniture'].contains(p.category))
                 .toList();
           })
           .handleError((error, stackTrace) {
-        // في حال انقطاع الانترنت أو خطأ من Supabase لا ننهار
-      });
+            // في حال انقطاع الانترنت أو خطأ من Supabase لا ننهار
+          });
     } catch (_) {
       return const Stream.empty();
     }
   }
-  
+
   // دالة لجلب كل المنتجات مع ترحيل لتحسين الأداء
   Future<List<Product>> getAllProducts({
     int page = 0,
@@ -197,11 +201,12 @@ class SupabaseService {
 
     try {
       final response = await client
-            .from('products')
-            .select('id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
-            .eq('is_active', true)
-            .order('created_at', ascending: false)
-            .range(page * limit, (page + 1) * limit - 1);
+          .from('products')
+          .select(
+              'id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
+          .eq('is_active', true)
+          .order('created_at', ascending: false)
+          .range(page * limit, (page + 1) * limit - 1);
       // Offload JSON parsing to background isolate to prevent UI blocking
       final products = await compute(_parseProducts, response as List<dynamic>);
       return products;
@@ -225,7 +230,8 @@ class SupabaseService {
     try {
       final response = await client
           .from('products')
-          .select('id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
+          .select(
+              'id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
           .eq('is_active', true)
           .eq('category', categoryId)
           .order('created_at', ascending: false)
@@ -252,13 +258,14 @@ class SupabaseService {
 
     try {
       final response = await client
-            .from('products')
-            .select('id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
-            .eq('category', categoryId)
-            .eq('is_active', true)
-            .neq('id', excludeId)
-            .order('created_at', ascending: false)
-            .limit(limit);
+          .from('products')
+          .select(
+              'id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
+          .eq('category', categoryId)
+          .eq('is_active', true)
+          .neq('id', excludeId)
+          .order('created_at', ascending: false)
+          .limit(limit);
       // Offload JSON parsing to background isolate to prevent UI blocking
       final products = await compute(_parseProducts, response as List<dynamic>);
       return products;

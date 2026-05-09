@@ -17,7 +17,8 @@ class SalesChart extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Text("لا توجد مبيعات هذا الأسبوع", style: TextStyle(color: Colors.grey)),
+        child: Text("لا توجد مبيعات هذا الأسبوع",
+            style: TextStyle(color: Colors.grey)),
       );
     }
 
@@ -35,22 +36,29 @@ class SalesChart extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           // ✅ تم إصلاح withOpacity
-          BoxShadow(color: Colors.grey.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4))
+          BoxShadow(
+              color: Colors.grey.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4))
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("📊 أداء المبيعات (آخر 7 أيام)", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Text("📊 أداء المبيعات (آخر 7 أيام)",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 20),
           Expanded(
             child: LineChart(
               LineChartData(
                 gridData: const FlGridData(show: false),
                 titlesData: FlTitlesData(
-                  leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  leftTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false)),
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
@@ -61,7 +69,10 @@ class SalesChart extends StatelessWidget {
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
                               salesData[index]['day_name'].toString(),
-                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
+                              style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey),
                             ),
                           );
                         }

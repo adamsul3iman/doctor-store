@@ -17,7 +17,7 @@ Future<void> main() async {
   if (kIsWeb) {
     setupUrlStrategy();
   }
-  
+
   WidgetsFlutterBinding.ensureInitialized();
 
   // تهيئة كاش الصور للأداء الأفضل على Android

@@ -36,7 +36,8 @@ class _EmailOtpSheetState extends ConsumerState<EmailOtpSheet> {
   Future<void> _confirmCode() async {
     final code = _codeCtrl.text.trim();
     if (code.length != 6) {
-      setState(() => _errorMessage = 'الرجاء إدخال الكود المكوَّن من 6 أرقام كاملاً');
+      setState(() =>
+          _errorMessage = 'الرجاء إدخال الكود المكوَّن من 6 أرقام كاملاً');
       return;
     }
 
@@ -59,8 +60,7 @@ class _EmailOtpSheetState extends ConsumerState<EmailOtpSheet> {
         await ref.read(userProfileProvider.notifier).refreshProfile();
         await ref.read(wishlistProvider.notifier).refreshAfterLogin();
         await ref.read(cartProvider.notifier).syncAfterLogin();
-        await AnalyticsService.instance
-            .trackEvent('email_signup_otp_success');
+        await AnalyticsService.instance.trackEvent('email_signup_otp_success');
 
         if (!mounted) return;
         Navigator.of(context).pop(true); // نُرجع true لمنادينا كإشارة نجاح
@@ -70,14 +70,14 @@ class _EmailOtpSheetState extends ConsumerState<EmailOtpSheet> {
           'تم إنشاء الحساب وتفعيله بنجاح. أهلاً بك في متجر الدكتور!',
         );
       } else {
-        setState(() =>
-            _errorMessage = 'تعذَّر تأكيد الكود، حاول مرة أخرى أو أعد الإرسال.');
+        setState(() => _errorMessage =
+            'تعذَّر تأكيد الكود، حاول مرة أخرى أو أعد الإرسال.');
       }
     } on AuthException catch (e) {
       setState(() => _errorMessage = e.message);
     } catch (_) {
-      setState(() => _errorMessage =
-          'حدث خطأ غير متوقَّع أثناء التحقق، حاول لاحقاً.');
+      setState(() =>
+          _errorMessage = 'حدث خطأ غير متوقَّع أثناء التحقق، حاول لاحقاً.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -144,8 +144,7 @@ class _EmailOtpSheetState extends ConsumerState<EmailOtpSheet> {
           const SizedBox(height: 8),
           Text(
             'أرسلنا رمز تحقق مكوَّن من 6 أرقام إلى: ${widget.email}\nالرجاء إدخاله أدناه لإكمال إنشاء الحساب.',
-            style:
-                TextStyle(fontSize: 13, color: Colors.grey[700]),
+            style: TextStyle(fontSize: 13, color: Colors.grey[700]),
           ),
           const SizedBox(height: 18),
           TextField(
@@ -156,11 +155,9 @@ class _EmailOtpSheetState extends ConsumerState<EmailOtpSheet> {
               counterText: '',
               hintText: '••••••',
               hintStyle: TextStyle(
-                  letterSpacing: 8,
-                  fontSize: 22,
-                  color: Colors.grey[400]),
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14)),
+                  letterSpacing: 8, fontSize: 22, color: Colors.grey[400]),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
                 borderSide:
@@ -203,8 +200,8 @@ class _EmailOtpSheetState extends ConsumerState<EmailOtpSheet> {
                           color: Colors.white, strokeWidth: 2),
                     )
                   : Text('تأكيد الكود',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16)),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             ),
           ),
           const SizedBox(height: 10),

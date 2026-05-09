@@ -20,7 +20,8 @@ class ResponsiveCenterWrapper extends StatelessWidget {
             ? (constraints.maxWidth - maxWidth) / 2
             : 0.0;
 
-        final resolvedPadding = padding ?? const EdgeInsets.symmetric(horizontal: 16);
+        final resolvedPadding =
+            padding ?? const EdgeInsets.symmetric(horizontal: 16);
 
         return Padding(
           padding: EdgeInsets.only(left: sidePadding, right: sidePadding),

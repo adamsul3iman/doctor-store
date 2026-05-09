@@ -25,14 +25,14 @@ class _AnalyticsViewState extends State<AnalyticsView> {
 
   Future<void> _loadAnalyticsData() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final results = await Future.wait([
         AnalyticsService.instance.getDashboardStats(),
         AnalyticsService.instance.getTopProducts(limit: 10),
         AnalyticsService.instance.getAnalyticsForDays(7),
       ]);
-      
+
       if (mounted) {
         setState(() {
           _dashboardStats = results[0] as Map<String, dynamic>?;
@@ -83,25 +83,25 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                     // Live Users Widget
                     const LiveUsersWidget(),
                     const SizedBox(height: 24),
-                    
+
                     // Dashboard Stats Cards
                     _buildStatsGrid(),
                     const SizedBox(height: 32),
-                    
+
                     // Top Products Section
                     _buildSection(
                       title: 'المنتجات الأكثر مشاهدة',
                       child: _buildTopProductsList(),
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Weekly Analytics Chart
                     _buildSection(
                       title: 'إحصائيات آخر 7 أيام',
                       child: _buildWeeklyStatsChart(),
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Detailed Stats Table
                     _buildSection(
                       title: 'تفاصيل الإحصائيات',
@@ -289,7 +289,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                 ),
               ),
               const SizedBox(width: 12),
-              
+
               // Product Info
               Expanded(
                 child: Column(
@@ -316,10 +316,11 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                   ],
                 ),
               ),
-              
+
               // Views Count
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0A2647).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -354,7 +355,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
       children: _weeklyStats.map((day) {
         final date = DateTime.parse(day['stats_date']);
         final formattedDate = '${date.day}/${date.month}';
-        
+
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: Row(
@@ -371,7 +372,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                   ),
                 ),
               ),
-              
+
               // Visits Bar
               Expanded(
                 child: SizedBox(
@@ -386,7 +387,8 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                       ),
                       FractionallySizedBox(
                         alignment: Alignment.centerRight,
-                        widthFactor: (day['visits'] ?? 0) / 100.0, // Max 100 for demo
+                        widthFactor:
+                            (day['visits'] ?? 0) / 100.0, // Max 100 for demo
                         child: Container(
                           decoration: BoxDecoration(
                             color: const Color(0xFF4CAF50),
@@ -408,7 +410,7 @@ class _AnalyticsViewState extends State<AnalyticsView> {
                   ),
                 ),
               ),
-              
+
               // Other Stats
               const SizedBox(width: 8),
               Text(
@@ -431,13 +433,20 @@ class _AnalyticsViewState extends State<AnalyticsView> {
         1: FlexColumnWidth(1),
       },
       children: [
-        _buildTableRow('المستخدمون المتصلون الآن', '${_dashboardStats!['online_users_now'] ?? 0}'),
-        _buildTableRow('زيارات اليوم', '${_dashboardStats!['today_visits'] ?? 0}'),
-        _buildTableRow('مشاهدات المنتجات اليوم', '${_dashboardStats!['today_product_views'] ?? 0}'),
-        _buildTableRow('طلبات اليوم', '${_dashboardStats!['today_orders'] ?? 0}'),
-        _buildTableRow('إيرادات اليوم', '${_dashboardStats!['today_revenue'] ?? 0} دينار'),
-        _buildTableRow('إجمالي المنتجات', '${_dashboardStats!['total_products'] ?? 0}'),
-        _buildTableRow('إجمالي المستخدمين', '${_dashboardStats!['total_users'] ?? 0}'),
+        _buildTableRow('المستخدمون المتصلون الآن',
+            '${_dashboardStats!['online_users_now'] ?? 0}'),
+        _buildTableRow(
+            'زيارات اليوم', '${_dashboardStats!['today_visits'] ?? 0}'),
+        _buildTableRow('مشاهدات المنتجات اليوم',
+            '${_dashboardStats!['today_product_views'] ?? 0}'),
+        _buildTableRow(
+            'طلبات اليوم', '${_dashboardStats!['today_orders'] ?? 0}'),
+        _buildTableRow(
+            'إيرادات اليوم', '${_dashboardStats!['today_revenue'] ?? 0} دينار'),
+        _buildTableRow(
+            'إجمالي المنتجات', '${_dashboardStats!['total_products'] ?? 0}'),
+        _buildTableRow(
+            'إجمالي المستخدمين', '${_dashboardStats!['total_users'] ?? 0}'),
       ],
     );
   }

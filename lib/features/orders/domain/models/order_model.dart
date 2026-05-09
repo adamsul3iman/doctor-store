@@ -1,6 +1,6 @@
 /// Enum for order status values in the database
 enum OrderStatus {
-  new_,      // 'new' in DB (reserved keyword in Dart)
+  new_, // 'new' in DB (reserved keyword in Dart)
   pending,
   processing,
   shipped,
@@ -102,15 +102,15 @@ enum OrderStatus {
 
 /// Order model matching the DB schema exactly
 class Order {
-  final String id;                    // uuid PK
-  final DateTime createdAt;           // timestamptz NOT NULL
-  final String customerName;          // text NOT NULL
-  final String customerPhone;         // text NOT NULL
-  final String customerAddress;       // text NOT NULL
-  final double totalAmount;           // numeric NOT NULL
-  final OrderStatus status;           // text (with default 'new')
-  final String platform;              // text (with default 'whatsapp')
-  final String? userId;               // uuid (nullable - for guest orders)
+  final String id; // uuid PK
+  final DateTime createdAt; // timestamptz NOT NULL
+  final String customerName; // text NOT NULL
+  final String customerPhone; // text NOT NULL
+  final String customerAddress; // text NOT NULL
+  final double totalAmount; // numeric NOT NULL
+  final OrderStatus status; // text (with default 'new')
+  final String platform; // text (with default 'whatsapp')
+  final String? userId; // uuid (nullable - for guest orders)
 
   const Order({
     required this.id,
@@ -132,7 +132,7 @@ class Order {
     if (rawCreatedAt is String) {
       parsedCreatedAt = DateTime.tryParse(rawCreatedAt);
     }
-    
+
     return Order(
       id: json['id']?.toString() ?? '',
       createdAt: parsedCreatedAt ?? DateTime.now(),
@@ -209,15 +209,15 @@ class Order {
 
 /// OrderItem model matching the DB schema exactly
 class OrderItem {
-  final String id;              // uuid PK
-  final String orderId;         // uuid FK (NOT NULL)
-  final String productId;       // uuid (NOT NULL)
-  final String productTitle;    // text (NOT NULL)
-  final int quantity;           // integer (NOT NULL)
-  final double price;           // numeric (NOT NULL)
-  final String? selectedSize;   // text (nullable)
-  final String? selectedColor;  // text (nullable)
-  final String? imageUrl;       // text (nullable)
+  final String id; // uuid PK
+  final String orderId; // uuid FK (NOT NULL)
+  final String productId; // uuid (NOT NULL)
+  final String productTitle; // text (NOT NULL)
+  final int quantity; // integer (NOT NULL)
+  final double price; // numeric (NOT NULL)
+  final String? selectedSize; // text (nullable)
+  final String? selectedColor; // text (nullable)
+  final String? imageUrl; // text (nullable)
 
   const OrderItem({
     required this.id,

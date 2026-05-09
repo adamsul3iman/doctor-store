@@ -34,7 +34,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
   // لجلب تفاصيل المنتجات بناءً على الـ IDs المحفوظة
   Future<List<Product>> _fetchWishlistProducts(List<String> ids) async {
     if (ids.isEmpty) return [];
-    
+
     final data = await Supabase.instance.client
         .from('products')
         .select()
@@ -89,7 +89,8 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                         onTap: () async {
                           final messenger = ScaffoldMessenger.of(context);
                           ref.read(cartProvider.notifier).addItem(product);
-                          await AnalyticsService.instance.trackEvent('wishlist_add_to_cart');
+                          await AnalyticsService.instance
+                              .trackEvent('wishlist_add_to_cart');
                           messenger.showSnackBar(
                             const SnackBar(
                               content: Text("تمت إضافة المنتج إلى السلة 🛒"),
@@ -98,7 +99,8 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                           );
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.95),
                             borderRadius: BorderRadius.circular(999),
@@ -109,7 +111,8 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: const [
-                              Icon(Icons.add_shopping_cart, size: 16, color: Color(0xFF0A2647)),
+                              Icon(Icons.add_shopping_cart,
+                                  size: 16, color: Color(0xFF0A2647)),
                               SizedBox(width: 4),
                               Text('للسلة', style: TextStyle(fontSize: 11)),
                             ],
@@ -123,9 +126,13 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                       left: 8,
                       child: GestureDetector(
                         onTap: () {
-                          ref.read(wishlistProvider.notifier).toggleWishlist(product.id);
+                          ref
+                              .read(wishlistProvider.notifier)
+                              .toggleWishlist(product.id);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("تم الحذف من المفضلة 💔"), duration: Duration(seconds: 1)),
+                            const SnackBar(
+                                content: Text("تم الحذف من المفضلة 💔"),
+                                duration: Duration(seconds: 1)),
                           );
                         },
                         child: Container(
@@ -133,9 +140,12 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.9),
                             shape: BoxShape.circle,
-                            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                            boxShadow: const [
+                              BoxShadow(color: Colors.black12, blurRadius: 4)
+                            ],
                           ),
-                          child: const Icon(Icons.close, size: 16, color: Colors.grey),
+                          child: const Icon(Icons.close,
+                              size: 16, color: Colors.grey),
                         ),
                       ),
                     ),
@@ -230,7 +240,8 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
           if (favIds.isNotEmpty)
             SliverToBoxAdapter(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                 color: Colors.white,
                 child: Row(
                   children: [
@@ -243,14 +254,14 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                           Text(
                             "لديك ${favIds.length} منتجات مميزة",
                             style: TextStyle(
-                              color: Colors.grey[800],
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14
-                            ),
+                                color: Colors.grey[800],
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14),
                           ),
                           Text(
                             "اضغط على أي منتج لعرض التفاصيل، أو استخدم زر \"للسلة\" للإضافة المباشرة.",
-                            style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                            style: TextStyle(
+                                fontSize: 11, color: Colors.grey[600]),
                           ),
                         ],
                       ),
@@ -260,9 +271,13 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                       onPressed: () async {
                         // سيتم تنفيذ النقل الكامل في الأسفل عند توفر المنتجات الفعلية
                         final messenger = ScaffoldMessenger.of(context);
-                        await AnalyticsService.instance.trackEvent('wishlist_open_move_all_hint');
+                        await AnalyticsService.instance
+                            .trackEvent('wishlist_open_move_all_hint');
                         messenger.showSnackBar(
-                          const SnackBar(content: Text('انزل لأسفل لنقل كل المفضلة إلى السلة'), duration: Duration(seconds: 2)),
+                          const SnackBar(
+                              content:
+                                  Text('انزل لأسفل لنقل كل المفضلة إلى السلة'),
+                              duration: Duration(seconds: 2)),
                         );
                       },
                       child: const Text(
@@ -270,10 +285,10 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                         style: TextStyle(fontSize: 11),
                       ),
                     ),
-                   ],
-                 ),
-               ),
-             ),
+                  ],
+                ),
+              ),
+            ),
 
           // 4. المحتوى (المنتجات أو الفارغ)
           favIds.isEmpty
@@ -285,10 +300,12 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                   future: _fetchWishlistProducts(favIds),
                   builder: (context, snapshot) {
                     // ✅ تحسين: تخزين مؤقت للـ snapshot لتجنب وميض الواجهة
-                    if (snapshot.connectionState == ConnectionState.waiting && _cachedProducts != null) {
-                      return _buildProductsGrid(_cachedProducts!, favIds.length);
+                    if (snapshot.connectionState == ConnectionState.waiting &&
+                        _cachedProducts != null) {
+                      return _buildProductsGrid(
+                          _cachedProducts!, favIds.length);
                     }
-                    
+
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const SliverPadding(
                         padding: EdgeInsets.all(16),
@@ -299,9 +316,12 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                     }
 
                     if (snapshot.hasError) {
-                      debugPrint('Wishlist products load error: ${snapshot.error}');
+                      debugPrint(
+                          'Wishlist products load error: ${snapshot.error}');
                       return const SliverFillRemaining(
-                        child: Center(child: Text("تعذر تحميل المفضلة الآن، حاول مرة أخرى لاحقاً")),
+                        child: Center(
+                            child: Text(
+                                "تعذر تحميل المفضلة الآن، حاول مرة أخرى لاحقاً")),
                       );
                     }
 
@@ -333,12 +353,15 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                       for (final p in products) {
                         ref.read(cartProvider.notifier).addItem(p);
                       }
-                      await AnalyticsService.instance.trackEvent('wishlist_move_all_to_cart', props: {
+                      await AnalyticsService.instance
+                          .trackEvent('wishlist_move_all_to_cart', props: {
                         'count': favIds.length,
                       });
 
                       messenger.showSnackBar(
-                        const SnackBar(content: Text('تم نقل كل المفضلة إلى السلة 🛒'), duration: Duration(seconds: 2)),
+                        const SnackBar(
+                            content: Text('تم نقل كل المفضلة إلى السلة 🛒'),
+                            duration: Duration(seconds: 2)),
                       );
                       router.push('/cart');
                     },
@@ -347,14 +370,15 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0A2647),
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                 ),
               ),
             ),
 
-           const SliverToBoxAdapter(child: SizedBox(height: 50)),
+          const SliverToBoxAdapter(child: SizedBox(height: 50)),
         ],
       ),
     );
@@ -372,12 +396,16 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
               color: Colors.red.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.favorite_border, size: 80, color: Colors.red.withValues(alpha: 0.3)),
+            child: Icon(Icons.favorite_border,
+                size: 80, color: Colors.red.withValues(alpha: 0.3)),
           ),
           const SizedBox(height: 20),
           Text(
             "قائمتك فارغة حالياً",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF0A2647)),
+            style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF0A2647)),
           ),
           const SizedBox(height: 10),
           Text(
@@ -386,15 +414,16 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
             style: TextStyle(fontSize: 14, color: Colors.grey),
           ),
           const SizedBox(height: 30),
-        ElevatedButton(
+          ElevatedButton(
             // ✅ التصحيح: استخدمنا push بدلاً من go لنتمكن من الرجوع
             onPressed: () => context.push('/all_products'),
-            
+
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF0A2647),
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text("تصفح المنتجات"),
           ),

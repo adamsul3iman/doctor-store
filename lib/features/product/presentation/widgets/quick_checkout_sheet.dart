@@ -212,7 +212,8 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
                 const SizedBox(height: 8),
                 _buildField(_nameCtrl, "الاسم الكامل", Icons.person),
                 const SizedBox(height: 10),
-                _buildField(_phoneCtrl, "رقم الهاتف", Icons.phone, isNumber: true),
+                _buildField(_phoneCtrl, "رقم الهاتف", Icons.phone,
+                    isNumber: true),
 
                 const SizedBox(height: 18),
 
@@ -227,19 +228,23 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: _isSubmitting ? null : () => _onSubmit(requireDeliveryZone),
+                    onPressed: _isSubmitting
+                        ? null
+                        : () => _onSubmit(requireDeliveryZone),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF25D366),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
                     ),
                     icon: const FaIcon(FontAwesomeIcons.whatsapp),
                     label: _isSubmitting
                         ? const Text("جاري تجهيز الرسالة...")
                         : Text(
                             "إتمام الطلب عبر واتساب • ${_totalPrice.toStringAsFixed(1)} د.أ",
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                            style: const TextStyle(
+                                fontSize: 15, fontWeight: FontWeight.w800),
                           ),
                   ),
                 ),
@@ -344,7 +349,8 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.grey.shade50,
                         borderRadius: BorderRadius.circular(20),
@@ -360,11 +366,14 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
                             child: Icon(
                               Icons.remove,
                               size: 16,
-                              color: _sheetQuantity > 1 ? Colors.grey[700] : Colors.grey[400],
+                              color: _sheetQuantity > 1
+                                  ? Colors.grey[700]
+                                  : Colors.grey[400],
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8.0),
                             child: Text(
                               '$_sheetQuantity',
                               style: const TextStyle(
@@ -401,11 +410,20 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: const [
-        _TrustItem(icon: FontAwesomeIcons.shieldHalved, title: 'دفع آمن', subtitle: 'معلوماتك محمية'),
+        _TrustItem(
+            icon: FontAwesomeIcons.shieldHalved,
+            title: 'دفع آمن',
+            subtitle: 'معلوماتك محمية'),
         SizedBox(width: 18),
-        _TrustItem(icon: FontAwesomeIcons.truckFast, title: 'شحن سريع', subtitle: 'توصيل موثوق'),
+        _TrustItem(
+            icon: FontAwesomeIcons.truckFast,
+            title: 'شحن سريع',
+            subtitle: 'توصيل موثوق'),
         SizedBox(width: 18),
-        _TrustItem(icon: FontAwesomeIcons.headset, title: 'دعم', subtitle: 'خدمة عملاء عبر الواتساب'),
+        _TrustItem(
+            icon: FontAwesomeIcons.headset,
+            title: 'دعم',
+            subtitle: 'خدمة عملاء عبر الواتساب'),
       ],
     );
   }
@@ -422,7 +440,8 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
             onSubmitted: (_) => _applyCoupon(),
             decoration: InputDecoration(
               hintText: "كود خصم (إن وجد)",
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide(color: Colors.grey.shade300),
@@ -531,7 +550,8 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
             style: TextStyle(fontSize: 10, color: Colors.grey),
           ),
           const SizedBox(height: 8),
-          _summaryRow("إجمالي المنتجات", "${productsTotal.toStringAsFixed(1)} د.أ"),
+          _summaryRow(
+              "إجمالي المنتجات", "${productsTotal.toStringAsFixed(1)} د.أ"),
           if (_appliedCoupon != null)
             _summaryRow("الخصم", "-${discountAmount.toStringAsFixed(1)} د.أ"),
           _summaryRow(
@@ -580,7 +600,8 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
     if (!_formKey.currentState!.validate()) return;
 
     if (requireDeliveryZone && _selectedZone == null) {
-      AppNotifier.showError(context, "يرجى اختيار منطقة التوصيل قبل إتمام الطلب");
+      AppNotifier.showError(
+          context, "يرجى اختيار منطقة التوصيل قبل إتمام الطلب");
       return;
     }
 
@@ -664,7 +685,8 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
     }
   }
 
-  Widget _buildDeliveryZonePicker(AsyncValue<List<DeliveryZone>> deliveryZonesAsync) {
+  Widget _buildDeliveryZonePicker(
+      AsyncValue<List<DeliveryZone>> deliveryZonesAsync) {
     return deliveryZonesAsync.when(
       data: (zones) {
         if (zones.isEmpty) return const SizedBox.shrink();
@@ -679,10 +701,13 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
             borderRadius: BorderRadius.circular(8),
             child: InputDecorator(
               decoration: InputDecoration(
-                labelText: isRequired ? 'منطقة التوصيل *' : 'منطقة التوصيل', // ✅
+                labelText:
+                    isRequired ? 'منطقة التوصيل *' : 'منطقة التوصيل', // ✅
                 hintText: 'اختر المدينة / المنطقة',
                 prefixIcon: const Icon(Icons.delivery_dining),
-                errorText: isRequired && _selectedZone == null ? 'يجب اختيار منطقة التوصيل' : null, // ✅
+                errorText: isRequired && _selectedZone == null
+                    ? 'يجب اختيار منطقة التوصيل'
+                    : null, // ✅
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide(color: Colors.grey.shade300),
@@ -780,7 +805,8 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
                         ),
                         focusedBorder: const OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(10)),
-                          borderSide: BorderSide(color: _brandColor, width: 1.4),
+                          borderSide:
+                              BorderSide(color: _brandColor, width: 1.4),
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -800,7 +826,8 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
                           : ListView.separated(
                               shrinkWrap: true,
                               itemCount: filtered.length,
-                              separatorBuilder: (_, __) => const Divider(height: 1),
+                              separatorBuilder: (_, __) =>
+                                  const Divider(height: 1),
                               itemBuilder: (context, index) {
                                 final zone = filtered[index];
                                 final isSelected = _selectedZone?.id == zone.id;
@@ -808,10 +835,12 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
                                   title: Text(zone.name),
                                   subtitle: Text(
                                     'رسوم التوصيل: يتم الحساب حسب حجم المنتج',
-                                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                    style: TextStyle(
+                                        fontSize: 12, color: Colors.grey[600]),
                                   ),
                                   trailing: isSelected
-                                      ? const Icon(Icons.check, color: Color(0xFF0A2647))
+                                      ? const Icon(Icons.check,
+                                          color: Color(0xFF0A2647))
                                       : null,
                                   onTap: () => Navigator.of(context).pop(zone),
                                 );
@@ -832,30 +861,31 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
       setState(() {
         _selectedZone = selected;
       });
-      
+
       // ✅ حساب سعر الشحن الديناميكي
       _calculateDynamicShippingCost();
     }
   }
-  
+
   /// ✅ حساب سعر الشحن بناءً على حجم المنتج
   Future<void> _calculateDynamicShippingCost() async {
     if (_selectedZone == null) {
       setState(() => _dynamicDeliveryFee = 0.0);
       return;
     }
-    
+
     try {
       final zoneId = ShippingCalculator.zoneNameToId(_selectedZone!.name);
-      
+
       // الحصول على حجم الشحن من المنتج
-      final shippingSize = widget.product.options['shipping_size'] as String? ?? 'small';
-      
+      final shippingSize =
+          widget.product.options['shipping_size'] as String? ?? 'small';
+
       final cost = await ShippingCalculator.getShippingCostForZone(
         zoneId: zoneId,
         shippingSize: shippingSize,
       );
-      
+
       if (mounted) {
         setState(() {
           _dynamicDeliveryFee = cost;
@@ -870,7 +900,8 @@ class _QuickCheckoutSheetState extends ConsumerState<QuickCheckoutSheet> {
     }
   }
 
-  Widget _buildField(TextEditingController ctrl, String hint, IconData icon, {bool isNumber = false}) {
+  Widget _buildField(TextEditingController ctrl, String hint, IconData icon,
+      {bool isNumber = false}) {
     return TextFormField(
       controller: ctrl,
       keyboardType: isNumber ? TextInputType.phone : TextInputType.text,

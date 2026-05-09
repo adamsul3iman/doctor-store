@@ -14,7 +14,8 @@ import 'package:doctor_store/shared/widgets/app_network_image.dart';
 import 'package:doctor_store/shared/widgets/image_shimmer_placeholder.dart';
 import 'package:doctor_store/shared/widgets/responsive_center_wrapper.dart';
 
-final modernFlashDealProductsProvider = FutureProvider<List<Product>>((ref) async {
+final modernFlashDealProductsProvider =
+    FutureProvider<List<Product>>((ref) async {
   return SupabaseService().getFlashDealProducts();
 });
 
@@ -252,7 +253,8 @@ class _ModernFlashSaleBannerState extends ConsumerState<ModernFlashSaleBanner>
                                       style: TextStyle(
                                         fontSize: isDesktop ? 16 : 13,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.white.withValues(alpha: 0.90),
+                                        color: Colors.white
+                                            .withValues(alpha: 0.90),
                                       ),
                                     ),
                                     const SizedBox(height: 12),
@@ -274,7 +276,8 @@ class _ModernFlashSaleBannerState extends ConsumerState<ModernFlashSaleBanner>
                                             style: TextStyle(
                                               fontSize: isDesktop ? 20 : 14,
                                               fontWeight: FontWeight.w800,
-                                              color: Colors.white.withValues(alpha: 0.95),
+                                              color: Colors.white
+                                                  .withValues(alpha: 0.95),
                                             ),
                                           ),
                                         ],
@@ -319,7 +322,8 @@ class _ModernFlashSaleBannerState extends ConsumerState<ModernFlashSaleBanner>
                                       url: heroProduct.imageUrl,
                                       variant: ImageVariant.productCard,
                                       fit: BoxFit.cover,
-                                      placeholder: const ShimmerImagePlaceholder(
+                                      placeholder:
+                                          const ShimmerImagePlaceholder(
                                         width: 200,
                                         height: 200,
                                       ),
@@ -327,8 +331,10 @@ class _ModernFlashSaleBannerState extends ConsumerState<ModernFlashSaleBanner>
                                         width: imageWidth,
                                         height: imageHeight,
                                         decoration: BoxDecoration(
-                                          color: Colors.grey.withValues(alpha: 0.2),
-                                          borderRadius: BorderRadius.circular(16),
+                                          color: Colors.grey
+                                              .withValues(alpha: 0.2),
+                                          borderRadius:
+                                              BorderRadius.circular(16),
                                         ),
                                         child: const Icon(
                                           Icons.broken_image,
@@ -401,7 +407,8 @@ class _ModernFlashSaleBannerState extends ConsumerState<ModernFlashSaleBanner>
                               borderRadius: BorderRadius.circular(999),
                               child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 220),
-                                margin: const EdgeInsetsDirectional.only(end: 6),
+                                margin:
+                                    const EdgeInsetsDirectional.only(end: 6),
                                 width: isActive ? 16 : 6,
                                 height: 6,
                                 decoration: BoxDecoration(

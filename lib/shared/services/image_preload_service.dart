@@ -12,12 +12,13 @@ class ImagePreloadService {
   final Set<String> _preloadedUrls = {};
 
   /// تحميل صورة واحدة مسبقاً
-  Future<void> preloadImage(BuildContext context, String url, ImageVariant variant) {
+  Future<void> preloadImage(
+      BuildContext context, String url, ImageVariant variant) {
     if (url.isEmpty || _preloadedUrls.contains(url)) return Future.value();
-    
+
     _preloadedUrls.add(url);
     final optimizedUrl = buildOptimizedImageUrl(url, variant: variant);
-    
+
     return precacheImage(
       CachedNetworkImageProvider(
         optimizedUrl,

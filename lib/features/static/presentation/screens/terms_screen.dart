@@ -62,7 +62,8 @@ class TermsScreen extends ConsumerWidget {
                     return const _DefaultTermsContent();
                   }
                   return _DynamicStaticPageContent(
-                    title: page.title.isNotEmpty ? page.title : 'الشروط والأحكام',
+                    title:
+                        page.title.isNotEmpty ? page.title : 'الشروط والأحكام',
                     content: page.content,
                   );
                 },
@@ -94,7 +95,8 @@ class _DefaultTermsContent extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         _sectionTitle('أولاً: الطلبات والدفع'),
-        _sectionBody('• يتم تأكيد الطلب بعد التواصل معك عبر الواتساب أو الهاتف.\n'
+        _sectionBody(
+            '• يتم تأكيد الطلب بعد التواصل معك عبر الواتساب أو الهاتف.\n'
             '• قد تتغير الأسعار أو العروض في أي وقت دون إشعار مسبق، مع الحفاظ على السعر المتفق عليه للطلبات المؤكّدة.'),
         const SizedBox(height: 16),
         _sectionTitle('ثانياً: الشحن والتوصيل'),
@@ -102,11 +104,13 @@ class _DefaultTermsContent extends StatelessWidget {
             '• تختلف مدة التوصيل حسب المدينة وحجم الطلب، ويتم توضيحها لك قبل التأكيد.'),
         const SizedBox(height: 16),
         _sectionTitle('ثالثاً: الاستبدال والاسترجاع'),
-        _sectionBody('• نحرص على رضاك التام، ويمكنك طلب الاستبدال أو الاسترجاع وفق سياسة المتجر المعمول بها، بشرط بقاء المنتج بحالته الأصلية.\n'
+        _sectionBody(
+            '• نحرص على رضاك التام، ويمكنك طلب الاستبدال أو الاسترجاع وفق سياسة المتجر المعمول بها، بشرط بقاء المنتج بحالته الأصلية.\n'
             '• بعض المنتجات الخاصة أو التفصيلية قد لا يشملها الاسترجاع الكامل.'),
         const SizedBox(height: 16),
         _sectionTitle('رابعاً: استخدام الموقع'),
-        _sectionBody('يُمنع إساءة استخدام الموقع أو محاولة الوصول غير المشروع لبيانات أو أنظمة المتجر.'),
+        _sectionBody(
+            'يُمنع إساءة استخدام الموقع أو محاولة الوصول غير المشروع لبيانات أو أنظمة المتجر.'),
       ],
     );
   }

@@ -16,9 +16,8 @@ class ProductTrustSignals extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // حساب عدد المبيعات الوهمي بناءً على التقييمات
-    final estimatedSales = product.ratingCount > 0
-        ? (product.ratingCount * 2.5).round()
-        : 50;
+    final estimatedSales =
+        product.ratingCount > 0 ? (product.ratingCount * 2.5).round() : 50;
 
     return Column(
       children: [

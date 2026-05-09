@@ -4,7 +4,8 @@ import 'package:doctor_store/shared/services/supabase_service.dart';
 class ProductRepository {
   final SupabaseService _service;
 
-  ProductRepository({SupabaseService? service}) : _service = service ?? SupabaseService();
+  ProductRepository({SupabaseService? service})
+      : _service = service ?? SupabaseService();
 
   Future<List<Product>> fetchAll({int limit = 200}) async {
     final items = await _service.getAllProducts();
@@ -12,7 +13,8 @@ class ProductRepository {
     return items.take(limit).toList();
   }
 
-  Future<List<Product>> fetchByCategory({required String categoryId, int limit = 200}) {
+  Future<List<Product>> fetchByCategory(
+      {required String categoryId, int limit = 200}) {
     return _service.getProductsByCategory(categoryId: categoryId, limit: limit);
   }
 

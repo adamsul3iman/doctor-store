@@ -29,9 +29,9 @@ class ProductCard extends ConsumerWidget {
     final isCompact = this.isCompact;
 
     // اسم القسم (محسوب بخريطة جاهزة لتقليل العمل داخل كل كرت)
-    final categoryLabel =
-        ref.watch(categoryLabelByIdProvider.select((labels) => labels[product.category])) ??
-            product.categoryArabic;
+    final categoryLabel = ref.watch(categoryLabelByIdProvider
+            .select((labels) => labels[product.category])) ??
+        product.categoryArabic;
 
     return RepaintBoundary(
       child: GestureDetector(
@@ -162,9 +162,11 @@ class ProductCard extends ConsumerWidget {
                             // Rating (if available) - wrapped in a Container to force new line when needed
                             if (product.ratingAverage > 0)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFFA726).withValues(alpha: 0.1),
+                                  color: const Color(0xFFFFA726)
+                                      .withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Row(
@@ -218,7 +220,9 @@ class _WishlistButton extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              isInWishlist ? 'تم إزالة المنتج من المفضلة' : 'تم إضافة المنتج للمفضلة',
+              isInWishlist
+                  ? 'تم إزالة المنتج من المفضلة'
+                  : 'تم إضافة المنتج للمفضلة',
               style: const TextStyle(fontFamily: 'Almarai'),
             ),
             backgroundColor: const Color(0xFF0A2647),
@@ -365,15 +369,13 @@ class LatestProductCard extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 if (product.oldPrice != null)
                                   Text(
                                     '${product.oldPrice!.toStringAsFixed(0)} د.أ',
                                     style: const TextStyle(
-                                      decoration:
-                                          TextDecoration.lineThrough,
+                                      decoration: TextDecoration.lineThrough,
                                       color: Colors.grey,
                                       fontSize: 10,
                                     ),

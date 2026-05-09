@@ -10,7 +10,8 @@ class SmartDescription extends StatefulWidget {
   State<SmartDescription> createState() => _SmartDescriptionState();
 }
 
-class _SmartDescriptionState extends State<SmartDescription> with SingleTickerProviderStateMixin {
+class _SmartDescriptionState extends State<SmartDescription>
+    with SingleTickerProviderStateMixin {
   bool isExpanded = false;
   late List<String> _lines;
 
@@ -29,7 +30,8 @@ class _SmartDescriptionState extends State<SmartDescription> with SingleTickerPr
   Widget build(BuildContext context) {
     // إذا كان النص قصيراً (أقل من 6 أسطر) نعرضه كله، وإلا نختصره
     final bool isLongText = _lines.length > 6;
-    final List<String> visibleLines = (isExpanded || !isLongText) ? _lines : _lines.take(5).toList();
+    final List<String> visibleLines =
+        (isExpanded || !isLongText) ? _lines : _lines.take(5).toList();
 
     return AnimatedSize(
       duration: const Duration(milliseconds: 300),
@@ -46,7 +48,7 @@ class _SmartDescriptionState extends State<SmartDescription> with SingleTickerPr
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ...visibleLines.map((line) => _buildSmartLine(line)),
-            
+
             // زر قراءة المزيد بتصميم جميل
             if (isLongText)
               GestureDetector(
@@ -57,8 +59,8 @@ class _SmartDescriptionState extends State<SmartDescription> with SingleTickerPr
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: isExpanded 
-                          ? [Colors.white, Colors.white] 
+                      colors: isExpanded
+                          ? [Colors.white, Colors.white]
                           : [Colors.white.withValues(alpha: 0.1), Colors.white],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
@@ -77,7 +79,9 @@ class _SmartDescriptionState extends State<SmartDescription> with SingleTickerPr
                       ),
                       const SizedBox(width: 5),
                       Icon(
-                        isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                        isExpanded
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
                         color: const Color(0xFF0A2647),
                         size: 20,
                       ),
@@ -93,7 +97,7 @@ class _SmartDescriptionState extends State<SmartDescription> with SingleTickerPr
 
   Widget _buildSmartLine(String rawLine) {
     String line = rawLine.trim();
-    
+
     // 1. تحليل الخصائص (مثل: "اللون: أحمر" أو "المقاس : كبير")
     if (line.contains(':') && line.length < 50) {
       final parts = line.split(':');
@@ -103,11 +107,13 @@ class _SmartDescriptionState extends State<SmartDescription> with SingleTickerPr
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.check_circle_outline, size: 16, color: Color(0xFF0A2647)),
+              const Icon(Icons.check_circle_outline,
+                  size: 16, color: Color(0xFF0A2647)),
               const SizedBox(width: 8),
               Text(
                 "${parts[0].trim()}: ",
-                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[800]),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold, color: Colors.grey[800]),
               ),
               Expanded(
                 child: Text(
@@ -123,17 +129,19 @@ class _SmartDescriptionState extends State<SmartDescription> with SingleTickerPr
 
     // 2. تحليل العناوين (أسطر قصيرة لا تنتهي بنقطة وليست قائمة)
     // نعتبر السطر عنواناً إذا كان قصيراً ولا يحتوي على رموز القوائم
-    bool isHeading = line.length < 35 && 
-                     !line.endsWith('.') && 
-                     !line.startsWith('-') && 
-                     !line.startsWith('•');
+    bool isHeading = line.length < 35 &&
+        !line.endsWith('.') &&
+        !line.startsWith('-') &&
+        !line.startsWith('•');
 
     if (isHeading) {
       return Container(
         margin: const EdgeInsets.only(top: 12, bottom: 8),
         padding: const EdgeInsets.only(right: 8),
         decoration: const BoxDecoration(
-          border: Border(right: BorderSide(color: Color(0xFFD4AF37), width: 3)), // خط ذهبي بجانب العنوان
+          border: Border(
+              right: BorderSide(
+                  color: Color(0xFFD4AF37), width: 3)), // خط ذهبي بجانب العنوان
         ),
         child: Text(
           line,
@@ -147,10 +155,10 @@ class _SmartDescriptionState extends State<SmartDescription> with SingleTickerPr
     }
 
     // 3. تحليل القوائم (أي سطر يبدأ برمز أو رقم)
-    bool isListItem = line.startsWith('-') || 
-                      line.startsWith('•') || 
-                      line.startsWith('*') || 
-                      RegExp(r'^\d+\.').hasMatch(line);
+    bool isListItem = line.startsWith('-') ||
+        line.startsWith('•') ||
+        line.startsWith('*') ||
+        RegExp(r'^\d+\.').hasMatch(line);
 
     if (isListItem) {
       // حذف الرمز من البداية لعرض نظيف
@@ -167,7 +175,8 @@ class _SmartDescriptionState extends State<SmartDescription> with SingleTickerPr
             Expanded(
               child: Text(
                 content,
-                style: TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
+                style:
+                    TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
               ),
             ),
           ],

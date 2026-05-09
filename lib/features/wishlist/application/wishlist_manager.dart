@@ -44,7 +44,8 @@ class WishlistItem {
 
 // ================== البروفايدر ==================
 
-final wishlistProvider = StateNotifierProvider<WishlistNotifier, List<WishlistItem>>((ref) {
+final wishlistProvider =
+    StateNotifierProvider<WishlistNotifier, List<WishlistItem>>((ref) {
   return WishlistNotifier();
 });
 
@@ -78,14 +79,15 @@ class WishlistNotifier extends StateNotifier<List<WishlistItem>> {
 
   Future<void> _loadWishlist() async {
     if (_initialized) return;
-    
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final jsonString = prefs.getString(_storageKey);
-      
+
       if (jsonString != null) {
         final List<dynamic> jsonList = jsonDecode(jsonString);
-        final items = jsonList.map((json) => WishlistItem.fromJson(json)).toList();
+        final items =
+            jsonList.map((json) => WishlistItem.fromJson(json)).toList();
         state = items;
       }
       _initialized = true;
@@ -197,13 +199,13 @@ class WishlistNotifier extends StateNotifier<List<WishlistItem>> {
     if (state.any((item) => item.product.id == product.id)) {
       return; // Already in wishlist
     }
-    
+
     state = [...state, WishlistItem(product: product)];
     _saveWishlist();
-    
+
     // ✅ Sync to cloud if user is logged in
     _syncToCloud(product.id);
-    
+
     // ✅ Track analytics
     AnalyticsService.instance.trackEvent('wishlist_add', props: {
       'product_id': product.id,
@@ -213,10 +215,10 @@ class WishlistNotifier extends StateNotifier<List<WishlistItem>> {
   void removeFromWishlist(String productId) {
     state = state.where((item) => item.product.id != productId).toList();
     _saveWishlist();
-    
+
     // ✅ Remove from cloud if user is logged in
     _removeFromCloud(productId);
-    
+
     // ✅ Track analytics
     AnalyticsService.instance.trackEvent('wishlist_remove', props: {
       'product_id': productId,
@@ -243,10 +245,10 @@ class WishlistNotifier extends StateNotifier<List<WishlistItem>> {
         }
       }
     }
-    
+
     state = [];
     _saveWishlist();
-    
+
     AnalyticsService.instance.trackEvent('wishlist_clear');
   }
 
@@ -255,10 +257,10 @@ class WishlistNotifier extends StateNotifier<List<WishlistItem>> {
       (item) => item.product.id == productId,
       orElse: () => throw Exception('Product not in wishlist'),
     );
-    
+
     removeFromWishlist(productId);
     onMove(item.product);
-    
+
     AnalyticsService.instance.trackEvent('wishlist_move_to_cart', props: {
       'product_id': productId,
     });

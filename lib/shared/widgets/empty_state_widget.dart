@@ -27,27 +27,29 @@ class EmptyStateWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(30),
               decoration: BoxDecoration(
-                color: const Color(0xFF0A2647).withValues(alpha: 0.05), // خلفية باهتة
+                color: const Color(0xFF0A2647)
+                    .withValues(alpha: 0.05), // خلفية باهتة
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, size: 80, color: const Color(0xFF0A2647).withValues(alpha: 0.4)),
+              child: Icon(icon,
+                  size: 80,
+                  color: const Color(0xFF0A2647).withValues(alpha: 0.4)),
             ),
             const SizedBox(height: 25),
             Text(
               title,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 20, 
-                fontWeight: FontWeight.bold, 
-                color: const Color(0xFF0A2647)
-              ),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF0A2647)),
             ),
             const SizedBox(height: 10),
             Text(
               subtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 14, 
+                fontSize: 14,
                 color: Colors.grey[500],
                 height: 1.5,
               ),
@@ -63,7 +65,8 @@ class EmptyStateWidget extends StatelessWidget {
                     backgroundColor: const Color(0xFF0A2647),
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25)),
                   ),
                   child: Text(
                     buttonText!,

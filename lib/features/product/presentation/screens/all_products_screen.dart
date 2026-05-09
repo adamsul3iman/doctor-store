@@ -153,7 +153,8 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
     // تحميل الصور مسبقاً للأداء الأفضل
     if (!productsState.isLoading && products.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final imageUrls = products.take(10).map((p) => p.originalImageUrl).toList();
+        final imageUrls =
+            products.take(10).map((p) => p.originalImageUrl).toList();
         ImagePreloadService().preloadImages(
           context,
           imageUrls,
@@ -183,7 +184,8 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
                 ? _buildLoadingSliver()
                 : productsState.hasError && products.isEmpty
                     ? _buildErrorSliverWithRetry(productsState.errorMessage)
-                    : _buildAllProductsSliver(products, isOffline: productsState.isOffline),
+                    : _buildAllProductsSliver(products,
+                        isOffline: productsState.isOffline),
           ),
           // مساحة في الأسفل + Footer موحّد
           const SliverResponsiveCenterPadding(
@@ -387,15 +389,13 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
                 onTap: () => setModalState(() => tempSort = id),
                 leading: Icon(
                   icon,
-                  color:
-                      selected ? const Color(0xFF0A2647) : Colors.grey[500],
+                  color: selected ? const Color(0xFF0A2647) : Colors.grey[500],
                 ),
                 title: Text(
                   label,
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight:
-                        selected ? FontWeight.w700 : FontWeight.w500,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   ),
                 ),
                 trailing: selected
@@ -432,13 +432,13 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
                     ),
                     const SizedBox(height: 8),
                     buildOption('newest', 'الأحدث', Icons.fiber_new_rounded),
+                    buildOption('price_low', 'الأقل سعراً',
+                        Icons.arrow_downward_rounded),
+                    buildOption('price_high', 'الأعلى سعراً',
+                        Icons.arrow_upward_rounded),
                     buildOption(
-                        'price_low', 'الأقل سعراً', Icons.arrow_downward_rounded),
-                    buildOption(
-                        'price_high', 'الأعلى سعراً', Icons.arrow_upward_rounded),
-                    buildOption('best', 'الأكثر مبيعاً', Icons.star_rate_rounded),
-                    buildOption(
-                        'offers', 'العروض', Icons.local_offer_rounded),
+                        'best', 'الأكثر مبيعاً', Icons.star_rate_rounded),
+                    buildOption('offers', 'العروض', Icons.local_offer_rounded),
                     const SizedBox(height: 12),
                     Align(
                       alignment: Alignment.centerLeft,
@@ -740,14 +740,15 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
     );
   }
 
-  Widget _buildAllProductsSliver(List<Product> products, {bool isOffline = false}) {
+  Widget _buildAllProductsSliver(List<Product> products,
+      {bool isOffline = false}) {
     if (_showFlatResultsMode) {
       return _buildFlatProductsSliver(products, isOffline: isOffline);
     }
 
     // إظهار تنبيه عند عدم الاتصال
     final List<Widget> widgets = [];
-    
+
     if (isOffline) {
       widgets.add(
         SliverToBoxAdapter(
@@ -802,7 +803,7 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
       );
       return SliverList(
         delegate: SliverChildListDelegate([
-          if (isOffline) 
+          if (isOffline)
             Container(
               margin: const EdgeInsets.all(16),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -986,7 +987,8 @@ class _AllProductsScreenState extends ConsumerState<AllProductsScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0A2647),
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),

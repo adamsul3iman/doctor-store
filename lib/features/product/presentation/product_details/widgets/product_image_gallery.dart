@@ -3,7 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:doctor_store/shared/utils/image_url_helper.dart';
 
 /// Product Image Gallery with isolated state.
-/// 
+///
 /// This widget manages its own image index state, preventing rebuilds
 /// of the parent screen during image swipes.
 class ProductImageGallery extends StatefulWidget {
@@ -87,6 +87,12 @@ class ProductImageGalleryState extends State<ProductImageGallery> {
       );
     }
 
+    final dpr = MediaQuery.of(context).devicePixelRatio;
+    final targetHeight = (widget.height * dpr).clamp(300.0, 1100.0).toInt();
+    final targetWidth = (MediaQuery.of(context).size.width * dpr)
+        .clamp(360.0, 1400.0)
+        .toInt();
+
     return Stack(
       alignment: Alignment.bottomCenter,
       children: [
@@ -95,12 +101,12 @@ class ProductImageGalleryState extends State<ProductImageGallery> {
           controller: _pageController,
           itemCount: widget.imageUrls.length,
           onPageChanged: _onPageChanged,
+          allowImplicitScrolling: true,
           itemBuilder: (context, index) {
             final imageUrl = widget.imageUrls[index];
             return GestureDetector(
-              onTap: widget.onImageTap != null
-                  ? () => widget.onImageTap!()
-                  : null,
+              onTap:
+                  widget.onImageTap != null ? () => widget.onImageTap!() : null,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -113,7 +119,9 @@ class ProductImageGalleryState extends State<ProductImageGallery> {
                         variant: ImageVariant.fullScreen,
                       ),
                       fit: BoxFit.cover,
-                      memCacheHeight: 900,
+                      useOldImageOnUrlChange: true,
+                      memCacheWidth: targetWidth,
+                      memCacheHeight: targetHeight,
                       placeholder: (c, u) => Container(color: Colors.grey[100]),
                       errorWidget: (c, u, e) => const Icon(
                         Icons.broken_image,
@@ -197,7 +205,7 @@ class ProductImageGalleryState extends State<ProductImageGallery> {
 }
 
 /// Full-screen image gallery dialog.
-/// 
+///
 /// Shows images in a modal with zoom support and infinite loop pagination.
 class ProductFullscreenGallery extends StatefulWidget {
   final String productId;

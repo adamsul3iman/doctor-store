@@ -31,11 +31,12 @@ class NetworkService {
     final wasConnected = _isConnected;
     // إذا كان هناك أي اتصال (WiFi, mobile, ethernet) نعتبره متصلاً
     _isConnected = results.any((r) => r != ConnectivityResult.none);
-    
+
     if (wasConnected != _isConnected) {
       _connectionController.add(_isConnected);
       if (kDebugMode) {
-        debugPrint('🌐 Network status: ${_isConnected ? "Connected" : "Disconnected"}');
+        debugPrint(
+            '🌐 Network status: ${_isConnected ? "Connected" : "Disconnected"}');
       }
     }
   }

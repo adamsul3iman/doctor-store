@@ -49,9 +49,7 @@ final homeSectionsProvider =
 
   try {
     // نستخدم stream مع primaryKey حتى نضمن استلام التغييرات الحية
-    final stream = supabase
-        .from('home_sections')
-        .stream(primaryKey: ['key']);
+    final stream = supabase.from('home_sections').stream(primaryKey: ['key']);
 
     await for (final data in stream) {
       final Map<String, HomeSectionConfig> result = {};

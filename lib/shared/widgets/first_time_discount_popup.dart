@@ -123,185 +123,191 @@ class _FirstTimeDiscountPopupState extends State<FirstTimeDiscountPopup>
                   ),
                   child: Stack(
                     children: [
-                    // زر الإغلاق
-                    Positioned(
-                      left: 8,
-                      top: 8,
-                      child: IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white70),
-                        onPressed: _handleClose,
-                      ),
-                    ),
-                    // المحتوى
-                    Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // أيقونة الهدية
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFF6F00).withValues(alpha: 0.2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.card_giftcard_rounded,
-                                size: 48,
-                                color: Color(0xFFFF6F00),
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            // العنوان
-                            const Text(
-                              'مرحباً بك!',
-                              style: TextStyle(
-                                fontFamily: 'Almarai',
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            // النص الوصفي
-                            const Text(
-                              'احصل على خصم 15% على أول طلب',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontFamily: 'Almarai',
-                                fontSize: 18,
-                                color: Colors.white70,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFFF6F00),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const Text(
-                                'كود: WELCOME15',
-                                style: TextStyle(
-                                  fontFamily: 'Almarai',
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  letterSpacing: 2,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            // حقل البريد الإلكتروني
-                            TextFormField(
-                              controller: _emailController,
-                              keyboardType: TextInputType.emailAddress,
-                              textAlign: TextAlign.right,
-                              style: const TextStyle(
-                                fontFamily: 'Almarai',
-                                color: Colors.white,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: 'أدخل بريدك الإلكتروني',
-                                hintStyle: const TextStyle(
-                                  fontFamily: 'Almarai',
-                                  color: Colors.white54,
-                                ),
-                                prefixIcon: const Icon(
-                                  Icons.email_outlined,
-                                  color: Colors.white70,
-                                ),
-                                filled: true,
-                                fillColor: Colors.white.withValues(alpha: 0.1),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.white.withValues(alpha: 0.2),
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFFFF6F00),
-                                    width: 2,
-                                  ),
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'الرجاء إدخال البريد الإلكتروني';
-                                }
-                                if (!value.contains('@') || !value.contains('.')) {
-                                  return 'الرجاء إدخال بريد إلكتروني صحيح';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 20),
-                            // زر الحصول على الخصم
-                            SizedBox(
-                              width: double.infinity,
-                              height: 56,
-                              child: ElevatedButton(
-                                onPressed: _isLoading ? null : _handleSubmit,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFFF6F00),
-                                  foregroundColor: Colors.white,
-                                  elevation: 4,
-                                  shadowColor: const Color(0xFFFF6F00).withValues(alpha: 0.5),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: _isLoading
-                                    ? const SizedBox(
-                                        height: 24,
-                                        width: 24,
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                          strokeWidth: 2.5,
-                                        ),
-                                      )
-                                    : const Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            'احصل على الخصم',
-                                            style: TextStyle(
-                                              fontFamily: 'Almarai',
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          SizedBox(width: 8),
-                                          Icon(Icons.arrow_back, size: 20),
-                                        ],
-                                      ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            // ملاحظة صغيرة
-                            Text(
-                              'لن نرسل لك رسائل مزعجة، وعد! 💙',
-                              style: TextStyle(
-                                fontFamily: 'Almarai',
-                                fontSize: 12,
-                                color: Colors.white.withValues(alpha: 0.6),
-                              ),
-                            ),
-                          ],
+                      // زر الإغلاق
+                      Positioned(
+                        left: 8,
+                        top: 8,
+                        child: IconButton(
+                          icon: const Icon(Icons.close, color: Colors.white70),
+                          onPressed: _handleClose,
                         ),
                       ),
-                    ),
+                      // المحتوى
+                      Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // أيقونة الهدية
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFF6F00)
+                                      .withValues(alpha: 0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.card_giftcard_rounded,
+                                  size: 48,
+                                  color: Color(0xFFFF6F00),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              // العنوان
+                              const Text(
+                                'مرحباً بك!',
+                                style: TextStyle(
+                                  fontFamily: 'Almarai',
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              // النص الوصفي
+                              const Text(
+                                'احصل على خصم 15% على أول طلب',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Almarai',
+                                  fontSize: 18,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFF6F00),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Text(
+                                  'كود: WELCOME15',
+                                  style: TextStyle(
+                                    fontFamily: 'Almarai',
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 2,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              // حقل البريد الإلكتروني
+                              TextFormField(
+                                controller: _emailController,
+                                keyboardType: TextInputType.emailAddress,
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(
+                                  fontFamily: 'Almarai',
+                                  color: Colors.white,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: 'أدخل بريدك الإلكتروني',
+                                  hintStyle: const TextStyle(
+                                    fontFamily: 'Almarai',
+                                    color: Colors.white54,
+                                  ),
+                                  prefixIcon: const Icon(
+                                    Icons.email_outlined,
+                                    color: Colors.white70,
+                                  ),
+                                  filled: true,
+                                  fillColor:
+                                      Colors.white.withValues(alpha: 0.1),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.2),
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFFF6F00),
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'الرجاء إدخال البريد الإلكتروني';
+                                  }
+                                  if (!value.contains('@') ||
+                                      !value.contains('.')) {
+                                    return 'الرجاء إدخال بريد إلكتروني صحيح';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 20),
+                              // زر الحصول على الخصم
+                              SizedBox(
+                                width: double.infinity,
+                                height: 56,
+                                child: ElevatedButton(
+                                  onPressed: _isLoading ? null : _handleSubmit,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFFF6F00),
+                                    foregroundColor: Colors.white,
+                                    elevation: 4,
+                                    shadowColor: const Color(0xFFFF6F00)
+                                        .withValues(alpha: 0.5),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: _isLoading
+                                      ? const SizedBox(
+                                          height: 24,
+                                          width: 24,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2.5,
+                                          ),
+                                        )
+                                      : const Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              'احصل على الخصم',
+                                              style: TextStyle(
+                                                fontFamily: 'Almarai',
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            SizedBox(width: 8),
+                                            Icon(Icons.arrow_back, size: 20),
+                                          ],
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              // ملاحظة صغيرة
+                              Text(
+                                'لن نرسل لك رسائل مزعجة، وعد! 💙',
+                                style: TextStyle(
+                                  fontFamily: 'Almarai',
+                                  fontSize: 12,
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),

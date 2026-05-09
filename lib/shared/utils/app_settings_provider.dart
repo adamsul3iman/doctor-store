@@ -29,8 +29,10 @@ class AppSettings {
       freeShippingEnabled: (json['free_shipping_enabled'] as bool?) ?? true,
       freeShippingThreshold: _asDouble(json['free_shipping_threshold'], 100.0),
       bundleDiscountPercent: _asDouble(json['bundle_discount_percent'], 10.0),
-      firstTimeDiscountPercent: _asDouble(json['first_time_discount_percent'], 15.0),
-      firstTimeDiscountCode: json['first_time_discount_code']?.toString() ?? 'WELCOME15',
+      firstTimeDiscountPercent:
+          _asDouble(json['first_time_discount_percent'], 15.0),
+      firstTimeDiscountCode:
+          json['first_time_discount_code']?.toString() ?? 'WELCOME15',
     );
   }
 
@@ -49,14 +51,14 @@ class AppSettings {
 final appSettingsProvider = FutureProvider<AppSettings>((ref) async {
   try {
     final supabase = Supabase.instance.client;
-    
+
     // جلب الإعدادات من جدول app_settings
     final response = await supabase
         .from('app_settings')
         .select()
         .eq('id', 1) // نفترض أن ID الإعدادات هو 1
         .single();
-    
+
     return AppSettings.fromJson(response);
   } catch (e) {
     // في حالة الخطأ أو عدم وجود الجدول، نرجع القيم الافتراضية
@@ -68,7 +70,7 @@ final appSettingsProvider = FutureProvider<AppSettings>((ref) async {
 final appSettingsStreamProvider = StreamProvider<AppSettings>((ref) {
   try {
     final supabase = Supabase.instance.client;
-    
+
     return supabase
         .from('app_settings')
         .stream(primaryKey: ['id'])

@@ -55,7 +55,9 @@ class _SimilarProductsSectionState extends State<SimilarProductsSection> {
               );
               final isCompact = crossAxisCount >= 3;
               // حساب الارتفاع المناسب حسب عرض العنصر
-              final itemWidth = (constraints.maxWidth - ((crossAxisCount - 1) * 10)) / crossAxisCount;
+              final itemWidth =
+                  (constraints.maxWidth - ((crossAxisCount - 1) * 10)) /
+                      crossAxisCount;
               final cardHeight = isCompact ? itemWidth + 85 : tileHeight;
 
               return GridView.builder(
@@ -87,13 +89,16 @@ class _SimilarProductsSectionState extends State<SimilarProductsSection> {
                 );
                 final isCompact = crossAxisCount >= 3;
                 // حساب الارتفاع المناسب حسب عرض العنصر
-                final itemWidth = (constraints.maxWidth - ((crossAxisCount - 1) * 10)) / crossAxisCount;
+                final itemWidth =
+                    (constraints.maxWidth - ((crossAxisCount - 1) * 10)) /
+                        crossAxisCount;
                 final cardHeight = isCompact ? itemWidth + 85 : tileHeight;
 
                 return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: crossAxisCount,
                     mainAxisSpacing: 10,
@@ -132,10 +137,12 @@ class InlineSimilarProductsStrip extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<InlineSimilarProductsStrip> createState() => _InlineSimilarProductsStripState();
+  ConsumerState<InlineSimilarProductsStrip> createState() =>
+      _InlineSimilarProductsStripState();
 }
 
-class _InlineSimilarProductsStripState extends ConsumerState<InlineSimilarProductsStrip> {
+class _InlineSimilarProductsStripState
+    extends ConsumerState<InlineSimilarProductsStrip> {
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(

@@ -11,18 +11,19 @@ import '../../data/services/admin_dashboard_service.dart';
 
 class ModernAdminDashboard extends ConsumerStatefulWidget {
   final Function(int)? onNavigateToTab;
-  
+
   const ModernAdminDashboard({super.key, this.onNavigateToTab});
 
   @override
-  ConsumerState<ModernAdminDashboard> createState() => _ModernAdminDashboardState();
+  ConsumerState<ModernAdminDashboard> createState() =>
+      _ModernAdminDashboardState();
 }
 
 class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
   final AdminDashboardService _dashboardService = AdminDashboardService();
 
   bool _isLoading = true;
-  
+
   DashboardStats? _stats;
   List<SalesData>? _salesData;
   List<RecentActivity>? _activities;
@@ -44,7 +45,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
 
   Future<void> _loadDashboardData() async {
     setState(() => _isLoading = true);
-    
+
     try {
       final results = await Future.wait([
         _dashboardService.getDashboardStats(),
@@ -53,7 +54,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
         _dashboardService.getTopProducts(limit: 3),
         _dashboardService.getQuickAnalytics(),
       ]);
-      
+
       if (mounted) {
         setState(() {
           _stats = results[0] as DashboardStats;
@@ -126,7 +127,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
         : now.hour < 18
             ? 'مساء الخير'
             : 'مساء الخير';
-    
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -238,7 +239,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
     const navy2 = Color(0xFF144272);
     const orange = Color(0xFFFF6F00);
     const orange2 = Color(0xFFE65100);
-    
+
     return Column(
       children: [
         Row(
@@ -301,7 +302,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
     // 0: الرئيسية, 1: الطلبات, 2: المنتجات, 3: الأقسام, 4: الفئات الفرعية,
     // 5: الكوبونات, 6: مناطق التوصيل, 7: أسعار الشحن, 8: البانرات,
     // 9: العملاء, 10: التقييمات, 11: الإعدادات
-    
+
     switch (action) {
       case 'add_product':
         // إضافة منتج جديد - الانتقال لصفحة منفصلة
@@ -333,7 +334,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
   /// قسم التحليلات السريعة
   Widget _buildAnalyticsSection() {
     final analytics = _quickAnalytics ?? QuickAnalytics.empty();
-    
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -471,7 +472,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
       const Color(0xFFC0C0C0), // فضي
       const Color(0xFFCD7F32), // برونزي
     ];
-    
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -485,7 +486,8 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.emoji_events, color: const Color(0xFFFFD700), size: 24),
+                    Icon(Icons.emoji_events,
+                        color: const Color(0xFFFFD700), size: 24),
                     const SizedBox(width: 8),
                     Text(
                       'المنتجات الأكثر مبيعاً',
@@ -528,7 +530,7 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
                 final index = entry.key;
                 final product = entry.value;
                 final isLast = index == products.length - 1;
-                
+
                 return Column(
                   children: [
                     _buildTopProductItem(
@@ -536,8 +538,8 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
                       name: product.name,
                       sales: product.sales,
                       revenue: product.revenue,
-                      color: index < medalColors.length 
-                          ? medalColors[index] 
+                      color: index < medalColors.length
+                          ? medalColors[index]
                           : Colors.grey,
                     ),
                     if (!isLast) const Divider(height: 24),
@@ -604,7 +606,8 @@ class _ModernAdminDashboardState extends ConsumerState<ModernAdminDashboard> {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(Icons.shopping_bag_outlined, size: 14, color: Colors.grey[600]),
+                  Icon(Icons.shopping_bag_outlined,
+                      size: 14, color: Colors.grey[600]),
                   const SizedBox(width: 4),
                   Text(
                     sales,

@@ -19,7 +19,8 @@ class ProductCacheService {
     await init();
     final productsJson = products.map((p) => p.toJson()).toList();
     await _prefs?.setString('cached_products', jsonEncode(productsJson));
-    await _prefs?.setInt('cache_timestamp', DateTime.now().millisecondsSinceEpoch);
+    await _prefs?.setInt(
+        'cache_timestamp', DateTime.now().millisecondsSinceEpoch);
   }
 
   /// استرجاع المنتجات من الذاكرة المحلية
@@ -39,7 +40,8 @@ class ProductCacheService {
   }
 
   /// التحقق من صلاحية الكاش (أقل من 24 ساعة)
-  Future<bool> isCacheValid({Duration maxAge = const Duration(hours: 24)}) async {
+  Future<bool> isCacheValid(
+      {Duration maxAge = const Duration(hours: 24)}) async {
     await init();
     final timestamp = _prefs?.getInt('cache_timestamp');
     if (timestamp == null) return false;

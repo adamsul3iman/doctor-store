@@ -440,9 +440,7 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
                               'color_value': color.toARGB32(),
                               'icon_name': selectedIconName,
                             };
-                            await _supabase
-                                .from('categories')
-                                .upsert(payload);
+                            await _supabase.from('categories').upsert(payload);
 
                             if (!context.mounted) return;
 
@@ -450,7 +448,8 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
                             await _loadCategories();
                             if (!context.mounted) return;
 
-                            AppNotifier.showSuccess(context, 'تم حفظ القسم بنجاح');
+                            AppNotifier.showSuccess(
+                                context, 'تم حفظ القسم بنجاح');
                           } catch (e) {
                             if (!context.mounted) return;
 
@@ -541,8 +540,7 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
                               ElevatedButton.icon(
                                 onPressed: _seedDefaultCategories,
                                 icon: const Icon(Icons.auto_fix_high_outlined),
-                                label:
-                                    const Text('استيراد الأقسام الافتراضية'),
+                                label: const Text('استيراد الأقسام الافتراضية'),
                               ),
                             ],
                           ),
@@ -582,7 +580,8 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
                                     ReorderableDragStartListener(
                                       index: index,
                                       child: const Padding(
-                                        padding: EdgeInsetsDirectional.only(end: 4.0),
+                                        padding: EdgeInsetsDirectional.only(
+                                            end: 4.0),
                                         child: Icon(
                                           Icons.drag_indicator,
                                           color: Colors.grey,
@@ -591,14 +590,12 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
                                     ),
                                     Switch(
                                       value: isActive,
-                                      onChanged: (v) =>
-                                          _toggleActive(cat, v),
+                                      onChanged: (v) => _toggleActive(cat, v),
                                       activeThumbColor: const Color(0xFF0A2647),
                                     ),
                                     IconButton(
                                       tooltip: 'تعديل',
-                                      icon:
-                                          const Icon(Icons.edit_outlined),
+                                      icon: const Icon(Icons.edit_outlined),
                                       onPressed: () =>
                                           _openCategoryEditor(existing: cat),
                                     ),
@@ -613,8 +610,7 @@ class _AdminCategoriesViewState extends State<AdminCategoriesView> {
                                     ),
                                   ],
                                 ),
-                                onTap: () =>
-                                    _openCategoryEditor(existing: cat),
+                                onTap: () => _openCategoryEditor(existing: cat),
                               ),
                             );
                           },

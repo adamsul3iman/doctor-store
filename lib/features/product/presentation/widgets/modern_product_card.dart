@@ -15,7 +15,8 @@ class ModernProductCard extends ConsumerWidget {
   final Product product;
   final bool isCompact;
 
-  const ModernProductCard({super.key, required this.product, this.isCompact = false});
+  const ModernProductCard(
+      {super.key, required this.product, this.isCompact = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,7 +25,8 @@ class ModernProductCard extends ConsumerWidget {
 
     int discount = 0;
     if (product.oldPrice != null && product.oldPrice! > product.price) {
-      discount = ((product.oldPrice! - product.price) / product.oldPrice! * 100).round();
+      discount = ((product.oldPrice! - product.price) / product.oldPrice! * 100)
+          .round();
     }
 
     return RepaintBoundary(
@@ -51,7 +53,8 @@ class ModernProductCard extends ConsumerWidget {
               AspectRatio(
                 aspectRatio: 3 / 4,
                 child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(16)),
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
@@ -70,7 +73,8 @@ class ModernProductCard extends ConsumerWidget {
                           top: 8,
                           left: 8,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 3),
                             decoration: BoxDecoration(
                               color: Colors.red[600],
                               borderRadius: BorderRadius.circular(6),
@@ -109,7 +113,7 @@ class ModernProductCard extends ConsumerWidget {
                         minFontSize: isCompact ? 11 : 13,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      
+
                       // السعر وزر السلة
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -119,7 +123,8 @@ class ModernProductCard extends ConsumerWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (product.oldPrice != null && product.oldPrice! > product.price)
+                                if (product.oldPrice != null &&
+                                    product.oldPrice! > product.price)
                                   Text(
                                     product.oldPrice!.toStringAsFixed(0),
                                     style: TextStyle(
@@ -156,7 +161,9 @@ class ModernProductCard extends ConsumerWidget {
                                   return;
                                 }
 
-                                ref.read(cartProvider.notifier).addItem(product);
+                                ref
+                                    .read(cartProvider.notifier)
+                                    .addItem(product);
                                 ScaffoldMessenger.of(context)
                                   ..hideCurrentSnackBar()
                                   ..showSnackBar(
@@ -165,7 +172,8 @@ class ModernProductCard extends ConsumerWidget {
                                         "تمت الإضافة للسلة",
                                         style: TextStyle(),
                                       ),
-                                      duration: const Duration(milliseconds: 1500),
+                                      duration:
+                                          const Duration(milliseconds: 1500),
                                       backgroundColor: const Color(0xFF0A2647),
                                       behavior: SnackBarBehavior.floating,
                                     ),
@@ -179,7 +187,8 @@ class ModernProductCard extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(12),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppTheme.primary.withValues(alpha: 0.3),
+                                      color: AppTheme.primary
+                                          .withValues(alpha: 0.3),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),

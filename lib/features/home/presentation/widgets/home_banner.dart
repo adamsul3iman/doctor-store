@@ -116,7 +116,7 @@ class _HomeBannerState extends State<HomeBanner> {
                     height: 4,
                     width: _currentPage == index ? 25 : 8, // توسيع المؤشر النشط
                     decoration: BoxDecoration(
-                      color: _currentPage == index 
+                      color: _currentPage == index
                           ? const Color(0xFFD4AF37) // لون ذهبي للنشط
                           : Colors.white.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(4),
@@ -133,12 +133,14 @@ class _HomeBannerState extends State<HomeBanner> {
   Widget _buildBannerItem(Map<String, dynamic> banner) {
     return GestureDetector(
       onTap: () {
-        if (banner['link_target'] != null && banner['link_target'].toString().isNotEmpty) {
+        if (banner['link_target'] != null &&
+            banner['link_target'].toString().isNotEmpty) {
           context.push(banner['link_target']);
         }
       },
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5), // حواف جانبية
+        margin: const EdgeInsets.symmetric(
+            horizontal: 16, vertical: 5), // حواف جانبية
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20), // زوايا دائرية ناعمة
           boxShadow: [
@@ -173,7 +175,8 @@ class _HomeBannerState extends State<HomeBanner> {
                     colors: [
                       Colors.transparent,
                       Colors.black.withValues(alpha: 0.1),
-                      Colors.black.withValues(alpha: 0.7), // سواد في الأسفل للنص
+                      Colors.black
+                          .withValues(alpha: 0.7), // سواد في الأسفل للنص
                     ],
                     stops: const [0.4, 0.7, 1.0],
                   ),
@@ -187,7 +190,8 @@ class _HomeBannerState extends State<HomeBanner> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (banner['title'] != null && banner['title'].toString().isNotEmpty)
+                    if (banner['title'] != null &&
+                        banner['title'].toString().isNotEmpty)
                       Text(
                         banner['title'],
                         style: TextStyle(
@@ -196,8 +200,9 @@ class _HomeBannerState extends State<HomeBanner> {
                           fontWeight: FontWeight.w900, // خط عريض جداً
                         ),
                       ),
-                    
-                    if (banner['subtitle'] != null && banner['subtitle'].toString().isNotEmpty)
+
+                    if (banner['subtitle'] != null &&
+                        banner['subtitle'].toString().isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
@@ -213,10 +218,12 @@ class _HomeBannerState extends State<HomeBanner> {
                       ),
 
                     // زر (Call to Action) اختياري
-                    if (widget.position == 'top' && banner['button_text'] != null)
+                    if (widget.position == 'top' &&
+                        banner['button_text'] != null)
                       Container(
                         margin: const EdgeInsets.only(top: 12),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 6),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),

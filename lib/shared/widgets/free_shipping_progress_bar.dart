@@ -49,9 +49,7 @@ class FreeShippingProgressBar extends StatelessWidget {
             children: [
               Icon(
                 hasAchieved ? Icons.check_circle : Icons.local_shipping,
-                color: hasAchieved
-                    ? Colors.white
-                    : const Color(0xFF0A2647),
+                color: hasAchieved ? Colors.white : const Color(0xFF0A2647),
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -63,9 +61,7 @@ class FreeShippingProgressBar extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: hasAchieved
-                        ? Colors.white
-                        : const Color(0xFF0A2647),
+                    color: hasAchieved ? Colors.white : const Color(0xFF0A2647),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -125,8 +121,8 @@ class FreeShippingProgressBar extends StatelessWidget {
                     child: Padding(
                       padding: EdgeInsets.only(
                           left: MediaQuery.of(context).size.width *
-                              progress *
-                              0.85 -
+                                  progress *
+                                  0.85 -
                               30),
                       child: Text(
                         '${(progress * 100).toInt()}%',

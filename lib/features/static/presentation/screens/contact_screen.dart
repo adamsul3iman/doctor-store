@@ -45,9 +45,8 @@ class ContactScreen extends ConsumerWidget {
         ],
         title: Text(
           pageAsync.maybeWhen(
-            data: (page) => (page?.title.isNotEmpty ?? false)
-                ? page!.title
-                : 'اتصل بنا',
+            data: (page) =>
+                (page?.title.isNotEmpty ?? false) ? page!.title : 'اتصل بنا',
             orElse: () => 'اتصل بنا',
           ),
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -64,7 +63,8 @@ class ContactScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   pageAsync.when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (_, __) => const _DefaultContactIntro(),
                     data: (page) {
                       if (page == null || page.content.trim().isEmpty) {
@@ -78,7 +78,8 @@ class ContactScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 20),
                   settingsAsync.when(
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
                     error: (_, __) => const SizedBox(),
                     data: (settings) {
                       return Column(
@@ -97,7 +98,8 @@ class ContactScreen extends ConsumerWidget {
                                 'مرحباً، أود التواصل مع متجر الدكتور.',
                               );
                               if (await canLaunchUrl(uri)) {
-                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                await launchUrl(uri,
+                                    mode: LaunchMode.externalApplication);
                               }
                             },
                           ),
@@ -105,7 +107,8 @@ class ContactScreen extends ConsumerWidget {
                           _contactTile(
                             icon: Icons.email_outlined,
                             label: 'البريد الإلكتروني',
-                            value: 'يمكنك مراسلتنا عبر النموذج داخل الواتساب أو الرسائل.',
+                            value:
+                                'يمكنك مراسلتنا عبر النموذج داخل الواتساب أو الرسائل.',
                           ),
                           const SizedBox(height: 10),
                           _contactTile(
@@ -194,7 +197,11 @@ class _DynamicContactIntro extends StatelessWidget {
   }
 }
 
-Widget _contactTile({required IconData icon, required String label, required String value, VoidCallback? onTap}) {
+Widget _contactTile(
+    {required IconData icon,
+    required String label,
+    required String value,
+    VoidCallback? onTap}) {
   return InkWell(
     onTap: onTap,
     borderRadius: BorderRadius.circular(12),

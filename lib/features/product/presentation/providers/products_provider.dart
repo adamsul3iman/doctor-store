@@ -11,7 +11,8 @@ final productRepositoryProvider = Provider<ProductRepository>((ref) {
 });
 
 /// عدّاد مشاهدات المنتج (يشمل الزوّار غير المسجلين)
-final productViewsProvider = FutureProvider.family<int, String>((ref, productId) async {
+final productViewsProvider =
+    FutureProvider.family<int, String>((ref, productId) async {
   final supabase = Supabase.instance.client;
 
   // نستخدم count() من Supabase v2 للحصول على عدد الصفوف فقط
@@ -19,8 +20,7 @@ final productViewsProvider = FutureProvider.family<int, String>((ref, productId)
       .from('events')
       .select('id')
       .eq('name', 'product_view')
-      .contains('props', {'id': productId})
-      .count(CountOption.exact);
+      .contains('props', {'id': productId}).count(CountOption.exact);
 
   // في حال فشل العد لأي سبب نعيد 0 بشكل آمن
   final count = response.count;
@@ -28,7 +28,8 @@ final productViewsProvider = FutureProvider.family<int, String>((ref, productId)
 });
 
 /// تحميل منتجات فئة معيّنة مرة واحدة (أسرع للويب) مع كاش تلقائي من Riverpod.
-final productsByCategoryProvider = FutureProvider.family<List<Product>, String>((ref, categoryId) async {
+final productsByCategoryProvider =
+    FutureProvider.family<List<Product>, String>((ref, categoryId) async {
   final repo = ref.watch(productRepositoryProvider);
   return repo.fetchByCategory(categoryId: categoryId);
 });
@@ -39,7 +40,8 @@ final allProductsProvider = FutureProvider<List<Product>>((ref) async {
   return repo.fetchAll();
 });
 
-final similarProductsProvider = FutureProvider.family<List<Product>, SimilarProductsQuery>((ref, q) async {
+final similarProductsProvider =
+    FutureProvider.family<List<Product>, SimilarProductsQuery>((ref, q) async {
   final repo = ref.watch(productRepositoryProvider);
   return repo.fetchSimilarSmart(
     categoryId: q.categoryId,
@@ -55,14 +57,13 @@ final allProductsStreamProvider = FutureProvider<List<Product>>((ref) async {
 
   final response = await supabase
       .from('products')
-      .select('id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
+      .select(
+          'id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
       .eq('is_active', true)
       .order('created_at', ascending: false)
       .limit(200);
 
-  return (response as List)
-      .map((row) => Product.fromJson(row))
-      .toList();
+  return (response as List).map((row) => Product.fromJson(row)).toList();
 });
 
 /// تدفق لحظي لكل المنتجات - للوحة التحكم فقط (Admin)
@@ -78,9 +79,7 @@ final allProductsAdminStreamProvider = StreamProvider<List<Product>>((ref) {
       .limit(200);
 
   return stream.map((rows) {
-    return rows
-        .map((row) => Product.fromJson(row))
-        .toList();
+    return rows.map((row) => Product.fromJson(row)).toList();
   });
 });
 
@@ -89,17 +88,16 @@ final allProductsAdminStreamProvider = StreamProvider<List<Product>>((ref) {
 final productsByCategoryStreamProvider =
     FutureProvider.family<List<Product>, String>((ref, categoryId) async {
   final supabase = Supabase.instance.client;
-  
+
   final response = await supabase
       .from('products')
-      .select('id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
+      .select(
+          'id, title, price, old_price, image_url, category, sub_category_id, is_featured, is_flash_deal, is_active, created_at, options, gallery, variants, rating_average, rating_count, slug, short_description, tags')
       .eq('is_active', true)
       .eq('category', categoryId)
       .order('created_at', ascending: false);
-  
-  return (response as List)
-      .map((row) => Product.fromJson(row))
-      .toList();
+
+  return (response as List).map((row) => Product.fromJson(row)).toList();
 });
 
 /// تدفق لحظي لمنتجات فئة معيّنة - للوحة التحكم فقط (Admin)

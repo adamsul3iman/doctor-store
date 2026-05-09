@@ -75,9 +75,11 @@ class OwnerSection extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0A2647).withValues(alpha: 0.05),
+                          color:
+                              const Color(0xFF0A2647).withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Text(
@@ -170,7 +172,8 @@ class _OwnerImageFallback extends StatelessWidget {
 }
 
 Future<void> _launchConsultation(String phone) async {
-  const message = 'مرحباً دكتور، أرغب بتفصيل فرشة طبية وأحتاج استشارة لتحديد المناسب لي.';
+  const message =
+      'مرحباً دكتور، أرغب بتفصيل فرشة طبية وأحتاج استشارة لتحديد المناسب لي.';
   final normalizedPhone = WhatsAppService.normalizePhoneNumber(phone);
   if (normalizedPhone.isEmpty) return;
   final url = WhatsAppService.buildWhatsAppUrl(normalizedPhone, message);

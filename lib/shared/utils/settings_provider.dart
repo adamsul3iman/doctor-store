@@ -11,6 +11,7 @@ class AppSettings {
   final String instagram;
   final String tiktok;
   final String ownerName;
+
   /// رابط صورة صاحب المتجر المستخدمة في قسم OwnerSection في الهوم
   final String ownerImageUrl;
 
@@ -44,10 +45,8 @@ final settingsProvider = StreamProvider<AppSettings>((ref) async* {
   final supabase = Supabase.instance.client;
 
   try {
-    final stream = supabase
-        .from('app_settings')
-        .stream(primaryKey: ['id'])
-        .eq('id', 1);
+    final stream =
+        supabase.from('app_settings').stream(primaryKey: ['id']).eq('id', 1);
 
     await for (final rows in stream) {
       if (rows.isEmpty) {

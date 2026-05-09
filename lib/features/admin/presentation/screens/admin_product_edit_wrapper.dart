@@ -12,7 +12,8 @@ class AdminProductEditWrapper extends StatefulWidget {
   const AdminProductEditWrapper({super.key, required this.productId});
 
   @override
-  State<AdminProductEditWrapper> createState() => _AdminProductEditWrapperState();
+  State<AdminProductEditWrapper> createState() =>
+      _AdminProductEditWrapperState();
 }
 
 class _AdminProductEditWrapperState extends State<AdminProductEditWrapper> {

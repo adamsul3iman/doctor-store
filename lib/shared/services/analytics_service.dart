@@ -219,10 +219,8 @@ class AnalyticsService {
       final client = _getClientOrNull();
       if (client == null) return [];
 
-      final response = await client
-          .from('top_products_view')
-          .select()
-          .limit(limit);
+      final response =
+          await client.from('top_products_view').select().limit(limit);
 
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
@@ -255,10 +253,7 @@ class AnalyticsService {
       final client = _getClientOrNull();
       if (client == null) return null;
 
-      final response = await client
-          .from('today_stats_view')
-          .select()
-          .single();
+      final response = await client.from('today_stats_view').select().single();
 
       return response;
     } catch (e) {
@@ -276,7 +271,11 @@ class AnalyticsService {
       final response = await client
           .from('site_visits')
           .select('visitor_id')
-          .gt('session_start', DateTime.now().subtract(const Duration(minutes: 5)).toIso8601String())
+          .gt(
+              'session_start',
+              DateTime.now()
+                  .subtract(const Duration(minutes: 5))
+                  .toIso8601String())
           .count(CountOption.exact);
 
       return response.count;

@@ -61,7 +61,8 @@ class AdminProductRepository {
     return List<Map<String, dynamic>>.from(data as List);
   }
 
-  Future<void> upsertProduct({required Map<String, dynamic> productData, String? productId}) async {
+  Future<void> upsertProduct(
+      {required Map<String, dynamic> productData, String? productId}) async {
     final client = _getClientOrNull();
     if (client == null) return;
 
@@ -73,7 +74,8 @@ class AdminProductRepository {
     await client.from('products').insert(productData);
   }
 
-  Future<String> uploadProductImage({required String path, required Uint8List bytes}) async {
+  Future<String> uploadProductImage(
+      {required String path, required Uint8List bytes}) async {
     final client = _getClientOrNull();
     if (client == null) return '';
 
@@ -81,35 +83,32 @@ class AdminProductRepository {
     return client.storage.from('products').getPublicUrl(path);
   }
 
-  Future<void> setFlashDeal({required String productId, required bool isFlashDeal}) async {
+  Future<void> setFlashDeal(
+      {required String productId, required bool isFlashDeal}) async {
     final client = _getClientOrNull();
     if (client == null) return;
 
     await client
         .from('products')
-        .update({'is_flash_deal': isFlashDeal})
-        .eq('id', productId);
+        .update({'is_flash_deal': isFlashDeal}).eq('id', productId);
   }
 
-  Future<void> setActive({required String productId, required bool isActive}) async {
+  Future<void> setActive(
+      {required String productId, required bool isActive}) async {
     final client = _getClientOrNull();
     if (client == null) return;
 
     await client
         .from('products')
-        .update({'is_active': isActive})
-        .eq('id', productId);
+        .update({'is_active': isActive}).eq('id', productId);
   }
 
   Future<List<Map<String, dynamic>>> deleteProduct(String productId) async {
     final client = _getClientOrNull();
     if (client == null) return <Map<String, dynamic>>[];
 
-    final deleted = await client
-        .from('products')
-        .delete()
-        .eq('id', productId)
-        .select();
+    final deleted =
+        await client.from('products').delete().eq('id', productId).select();
     return List<Map<String, dynamic>>.from(deleted as List);
   }
 
@@ -119,7 +118,6 @@ class AdminProductRepository {
 
     return client
         .from('products')
-        .stream(primaryKey: ['id'])
-        .order('created_at', ascending: false);
+        .stream(primaryKey: ['id']).order('created_at', ascending: false);
   }
 }

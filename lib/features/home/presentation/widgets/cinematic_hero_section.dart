@@ -18,16 +18,17 @@ final activeBannersProvider = FutureProvider<List<AppBanner>>((ref) async {
 });
 
 // مزود لـ Preload صور البانرات
-final bannerImagesPreloaderProvider = FutureProvider.family<void, List<AppBanner>>((ref, banners) async {
+final bannerImagesPreloaderProvider =
+    FutureProvider.family<void, List<AppBanner>>((ref, banners) async {
   if (banners.isEmpty) return;
-  
+
   // Preload image URLs into cache manager in parallel
   final cacheManager = DefaultCacheManager();
   final List<Future<dynamic>> preloadFutures = banners
       .where((b) => b.imageUrl.isNotEmpty)
       .map((b) => cacheManager.getSingleFile(b.imageUrl))
       .toList();
-  
+
   // Use error-aware waiting - failures don't block successful loads
   await Future.wait(
     preloadFutures.map((f) => f.catchError((_) {})).toList(),
@@ -39,7 +40,8 @@ class CinematicHeroSection extends ConsumerStatefulWidget {
   const CinematicHeroSection({super.key});
 
   @override
-  ConsumerState<CinematicHeroSection> createState() => _CinematicHeroSectionState();
+  ConsumerState<CinematicHeroSection> createState() =>
+      _CinematicHeroSectionState();
 }
 
 class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
@@ -54,7 +56,7 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: 0);
-    
+
     // ✅ تحسين: تعطيل Animations على Web للأداء الأفضل
     final isWeb = kIsWeb;
     _floatingController = AnimationController(
@@ -65,13 +67,13 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
       vsync: this,
       duration: const Duration(seconds: 2),
     );
-    
+
     // ✅ تشغيل الأنيميشن فقط إذا لم يكن Web
     if (!isWeb) {
       _floatingController.repeat(reverse: true);
       _glowController.repeat(reverse: true);
     }
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startAutoPlay();
     });
@@ -102,7 +104,7 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
   @override
   Widget build(BuildContext context) {
     final bannersAsync = ref.watch(activeBannersProvider);
-    
+
     // Preload banner images when data is loaded
     bannersAsync.whenData((banners) {
       if (banners.isNotEmpty) {
@@ -129,10 +131,11 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
                 },
                 itemBuilder: (context, index) {
                   final banner = banners[index % banners.length];
-                  return _buildModernHeroPage(context, banner, index % banners.length == _currentPage);
+                  return _buildModernHeroPage(
+                      context, banner, index % banners.length == _currentPage);
                 },
               ),
-              
+
               // مؤشرات احترافية
               Positioned(
                 bottom: 24,
@@ -150,16 +153,19 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(4),
-                        color: isActive 
+                        color: isActive
                             ? const Color(0xFFD4AF37)
                             : Colors.white.withValues(alpha: 0.4),
-                        boxShadow: isActive ? [
-                          BoxShadow(
-                            color: const Color(0xFFD4AF37).withValues(alpha: 0.5),
-                            blurRadius: 8,
-                            spreadRadius: 1,
-                          ),
-                        ] : null,
+                        boxShadow: isActive
+                            ? [
+                                BoxShadow(
+                                  color: const Color(0xFFD4AF37)
+                                      .withValues(alpha: 0.5),
+                                  blurRadius: 8,
+                                  spreadRadius: 1,
+                                ),
+                              ]
+                            : null,
                       ),
                     );
                   }),
@@ -178,7 +184,8 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
     );
   }
 
-  Widget _buildModernHeroPage(BuildContext context, AppBanner banner, bool isActive) {
+  Widget _buildModernHeroPage(
+      BuildContext context, AppBanner banner, bool isActive) {
     final disableEffects = kIsWeb || MediaQuery.of(context).disableAnimations;
 
     return GestureDetector(
@@ -189,7 +196,8 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
           // الخلفية مع تأثير التكبير البطيء
           AnimatedScale(
             scale: disableEffects ? 1.0 : (isActive ? 1.08 : 1.0),
-            duration: disableEffects ? Duration.zero : const Duration(seconds: 8),
+            duration:
+                disableEffects ? Duration.zero : const Duration(seconds: 8),
             curve: Curves.easeOutQuad,
             child: AppNetworkImage(
               url: banner.imageUrl,
@@ -199,7 +207,7 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
               errorWidget: const Icon(Icons.broken_image, color: Colors.grey),
             ),
           ),
-          
+
           // تدرج متدرج غير متماثل
           Container(
             decoration: BoxDecoration(
@@ -249,9 +257,11 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
                   animation: _floatingController,
                   builder: (context, child) {
                     return Transform.translate(
-                      offset: Offset(0, math.sin(_floatingController.value * math.pi) * 4),
+                      offset: Offset(
+                          0, math.sin(_floatingController.value * math.pi) * 4),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
@@ -262,7 +272,8 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFD4AF37).withValues(alpha: 0.4),
+                              color: const Color(0xFFD4AF37)
+                                  .withValues(alpha: 0.4),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -271,7 +282,8 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.local_offer_rounded, color: Colors.white, size: 14),
+                            const Icon(Icons.local_offer_rounded,
+                                color: Colors.white, size: 14),
                             const SizedBox(width: 6),
                             Text(
                               'عرض خاص',
@@ -335,9 +347,9 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 8),
-                        
+
                         // الوصف
                         AnimatedOpacity(
                           duration: const Duration(milliseconds: 800),
@@ -353,9 +365,9 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 12),
-                        
+
                         // زر احترافي متوهج
                         AnimatedBuilder(
                           animation: _glowController,
@@ -366,27 +378,34 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
                                 boxShadow: [
                                   BoxShadow(
                                     color: const Color(0xFFD4AF37).withValues(
-                                      alpha: 0.3 + (_glowController.value * 0.3),
+                                      alpha:
+                                          0.3 + (_glowController.value * 0.3),
                                     ),
-                                    blurRadius: 15 + (_glowController.value * 10),
+                                    blurRadius:
+                                        15 + (_glowController.value * 10),
                                     spreadRadius: 2,
                                   ),
                                 ],
                               ),
                               child: ElevatedButton.icon(
-                                onPressed: () => _handleNavigation(banner.linkTarget),
+                                onPressed: () =>
+                                    _handleNavigation(banner.linkTarget),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.white,
                                   foregroundColor: const Color(0xFF0A2647),
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 24, vertical: 14),
                                   elevation: 0,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(30),
                                   ),
                                 ),
-                                icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                                icon: const Icon(Icons.arrow_forward_rounded,
+                                    size: 18),
                                 label: Text(
-                                  banner.buttonText.isNotEmpty ? banner.buttonText : 'اكتشف المزيد',
+                                  banner.buttonText.isNotEmpty
+                                      ? banner.buttonText
+                                      : 'اكتشف المزيد',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
@@ -400,7 +419,7 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
               ],
             ),
@@ -451,7 +470,7 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
               },
             ),
           ),
-          
+
           Center(
             child: Padding(
               padding: const EdgeInsets.all(30.0),
@@ -491,7 +510,8 @@ class _CinematicHeroSectionState extends ConsumerState<CinematicHeroSection>
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFD4AF37),
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),

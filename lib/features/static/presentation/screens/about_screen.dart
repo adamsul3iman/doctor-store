@@ -39,9 +39,8 @@ class AboutScreen extends ConsumerWidget {
         ],
         title: Text(
           pageAsync.maybeWhen(
-            data: (page) => (page?.title.isNotEmpty ?? false)
-                ? page!.title
-                : 'من نحن',
+            data: (page) =>
+                (page?.title.isNotEmpty ?? false) ? page!.title : 'من نحن',
             orElse: () => 'من نحن',
           ),
           style: TextStyle(fontWeight: FontWeight.bold),

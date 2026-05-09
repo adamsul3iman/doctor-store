@@ -41,7 +41,7 @@ final deliveryZonesProvider = FutureProvider<List<DeliveryZone>>((ref) async {
     final List<DeliveryZone> zones = [];
     for (final row in rawData) {
       zones.add(DeliveryZone.fromMap(row));
-        }
+    }
     return zones;
   } catch (_) {
     // في حال أي خطأ في الشبكة أو عدم تهيئة Supabase نرجع قائمة فارغة

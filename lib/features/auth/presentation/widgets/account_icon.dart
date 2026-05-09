@@ -33,7 +33,9 @@ class AccountIcon extends ConsumerWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: user.isGuest ? Colors.transparent : const Color(0xFFD4AF37), // إطار ذهبي للمسجل
+            color: user.isGuest
+                ? Colors.transparent
+                : const Color(0xFFD4AF37), // إطار ذهبي للمسجل
             width: 1.5,
           ),
         ),

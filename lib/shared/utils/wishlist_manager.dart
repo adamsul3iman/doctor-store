@@ -4,7 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:doctor_store/shared/services/analytics_service.dart';
 
-final wishlistProvider = StateNotifierProvider<WishlistNotifier, List<String>>((ref) {
+final wishlistProvider =
+    StateNotifierProvider<WishlistNotifier, List<String>>((ref) {
   return WishlistNotifier();
 });
 
@@ -110,7 +111,8 @@ class WishlistNotifier extends StateNotifier<List<String>> {
     await prefs.setStringList(_localKey, state);
   }
 
-  Future<void> _addToCloud(SupabaseClient client, String email, String productId) async {
+  Future<void> _addToCloud(
+      SupabaseClient client, String email, String productId) async {
     try {
       await client.from('wishlist').insert({
         'user_email': email,

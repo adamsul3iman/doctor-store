@@ -111,8 +111,8 @@ class _ProductPosterDialogState extends State<ProductPosterDialog> {
                   children: [
                     // 1. رأس البطاقة (صورة المنتج)
                     ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(20)),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(20)),
                       child: SizedBox(
                         height: 250,
                         width: double.infinity,
@@ -131,8 +131,8 @@ class _ProductPosterDialogState extends State<ProductPosterDialog> {
                             height: 250,
                             color: Colors.grey[200],
                             child: const Center(
-                              child: Icon(Icons.broken_image,
-                                  color: Colors.grey),
+                              child:
+                                  Icon(Icons.broken_image, color: Colors.grey),
                             ),
                           ),
                         ),
@@ -188,8 +188,8 @@ class _ProductPosterDialogState extends State<ProductPosterDialog> {
                                 data: productUrl,
                                 version: QrVersions.auto,
                                 size: 70.0,
-                                eyeStyle: const QrEyeStyle(
-                                    color: Color(0xFF0A2647)),
+                                eyeStyle:
+                                    const QrEyeStyle(color: Color(0xFF0A2647)),
                                 dataModuleStyle: const QrDataModuleStyle(
                                     color: Color(0xFF0A2647)),
                                 backgroundColor: Colors.white,
@@ -240,7 +240,8 @@ class _ProductPosterDialogState extends State<ProductPosterDialog> {
                             color: Colors.white, strokeWidth: 2),
                       )
                     : const Icon(Icons.share),
-                label: Text(_isSharing ? "جاري التصميم..." : "مشاركة البطاقة كصورة"),
+                label: Text(
+                    _isSharing ? "جاري التصميم..." : "مشاركة البطاقة كصورة"),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0A2647),
                   foregroundColor: Colors.white,

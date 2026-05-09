@@ -25,9 +25,12 @@ import 'package:doctor_store/features/static/presentation/screens/contact_screen
 import 'package:doctor_store/app/widgets/admin_guard.dart';
 
 // مسارات الإدارة - تُستورد بشكل مؤجل (deferred loading)
-import 'package:doctor_store/features/admin/presentation/screens/admin_dashboard.dart' deferred as admin_dashboard;
-import 'package:doctor_store/features/admin/presentation/screens/product_form_screen.dart' deferred as admin_product;
-import 'package:doctor_store/features/admin/presentation/screens/admin_product_edit_wrapper.dart' deferred as admin_edit;
+import 'package:doctor_store/features/admin/presentation/screens/admin_dashboard.dart'
+    deferred as admin_dashboard;
+import 'package:doctor_store/features/admin/presentation/screens/product_form_screen.dart'
+    deferred as admin_product;
+import 'package:doctor_store/features/admin/presentation/screens/admin_product_edit_wrapper.dart'
+    deferred as admin_edit;
 
 // ================= Helper transition builders =================
 
@@ -36,7 +39,8 @@ CustomTransitionPage _buildFadePage(GoRouterState state, Widget child) {
   return CustomTransitionPage(
     key: state.pageKey,
     child: child,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        child,
     transitionDuration: Duration.zero,
   );
 }
@@ -46,7 +50,8 @@ CustomTransitionPage _buildSlideUpPage(GoRouterState state, Widget child) {
   return CustomTransitionPage(
     key: state.pageKey,
     child: child,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        child,
     transitionDuration: Duration.zero,
   );
 }
@@ -62,7 +67,8 @@ CustomTransitionPage _buildDeferredAdminPage(
     child: FutureBuilder<Widget>(
       future: loader(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData) {
           return AdminGuard(child: snapshot.data!);
         }
         // Loading state
@@ -73,7 +79,8 @@ CustomTransitionPage _buildDeferredAdminPage(
         );
       },
     ),
-    transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        child,
     transitionDuration: Duration.zero,
   );
 }
@@ -100,13 +107,14 @@ GoRouter createAppRouterWithLocation(String initialLocation) {
 /// يجب استدعاؤها بعد WidgetsFlutterBinding.ensureInitialized()
 void initAppRouter() {
   if (!kIsWeb) return;
-  
+
   // قراءة URL المتصفح مرة واحدة عند التهيئة
-  _initialLocation = Uri.base.path + (Uri.base.hasQuery ? '?${Uri.base.query}' : '');
+  _initialLocation =
+      Uri.base.path + (Uri.base.hasQuery ? '?${Uri.base.query}' : '');
   if (_initialLocation!.isEmpty || _initialLocation == '/') {
     _initialLocation = '/';
   }
-  
+
   if (kDebugMode) {
     debugPrint('🌐 Deep Link detected: $_initialLocation');
   }
@@ -117,7 +125,7 @@ GoRouter get appRouter {
   if (_appRouterInstance != null) {
     return _appRouterInstance!;
   }
-  
+
   _appRouterInstance = _createAppRouter();
   return _appRouterInstance!;
 }
@@ -129,13 +137,13 @@ GoRouter _createAppRouter() {
     // Uri.base يقرأ URL الحالي من المتصفح
     initialLocation = Uri.base.path;
     if (initialLocation.isEmpty) initialLocation = '/';
-    
+
     // ignore: avoid_print
     print('🌐 Deep Link URL: ${Uri.base}');
     // ignore: avoid_print
     print('🌐 Path: $initialLocation');
   }
-  
+
   return GoRouter(
     routerNeglect: false,
     initialLocation: initialLocation,
@@ -151,11 +159,13 @@ List<RouteBase> _buildRoutes() {
   return [
     GoRoute(
       path: '/',
-      pageBuilder: (context, state) => const NoTransitionPage(child: HomeScreenV2()),
+      pageBuilder: (context, state) =>
+          const NoTransitionPage(child: HomeScreenV2()),
     ),
     GoRoute(
       path: '/login',
-      pageBuilder: (context, state) => _buildFadePage(state, const LoginScreen()),
+      pageBuilder: (context, state) =>
+          _buildFadePage(state, const LoginScreen()),
     ),
     GoRoute(
       path: '/signup',
@@ -169,23 +179,28 @@ List<RouteBase> _buildRoutes() {
     ),
     GoRoute(
       path: '/cart',
-      pageBuilder: (context, state) => _buildSlideUpPage(state, const CartScreen()),
+      pageBuilder: (context, state) =>
+          _buildSlideUpPage(state, const CartScreen()),
     ),
     GoRoute(
       path: '/wishlist',
-      pageBuilder: (context, state) => _buildFadePage(state, const WishlistScreen()),
+      pageBuilder: (context, state) =>
+          _buildFadePage(state, const WishlistScreen()),
     ),
     GoRoute(
       path: '/recently_viewed',
-      pageBuilder: (context, state) => _buildFadePage(state, const RecentlyViewedScreen()),
+      pageBuilder: (context, state) =>
+          _buildFadePage(state, const RecentlyViewedScreen()),
     ),
     GoRoute(
       path: '/profile',
-      pageBuilder: (context, state) => _buildFadePage(state, const ProfileScreen()),
+      pageBuilder: (context, state) =>
+          _buildFadePage(state, const ProfileScreen()),
     ),
     GoRoute(
       path: '/orders',
-      pageBuilder: (context, state) => _buildFadePage(state, const OrdersScreen()),
+      pageBuilder: (context, state) =>
+          _buildFadePage(state, const OrdersScreen()),
     ),
     GoRoute(
       path: '/search',
@@ -205,23 +220,28 @@ List<RouteBase> _buildRoutes() {
     ),
     GoRoute(
       path: '/browse_all',
-      pageBuilder: (context, state) => _buildFadePage(state, const BrowseAllScreen()),
+      pageBuilder: (context, state) =>
+          _buildFadePage(state, const BrowseAllScreen()),
     ),
     GoRoute(
       path: '/about',
-      pageBuilder: (context, state) => _buildFadePage(state, const AboutScreen()),
+      pageBuilder: (context, state) =>
+          _buildFadePage(state, const AboutScreen()),
     ),
     GoRoute(
       path: '/privacy',
-      pageBuilder: (context, state) => _buildFadePage(state, const PrivacyScreen()),
+      pageBuilder: (context, state) =>
+          _buildFadePage(state, const PrivacyScreen()),
     ),
     GoRoute(
       path: '/terms',
-      pageBuilder: (context, state) => _buildFadePage(state, const TermsScreen()),
+      pageBuilder: (context, state) =>
+          _buildFadePage(state, const TermsScreen()),
     ),
     GoRoute(
       path: '/contact',
-      pageBuilder: (context, state) => _buildFadePage(state, const ContactScreen()),
+      pageBuilder: (context, state) =>
+          _buildFadePage(state, const ContactScreen()),
     ),
     GoRoute(
       path: '/category/:id',
@@ -335,7 +355,7 @@ List<RouteBase> _buildRoutes() {
         () async {
           final extra = state.extra;
           final id = state.uri.queryParameters['id'];
-          
+
           if (extra is Product) {
             await admin_product.loadLibrary();
             return admin_product.ProductFormScreen(

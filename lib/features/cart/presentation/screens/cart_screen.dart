@@ -52,7 +52,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     }
   }
 
-  bool _analyticsTracked = false; // ✅ Guard to prevent duplicate analytics tracking
+  bool _analyticsTracked =
+      false; // ✅ Guard to prevent duplicate analytics tracking
 
   @override
   void initState() {
@@ -66,26 +67,27 @@ class _CartScreenState extends ConsumerState<CartScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
+
     // ✅ Fix: Only track analytics once to prevent duplicate events
     if (_analyticsTracked) return;
     _analyticsTracked = true;
-    
+
     // ✅ Fix: Use post-frame callback to ensure widget is fully built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      
+
       final cartItems = ref.read(cartProvider);
-      
+
       AnalyticsService.instance.trackSiteVisit(
         pageUrl: '/cart',
         deviceType: _detectDeviceType(),
         country: 'Kuwait',
       );
-      
+
       AnalyticsService.instance.trackEvent('cart_view', props: {
         'items_count': cartItems.length,
-        'total_value': cartItems.fold(0.0, (sum, item) => sum + (item.activePrice * item.quantity)),
+        'total_value': cartItems.fold(
+            0.0, (sum, item) => sum + (item.activePrice * item.quantity)),
       });
     });
   }
@@ -199,9 +201,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                 );
 
                                 if (confirm == true) {
-                                  ref
-                                      .read(cartProvider.notifier)
-                                      .clearCart();
+                                  ref.read(cartProvider.notifier).clearCart();
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text('تم تفريغ السلة'),
@@ -372,383 +372,322 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextField(
-                                        controller: _couponController,
-                                        decoration: InputDecoration(
-                                          hintText: "لديك كود خصم؟",
-                                          filled: true,
-                                          fillColor: Colors.grey[50],
-                                          border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              borderSide: BorderSide.none),
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                                  horizontal: 10),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    ElevatedButton(
-                                      onPressed: () async {
-                                        if (_couponController.text.isEmpty) {
-                                          return;
-                                        }
-                                        // ✅ حماية السياق (Context Safety)
-                                        final error = await validateCoupon(
-                                          ref,
-                                          _couponController.text,
-                                          phone: phoneController.text,
-                                        );
-                                        if (!mounted) return;
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _couponController,
+                                  decoration: InputDecoration(
+                                    hintText: "لديك كود خصم؟",
+                                    filled: true,
+                                    fillColor: Colors.grey[50],
+                                    border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide.none),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 10),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  if (_couponController.text.isEmpty) {
+                                    return;
+                                  }
+                                  // ✅ حماية السياق (Context Safety)
+                                  final error = await validateCoupon(
+                                    ref,
+                                    _couponController.text,
+                                    phone: phoneController.text,
+                                  );
+                                  if (!mounted) return;
 
-                                        if (error == null) {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(const SnackBar(
-                                                  content: Text(
-                                                      "تم تفعيل الخصم!"),
-                                                  backgroundColor:
-                                                      Colors.green));
-                                        } else {
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(SnackBar(
-                                                  content: Text(error),
-                                                  backgroundColor:
-                                                      Colors.red));
+                                  if (error == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                            content: Text("تم تفعيل الخصم!"),
+                                            backgroundColor: Colors.green));
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                            content: Text(error),
+                                            backgroundColor: Colors.red));
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 18, vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: const Text("تطبيق"),
+                              ),
+                            ],
+                          ),
+                          if (coupon != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8),
+                              child: Row(
+                                children: [
+                                  Text("كوبون مفعل: ${coupon.code}",
+                                      style: const TextStyle(
+                                          color: Colors.green,
+                                          fontWeight: FontWeight.bold)),
+                                  const Spacer(),
+                                  InkWell(
+                                    onTap: () => ref
+                                        .read(couponProvider.notifier)
+                                        .state = null,
+                                    child: const Icon(Icons.close,
+                                        size: 16, color: Colors.red),
+                                  )
+                                ],
+                              ),
+                            ),
+
+                          const Divider(height: 30),
+
+                          // اختيار منطقة التوصيل (واجهة احترافية مع بحث)
+                          _buildDeliveryZonePicker(deliveryZonesAsync),
+
+                          // تلميح صغير لتشجيع إكمال الملف الشخصي وتهيئة الدفع السريع
+                          _buildProfileHint(ref),
+                          _buildCodHighlightCard(),
+                          const SizedBox(height: 12),
+
+                          _buildCompactField(
+                              nameController, "الاسم الكامل", Icons.person),
+                          const SizedBox(height: 10),
+                          _buildCompactField(
+                              phoneController, "رقم الهاتف", Icons.phone,
+                              isNumber: true),
+                          const SizedBox(height: 20),
+
+                          // ملخص الأسعار: منتجات / خصم / توصيل / إجمالي
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    "مجموع المنتجات:",
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                  Text(
+                                    '${productsTotal.toStringAsFixed(2)} د.أ',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                              if (discountAmount > 0)
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text(
+                                      "الخصم:",
+                                      style: TextStyle(
+                                          fontSize: 14, color: Colors.green),
+                                    ),
+                                    Text(
+                                      '-${discountAmount.toStringAsFixed(2)} د.أ',
+                                      style: const TextStyle(
+                                          fontSize: 14, color: Colors.green),
+                                    ),
+                                  ],
+                                ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    "رسوم التوصيل:",
+                                    style: TextStyle(fontSize: 14),
+                                  ),
+                                  Text(
+                                    '${deliveryFee.toStringAsFixed(2)} د.أ',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                "* رسوم التوصيل تقديرية وتختلف حسب حجم الطلب.",
+                                style:
+                                    TextStyle(fontSize: 10, color: Colors.grey),
+                                textAlign: TextAlign.right,
+                              ),
+                              const Divider(height: 24),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    "الإجمالي النهائي:",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16),
+                                  ),
+                                  Text(
+                                    '${grandTotal.toStringAsFixed(2)} د.أ',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      color: Color(0xFF0A2647),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+
+                          settingsAsync.when(
+                            data: (settings) => SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: _isSubmitting
+                                    ? null
+                                    : () async {
+                                        if (_formKey.currentState!.validate()) {
+                                          setState(() => _isSubmitting = true);
+
+                                          // التأكد من اختيار منطقة التوصيل إذا كانت مفعّلة في لوحة التحكم
+                                          if (requireDeliveryZone &&
+                                              _selectedZone == null) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                    'يرجى اختيار منطقة التوصيل قبل إتمام الطلب'),
+                                              ),
+                                            );
+                                            setState(
+                                                () => _isSubmitting = false);
+                                            return;
+                                          }
+
+                                          try {
+                                            await AnalyticsService.instance
+                                                .trackEvent(
+                                                    'cart_checkout_start',
+                                                    props: {
+                                                  'items_count':
+                                                      cartItems.length,
+                                                  'total': grandTotal,
+                                                });
+
+                                            // التحقق من الاتصال قبل إرسال الطلب عبر واتساب
+                                            final netStatus = ref
+                                                .read(networkStatusProvider)
+                                                .asData
+                                                ?.value;
+                                            if (netStatus ==
+                                                NetworkStatus.offline) {
+                                              if (mounted) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                      'لا يوجد اتصال بالإنترنت، لا يمكن إرسال الطلب حالياً.',
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                              setState(
+                                                  () => _isSubmitting = false);
+                                              return;
+                                            }
+
+                                            await ref
+                                                .read(cartProvider.notifier)
+                                                .checkoutViaWhatsApp(
+                                                  customerName:
+                                                      nameController.text,
+                                                  customerPhone:
+                                                      phoneController.text,
+                                                  totalAmount: grandTotal,
+                                                  productsTotal: productsTotal,
+                                                  deliveryFee: deliveryFee,
+                                                  deliveryZoneName:
+                                                      _selectedZone?.name ??
+                                                          'غير محددة',
+                                                  discountAmount:
+                                                      discountAmount,
+                                                  storePhone: settings.whatsapp,
+                                                  coupon: coupon,
+                                                  notes: null,
+                                                );
+
+                                            await AnalyticsService.instance
+                                                .trackEvent(
+                                                    'cart_checkout_success',
+                                                    props: {
+                                                  'items_count':
+                                                      cartItems.length,
+                                                  'total': grandTotal,
+                                                });
+                                          } catch (e) {
+                                            if (mounted) {
+                                              final message = e
+                                                  .toString()
+                                                  .replaceFirst(
+                                                    'Exception: ',
+                                                    '',
+                                                  )
+                                                  .trim();
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(SnackBar(
+                                                content: Text(
+                                                  message.isNotEmpty
+                                                      ? message
+                                                      : "تعذر فتح واتساب لإتمام الطلب. لم يتم تفريغ السلة.",
+                                                ),
+                                              ));
+                                            }
+                                          } finally {
+                                            if (mounted) {
+                                              setState(
+                                                  () => _isSubmitting = false);
+                                            }
+                                          }
                                         }
                                       },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppTheme.primary,
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 18, vertical: 12),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                        ),
-                                      ),
-                                      child: const Text("تطبيق"),
-                                    ),
-                                  ],
+                                icon: const FaIcon(FontAwesomeIcons.whatsapp),
+                                label: _isSubmitting
+                                    ? const Text("جاري التنفيذ...")
+                                    : const Text("تأكيد الطلب عبر واتساب"),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF25D366),
+                                  foregroundColor: Colors.white,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 15),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12)),
                                 ),
-                                if (coupon != null)
-                                  Padding(
-                                    padding:
-                                        const EdgeInsets.only(top: 8),
-                                    child: Row(
-                                      children: [
-                                        Text(
-                                            "كوبون مفعل: ${coupon.code}",
-                                            style: const TextStyle(
-                                                color: Colors.green,
-                                                fontWeight:
-                                                    FontWeight.bold)),
-                                        const Spacer(),
-                                        InkWell(
-                                          onTap: () => ref
-                                              .read(couponProvider.notifier)
-                                              .state = null,
-                                          child: const Icon(Icons.close,
-                                              size: 16,
-                                              color: Colors.red),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-
-                                const Divider(height: 30),
-
-                                // اختيار منطقة التوصيل (واجهة احترافية مع بحث)
-                                _buildDeliveryZonePicker(
-                                    deliveryZonesAsync),
-
-                                // تلميح صغير لتشجيع إكمال الملف الشخصي وتهيئة الدفع السريع
-                                _buildProfileHint(ref),
-                                _buildCodHighlightCard(),
-                                const SizedBox(height: 12),
-
-                                _buildCompactField(nameController,
-                                    "الاسم الكامل", Icons.person),
-                                const SizedBox(height: 10),
-                                _buildCompactField(
-                                    phoneController,
-                                    "رقم الهاتف",
-                                    Icons.phone,
-                                    isNumber: true),
-                                const SizedBox(height: 20),
-
-                                // ملخص الأسعار: منتجات / خصم / توصيل / إجمالي
-                                Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text(
-                                          "مجموع المنتجات:",
-                                          style:
-                                              TextStyle(fontSize: 14),
-                                        ),
-                                        Text(
-                                          '${productsTotal.toStringAsFixed(2)} د.أ',
-                                          style: const TextStyle(
-                                              fontSize: 14),
-                                        ),
-                                      ],
-                                    ),
-                                    if (discountAmount > 0)
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          const Text(
-                                            "الخصم:",
-                                            style: TextStyle(
-                                                fontSize: 14,
-                                                color: Colors
-                                                    .green),
-                                          ),
-                                          Text(
-                                            '-${discountAmount.toStringAsFixed(2)} د.أ',
-                                            style: const TextStyle(
-                                                fontSize: 14,
-                                                color: Colors
-                                                    .green),
-                                          ),
-                                        ],
-                                      ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text(
-                                          "رسوم التوصيل:",
-                                          style:
-                                              TextStyle(fontSize: 14),
-                                        ),
-                                        Text(
-                                          '${deliveryFee.toStringAsFixed(2)} د.أ',
-                                          style: const TextStyle(
-                                              fontSize: 14),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    const Text(
-                                      "* رسوم التوصيل تقديرية وتختلف حسب حجم الطلب.",
-                                      style: TextStyle(
-                                          fontSize: 10,
-                                          color: Colors.grey),
-                                      textAlign: TextAlign.right,
-                                    ),
-                                    const Divider(height: 24),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text(
-                                          "الإجمالي النهائي:",
-                                          style: TextStyle(
-                                              fontWeight:
-                                                  FontWeight.bold,
-                                              fontSize: 16),
-                                        ),
-                                        Text(
-                                          '${grandTotal.toStringAsFixed(2)} د.أ',
-                                          style: const TextStyle(
-                                            fontWeight:
-                                                FontWeight.bold,
-                                            fontSize: 20,
-                                            color:
-                                                Color(0xFF0A2647),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 20),
-
-                                settingsAsync.when(
-                                  data: (settings) => SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton.icon(
-                                      onPressed: _isSubmitting
-                                          ? null
-                                          : () async {
-                                              if (_formKey
-                                                  .currentState!
-                                                  .validate()) {
-                                                setState(() =>
-                                                    _isSubmitting =
-                                                        true);
-
-                                                // التأكد من اختيار منطقة التوصيل إذا كانت مفعّلة في لوحة التحكم
-                                                if (requireDeliveryZone &&
-                                                    _selectedZone ==
-                                                        null) {
-                                                  ScaffoldMessenger.of(
-                                                          context)
-                                                      .showSnackBar(
-                                                    const SnackBar(
-                                                      content: Text(
-                                                          'يرجى اختيار منطقة التوصيل قبل إتمام الطلب'),
-                                                    ),
-                                                  );
-                                                  setState(() =>
-                                                      _isSubmitting =
-                                                          false);
-                                                  return;
-                                                }
-
-                                                try {
-                                                  await AnalyticsService
-                                                      .instance
-                                                      .trackEvent(
-                                                          'cart_checkout_start',
-                                                          props: {
-                                                            'items_count':
-                                                                cartItems
-                                                                    .length,
-                                                            'total':
-                                                                grandTotal,
-                                                          });
-
-                                                  // التحقق من الاتصال قبل إرسال الطلب عبر واتساب
-                                                  final netStatus = ref
-                                                      .read(networkStatusProvider)
-                                                      .asData
-                                                      ?.value;
-                                                  if (netStatus ==
-                                                      NetworkStatus.offline) {
-                                                    if (mounted) {
-                                                      ScaffoldMessenger.of(
-                                                              context)
-                                                          .showSnackBar(
-                                                        const SnackBar(
-                                                          content: Text(
-                                                            'لا يوجد اتصال بالإنترنت، لا يمكن إرسال الطلب حالياً.',
-                                                          ),
-                                                        ),
-                                                      );
-                                                    }
-                                                    setState(() =>
-                                                        _isSubmitting =
-                                                            false);
-                                                    return;
-                                                  }
-
-                                                  await ref
-                                                      .read(cartProvider
-                                                          .notifier)
-                                                      .checkoutViaWhatsApp(
-                                                        customerName:
-                                                            nameController
-                                                                .text,
-                                                        customerPhone:
-                                                            phoneController
-                                                                .text,
-                                                        totalAmount:
-                                                            grandTotal,
-                                                        productsTotal:
-                                                            productsTotal,
-                                                        deliveryFee:
-                                                            deliveryFee,
-                                                        deliveryZoneName:
-                                                            _selectedZone
-                                                                    ?.name ??
-                                                                'غير محددة',
-                                                        discountAmount:
-                                                            discountAmount,
-                                                        storePhone: settings
-                                                            .whatsapp,
-                                                        coupon: coupon,
-                                                        notes: null,
-                                                      );
-
-                                                  await AnalyticsService
-                                                      .instance
-                                                      .trackEvent(
-                                                          'cart_checkout_success',
-                                                          props: {
-                                                            'items_count':
-                                                                cartItems
-                                                                    .length,
-                                                            'total':
-                                                                grandTotal,
-                                                          });
-                                                } catch (e) {
-                                                  if (mounted) {
-                                                    final message = e
-                                                        .toString()
-                                                        .replaceFirst(
-                                                          'Exception: ',
-                                                          '',
-                                                        )
-                                                        .trim();
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
-                                                            SnackBar(
-                                                      content: Text(
-                                                        message.isNotEmpty
-                                                            ? message
-                                                            : "تعذر فتح واتساب لإتمام الطلب. لم يتم تفريغ السلة.",
-                                                      ),
-                                                    ));
-                                                  }
-                                                } finally {
-                                                  if (mounted) {
-                                                    setState(() =>
-                                                        _isSubmitting =
-                                                            false);
-                                                  }
-                                                }
-                                              }
-                                            },
-                                      icon: const FaIcon(
-                                          FontAwesomeIcons.whatsapp),
-                                      label: _isSubmitting
-                                          ? const Text(
-                                              "جاري التنفيذ...")
-                                          : const Text(
-                                              "تأكيد الطلب عبر واتساب"),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor:
-                                            const Color(0xFF25D366),
-                                        foregroundColor:
-                                            Colors.white,
-                                        padding: const EdgeInsets
-                                            .symmetric(vertical: 15),
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(
-                                                    12)),
-                                      ),
-                                    ),
-                                  ),
-                                  loading: () => const Center(
-                                      child:
-                                          CircularProgressIndicator()),
-                                  error: (e, s) => const Text(
-                                      "تأكد من الاتصال بالإنترنت"),
-                                ),
-                                const SizedBox(height: 6),
-                                const Align(
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    'يمكنك إتمام الطلب كضيف الآن، والدفع يكون عند الاستلام.',
-                                    style: TextStyle(
-                                        fontSize: 10,
-                                        color: Colors.grey),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
+                              ),
+                            ),
+                            loading: () => const Center(
+                                child: CircularProgressIndicator()),
+                            error: (e, s) =>
+                                const Text("تأكد من الاتصال بالإنترنت"),
+                          ),
+                          const SizedBox(height: 6),
+                          const Align(
+                            alignment: Alignment.center,
+                            child: Text(
+                              'يمكنك إتمام الطلب كضيف الآن، والدفع يكون عند الاستلام.',
+                              style:
+                                  TextStyle(fontSize: 10, color: Colors.grey),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -759,8 +698,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   return SingleChildScrollView(
                     child: ResponsiveCenterWrapper(
                       maxWidth: 1200,
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 24),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         textDirection: TextDirection.rtl,
@@ -784,7 +723,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
                 return SingleChildScrollView(
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                    constraints:
+                        BoxConstraints(minHeight: constraints.maxHeight),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -912,7 +852,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         if (zones.isEmpty) return const SizedBox.shrink();
 
         final selectedName = _selectedZone?.name ?? 'اختر منطقة التوصيل';
-        final bool isRequired = zones.isNotEmpty; // ✅ إجباري إذا كانت المناطق مفعّلة
+        final bool isRequired =
+            zones.isNotEmpty; // ✅ إجباري إذا كانت المناطق مفعّلة
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
@@ -921,11 +862,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
             borderRadius: BorderRadius.circular(8),
             child: InputDecorator(
               decoration: InputDecoration(
-                labelText: isRequired ? 'منطقة التوصيل *' : 'منطقة التوصيل', // ✅
+                labelText:
+                    isRequired ? 'منطقة التوصيل *' : 'منطقة التوصيل', // ✅
                 hintText: 'اختر المدينة / المنطقة',
                 prefixIcon: const Icon(Icons.delivery_dining),
                 border: const OutlineInputBorder(),
-                errorText: isRequired && _selectedZone == null ? 'يجب اختيار منطقة التوصيل' : null, // ✅
+                errorText: isRequired && _selectedZone == null
+                    ? 'يجب اختيار منطقة التوصيل'
+                    : null, // ✅
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1034,7 +978,8 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                   title: Text(zone.name),
                                   subtitle: Text(
                                     'رسوم التوصيل: يتم الحساب حسب حجم الطلب',
-                                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                    style: TextStyle(
+                                        fontSize: 12, color: Colors.grey[600]),
                                   ),
                                   trailing: isSelected
                                       ? const Icon(Icons.check,
@@ -1059,12 +1004,12 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       setState(() {
         _selectedZone = selected;
       });
-      
+
       // ✅ حساب سعر الشحن الديناميكي
       _calculateDynamicShippingCost();
     }
   }
-  
+
   /// ✅ حساب سعر الشحن بناءً على أكبر حجم في السلة
   Future<void> _calculateDynamicShippingCost() async {
     final cartItems = ref.read(cartProvider);
@@ -1072,14 +1017,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       setState(() => _dynamicDeliveryFee = 0.0);
       return;
     }
-    
+
     try {
       final zoneId = ShippingCalculator.zoneNameToId(_selectedZone!.name);
       final cost = await ShippingCalculator.calculateShippingCost(
         zoneId: zoneId,
         items: cartItems,
       );
-      
+
       if (mounted) {
         setState(() {
           _dynamicDeliveryFee = cost;
@@ -1143,4 +1088,3 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     );
   }
 }
-

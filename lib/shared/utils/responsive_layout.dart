@@ -24,17 +24,21 @@ class ResponsiveLayout {
     double crossAxisSpacing = 12,
     required bool isCompact,
   }) {
-    if (availableWidth.isNaN || availableWidth.isInfinite || availableWidth <= 0) {
+    if (availableWidth.isNaN ||
+        availableWidth.isInfinite ||
+        availableWidth <= 0) {
       return isCompact ? 270 : 330;
     }
     if (crossAxisCount <= 0) return isCompact ? 270 : 330;
 
     final safeSpacing = math.max(0, crossAxisSpacing);
     final totalSpacing = safeSpacing * (crossAxisCount - 1);
-    final itemWidth = math.max(0, (availableWidth - totalSpacing) / crossAxisCount);
+    final itemWidth =
+        math.max(0, (availableWidth - totalSpacing) / crossAxisCount);
 
     final imageAspectRatio = isCompact ? 1.0 : (4 / 3);
-    final imageHeight = imageAspectRatio == 0 ? 0 : (itemWidth / imageAspectRatio);
+    final imageHeight =
+        imageAspectRatio == 0 ? 0 : (itemWidth / imageAspectRatio);
 
     // ارتفاع ثابت تقريبي لمنطقة النص والأزرار داخل ProductCard.
     // الهدف: منع الـ overflow مع عدم وجود مساحة بيضاء زائدة.

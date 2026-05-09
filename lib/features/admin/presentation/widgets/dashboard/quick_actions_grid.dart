@@ -12,12 +12,18 @@ class QuickActionsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final actions = [
-      _QuickAction('add_product', 'إضافة منتج', Icons.add_box, const Color(0xFF4CAF50)),
-      _QuickAction('add_coupon', 'إضافة كوبون', Icons.local_offer, const Color(0xFFFF6F00)),
-      _QuickAction('add_banner', 'إضافة بانر', Icons.image, const Color(0xFF9C27B0)),
-      _QuickAction('view_orders', 'الطلبات الجديدة', Icons.shopping_bag, const Color(0xFF2196F3)),
-      _QuickAction('view_clients', 'العملاء', Icons.people, const Color(0xFFFFC107)),
-      _QuickAction('settings', 'الإعدادات السريعة', Icons.settings, const Color(0xFF607D8B)),
+      _QuickAction(
+          'add_product', 'إضافة منتج', Icons.add_box, const Color(0xFF4CAF50)),
+      _QuickAction('add_coupon', 'إضافة كوبون', Icons.local_offer,
+          const Color(0xFFFF6F00)),
+      _QuickAction(
+          'add_banner', 'إضافة بانر', Icons.image, const Color(0xFF9C27B0)),
+      _QuickAction('view_orders', 'الطلبات الجديدة', Icons.shopping_bag,
+          const Color(0xFF2196F3)),
+      _QuickAction(
+          'view_clients', 'العملاء', Icons.people, const Color(0xFFFFC107)),
+      _QuickAction('settings', 'الإعدادات السريعة', Icons.settings,
+          const Color(0xFF607D8B)),
     ];
 
     return Card(
@@ -36,7 +42,8 @@ class QuickActionsGrid extends StatelessWidget {
                     color: const Color(0xFFFF6F00).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.flash_on, color: const Color(0xFFFF6F00), size: 24),
+                  child: Icon(Icons.flash_on,
+                      color: const Color(0xFFFF6F00), size: 24),
                 ),
                 const SizedBox(width: 12),
                 Text(

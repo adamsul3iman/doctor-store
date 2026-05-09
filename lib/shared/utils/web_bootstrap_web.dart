@@ -19,13 +19,15 @@ Future<void> cleanupServiceWorkers() async {
     final storedVersion = html.window.localStorage['sw_version'];
 
     if (storedVersion != currentVersion) {
-      final regs = await html.window.navigator.serviceWorker?.getRegistrations();
+      final regs =
+          await html.window.navigator.serviceWorker?.getRegistrations();
       if (regs != null && regs.isNotEmpty) {
         for (final reg in regs) {
           await reg.unregister();
         }
         if (kDebugMode) {
-          debugPrint('Service Workers unregistered: ${regs.length} (version change)');
+          debugPrint(
+              'Service Workers unregistered: ${regs.length} (version change)');
         }
       }
       html.window.localStorage['sw_version'] = currentVersion;

@@ -6,8 +6,7 @@ enum NetworkStatus {
   offline,
 }
 
-final networkStatusProvider =
-    StreamProvider<NetworkStatus>((ref) async* {
+final networkStatusProvider = StreamProvider<NetworkStatus>((ref) async* {
   final connectivity = Connectivity();
 
   // الحالة الابتدائية

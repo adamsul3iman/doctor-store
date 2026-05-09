@@ -95,21 +95,20 @@ class ProductWhatsappHelpSection extends StatelessWidget {
   Future<void> _launchWhatsAppProductHelp(BuildContext context) async {
     final phone = WhatsAppService.normalizePhoneNumber(storePhone);
     if (phone.isEmpty) {
-      AppNotifier.showError(context, 'خدمة الواتساب غير متاحة حالياً. حاول مرة أخرى لاحقاً.');
+      AppNotifier.showError(
+          context, 'خدمة الواتساب غير متاحة حالياً. حاول مرة أخرى لاحقاً.');
       return;
     }
 
-    final colorText = hasColors
-        ? (selectedColor ?? 'لم أحدد بعد')
-        : 'غير متوفر';
-    final sizeText = hasSizes
-        ? (selectedSize ?? 'لم أحدد بعد')
-        : 'غير متوفر';
+    final colorText =
+        hasColors ? (selectedColor ?? 'لم أحدد بعد') : 'غير متوفر';
+    final sizeText = hasSizes ? (selectedSize ?? 'لم أحدد بعد') : 'غير متوفر';
 
     final productUrl = buildFullUrl('/p/${product.slug ?? product.id}');
 
     final buffer = StringBuffer();
-    buffer.writeln('مرحباً، لدي استفسار قبل الشراء عن هذا المنتج من متجر الدكتور:');
+    buffer.writeln(
+        'مرحباً، لدي استفسار قبل الشراء عن هذا المنتج من متجر الدكتور:');
     buffer.writeln('• الاسم: ${product.title}');
     buffer.writeln('• القسم: ${product.categoryArabic}');
     buffer.writeln('• رابط المنتج: $productUrl');
@@ -121,7 +120,8 @@ class ProductWhatsappHelpSection extends StatelessWidget {
     }
     buffer.writeln('• الكمية: $quantity $unitLabel');
     buffer.writeln('');
-    buffer.writeln('أرغب بمساعدتكم في اختيار الأنسب وتأكيد تفاصيل الطلب، وشكراً لكم.');
+    buffer.writeln(
+        'أرغب بمساعدتكم في اختيار الأنسب وتأكيد تفاصيل الطلب، وشكراً لكم.');
 
     final url = WhatsAppService.buildWhatsAppUrl(phone, buffer.toString());
 

@@ -5,7 +5,7 @@ import 'package:doctor_store/features/cart/application/cart_manager.dart';
 
 class CartIcon extends ConsumerWidget {
   final Color? color;
-  
+
   const CartIcon({super.key, this.color});
 
   @override
@@ -18,7 +18,8 @@ class CartIcon extends ConsumerWidget {
       alignment: Alignment.center,
       children: [
         IconButton(
-          icon: Icon(Icons.shopping_cart_outlined, color: color ?? const Color(0xFF0A2647)),
+          icon: Icon(Icons.shopping_cart_outlined,
+              color: color ?? const Color(0xFF0A2647)),
           onPressed: () => context.push('/cart'),
         ),
         if (cartCount > 0)
@@ -27,12 +28,16 @@ class CartIcon extends ConsumerWidget {
             right: 5,
             child: Container(
               padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                  color: Colors.red, shape: BoxShape.circle),
               constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
               child: Center(
                 child: Text(
                   '$cartCount',
-                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold),
                 ),
               ),
             ),

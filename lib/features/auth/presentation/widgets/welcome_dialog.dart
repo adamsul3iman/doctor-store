@@ -15,7 +15,7 @@ class WelcomeDialog extends ConsumerStatefulWidget {
 class _WelcomeDialogState extends ConsumerState<WelcomeDialog> {
   final _emailController = TextEditingController();
   bool _isLoading = false;
-  
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -24,7 +24,7 @@ class _WelcomeDialogState extends ConsumerState<WelcomeDialog> {
 
   Future<void> _registerClient() async {
     final email = _emailController.text.trim();
-    
+
     // التحقق من صحة الإيميل
     if (email.isEmpty || !email.contains('@')) {
       if (mounted) {
@@ -61,7 +61,7 @@ class _WelcomeDialogState extends ConsumerState<WelcomeDialog> {
         Navigator.pop(context); // إغلاق النافذة
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("تم التسجيل بنجاح! ❤️"), 
+            content: Text("تم التسجيل بنجاح! ❤️"),
             backgroundColor: Color(0xFF25D366),
             behavior: SnackBarBehavior.floating,
           ),
@@ -71,7 +71,8 @@ class _WelcomeDialogState extends ConsumerState<WelcomeDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text("تعذّر إتمام التسجيل حالياً، حاول مرة أخرى لاحقاً."),
+            content:
+                const Text("تعذّر إتمام التسجيل حالياً، حاول مرة أخرى لاحقاً."),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -95,87 +96,101 @@ class _WelcomeDialogState extends ConsumerState<WelcomeDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-            // أيقونة في الأعلى
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                // ✅ استخدام withValues (الطريقة الحديثة)
-                color: const Color(0xFF0A2647).withValues(alpha: 0.1), 
-                shape: BoxShape.circle,
+              // أيقونة في الأعلى
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  // ✅ استخدام withValues (الطريقة الحديثة)
+                  color: const Color(0xFF0A2647).withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.favorite,
+                    size: 40, color: Color(0xFF0A2647)),
               ),
-              child: const Icon(Icons.favorite, size: 40, color: Color(0xFF0A2647)),
-            ),
-            
-            const SizedBox(height: 20),
-            
-            Text(
-              "احفظ مفضلتك للأبد!", 
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            
-            const SizedBox(height: 10),
-            
-            Text(
-              "سجل بريدك الإلكتروني لنحفظ لك المنتجات التي تعجبك في حسابك، ولتصلك أحدث العروض.",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600], height: 1.5, fontSize: 13),
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // حقل الإدخال
-            TextField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(
-                labelText: "البريد الإلكتروني",
-                prefixIcon: const Icon(Icons.email_outlined, color: Colors.grey),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                filled: true,
-                fillColor: Colors.grey[50],
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF0A2647), width: 1.5),
+
+              const SizedBox(height: 20),
+
+              Text(
+                "احفظ مفضلتك للأبد!",
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 10),
+
+              Text(
+                "سجل بريدك الإلكتروني لنحفظ لك المنتجات التي تعجبك في حسابك، ولتصلك أحدث العروض.",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    color: Colors.grey[600], height: 1.5, fontSize: 13),
+              ),
+
+              const SizedBox(height: 20),
+
+              // حقل الإدخال
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: "البريد الإلكتروني",
+                  prefixIcon:
+                      const Icon(Icons.email_outlined, color: Colors.grey),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none),
+                  filled: true,
+                  fillColor: Colors.grey[50],
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: Color(0xFF0A2647), width: 1.5),
+                  ),
                 ),
               ),
-            ),
-            
-            const SizedBox(height: 25),
-            
-            // زر التسجيل
-            SizedBox(
-              width: double.infinity,
-              height: 45,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _registerClient,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0A2647),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
+
+              const SizedBox(height: 25),
+
+              // زر التسجيل
+              SizedBox(
+                width: double.infinity,
+                height: 45,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _registerClient,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0A2647),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2))
+                      : const Text("حفظ وانضمام",
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
-                child: _isLoading 
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) 
-                  : const Text("حفظ وانضمام", style: TextStyle(fontWeight: FontWeight.bold)),
               ),
-            ),
-            
-            const SizedBox(height: 10),
-            
-            // زر التخطي
-            TextButton(
-              onPressed: () async {
-                // ✅ حفظ خيار "تمت المشاهدة" حتى لا تظهر النافذة مرة أخرى
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.setBool('is_registered_client', true);
-                
-                // ✅ الحماية هنا أيضاً (آمن لأنه يتحقق من mounted قبل استخدام context)
-                // ignore: use_build_context_synchronously
-                if (mounted) Navigator.pop(context);
-              },
-              child: const Text("تصفح كزائر (تخطي)", style: TextStyle(color: Colors.grey, fontSize: 12)),
-            ),
+
+              const SizedBox(height: 10),
+
+              // زر التخطي
+              TextButton(
+                onPressed: () async {
+                  // ✅ حفظ خيار "تمت المشاهدة" حتى لا تظهر النافذة مرة أخرى
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('is_registered_client', true);
+
+                  // ✅ الحماية هنا أيضاً (آمن لأنه يتحقق من mounted قبل استخدام context)
+                  // ignore: use_build_context_synchronously
+                  if (mounted) Navigator.pop(context);
+                },
+                child: const Text("تصفح كزائر (تخطي)",
+                    style: TextStyle(color: Colors.grey, fontSize: 12)),
+              ),
             ],
           ),
         ),

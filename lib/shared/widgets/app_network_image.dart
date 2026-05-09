@@ -48,7 +48,7 @@ class AppNetworkImage extends StatelessWidget {
           return (width: 800, height: 800); // Reduced from 1200x1200 for web
       }
     }
-    
+
     // Mobile sizes (larger for retina displays)
     switch (v) {
       case ImageVariant.productCard:
@@ -83,13 +83,13 @@ class AppNetworkImage extends StatelessWidget {
     final cacheSize = _cacheSizeForVariant(variant);
 
     // For web: use smaller cache and lower filter quality to save memory
-    final effectiveFilterQuality = kIsWeb 
-        ? FilterQuality.low 
-        : filterQuality;
+    final effectiveFilterQuality = kIsWeb ? FilterQuality.low : filterQuality;
 
     return CachedNetworkImage(
       imageUrl: optimizedUrl,
-      cacheManager: kIsWeb ? null : ImageCacheConfig.cacheManager, // Use default on web
+      cacheManager:
+          kIsWeb ? null : ImageCacheConfig.cacheManager, // Use default on web
+      useOldImageOnUrlChange: true,
       fit: fit,
       alignment: alignment,
       filterQuality: effectiveFilterQuality,
@@ -100,13 +100,18 @@ class AppNetworkImage extends StatelessWidget {
       maxHeightDiskCache: kIsWeb ? cacheSize.height : null,
       maxWidthDiskCache: kIsWeb ? cacheSize.width : null,
       // Smooth fade animations
-      fadeInDuration: kIsWeb ? const Duration(milliseconds: 100) : fadeInDuration,
-      fadeOutDuration: kIsWeb ? const Duration(milliseconds: 50) : fadeOutDuration,
+      fadeInDuration:
+          kIsWeb ? const Duration(milliseconds: 100) : fadeInDuration,
+      fadeOutDuration:
+          kIsWeb ? const Duration(milliseconds: 50) : fadeOutDuration,
       // Placeholder with shimmer effect
-      placeholder: (context, _) => placeholder ?? const ShimmerImagePlaceholder(),
+      placeholder: (context, _) =>
+          placeholder ?? const ShimmerImagePlaceholder(),
       // Error handling with retry capability
       errorWidget: (context, url, error) {
-        debugPrint('Image load error for $url: $error');
+        if (kDebugMode) {
+          debugPrint('Image load error for $url: $error');
+        }
         return errorWidget ?? _buildErrorWidget();
       },
     );

@@ -38,8 +38,8 @@ class AppFooter extends ConsumerWidget {
                 children: [
                   if (isMobile) ...[
                     brandSection,
-              const SizedBox(height: 24),
-            _buildLinksSection(settings, context),
+                    const SizedBox(height: 24),
+                    _buildLinksSection(settings, context),
                     const SizedBox(height: 24),
                     quickSection,
                     const SizedBox(height: 24),
@@ -50,7 +50,9 @@ class AppFooter extends ConsumerWidget {
                       children: [
                         Expanded(flex: 3, child: brandSection),
                         const SizedBox(width: 32),
-                        Expanded(flex: 2, child: _buildLinksSection(settings, context)),
+                        Expanded(
+                            flex: 2,
+                            child: _buildLinksSection(settings, context)),
                         const SizedBox(width: 32),
                         Expanded(flex: 2, child: quickSection),
                         const SizedBox(width: 32),
@@ -174,21 +176,31 @@ class AppFooter extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        _FooterLink(label: 'من نحن', onTap: () {
-          context.push('/about');
-        }),
-        _FooterLink(label: 'سياسة الخصوصية', onTap: () {
-          context.push('/privacy');
-        }),
-        _FooterLink(label: 'الشروط والأحكام', onTap: () {
-          context.push('/terms');
-        }),
-        _FooterLink(label: 'اتصل بنا', onTap: () {
-          context.push('/contact');
-        }),
-        _FooterLink(label: 'الصفحة الرئيسية', onTap: () {
-          context.go('/');
-        }),
+        _FooterLink(
+            label: 'من نحن',
+            onTap: () {
+              context.push('/about');
+            }),
+        _FooterLink(
+            label: 'سياسة الخصوصية',
+            onTap: () {
+              context.push('/privacy');
+            }),
+        _FooterLink(
+            label: 'الشروط والأحكام',
+            onTap: () {
+              context.push('/terms');
+            }),
+        _FooterLink(
+            label: 'اتصل بنا',
+            onTap: () {
+              context.push('/contact');
+            }),
+        _FooterLink(
+            label: 'الصفحة الرئيسية',
+            onTap: () {
+              context.go('/');
+            }),
       ],
     );
   }
@@ -257,7 +269,8 @@ class AppFooter extends ConsumerWidget {
                   hintStyle: TextStyle(color: Colors.white54, fontSize: 11),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.06),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: const BorderSide(color: Colors.white24),
@@ -268,7 +281,8 @@ class AppFooter extends ConsumerWidget {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: AppTheme.secondary, width: 1.4),
+                    borderSide:
+                        const BorderSide(color: AppTheme.secondary, width: 1.4),
                   ),
                 ),
               ),
@@ -281,7 +295,8 @@ class AppFooter extends ConsumerWidget {
                   FocusScope.of(context).unfocus();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('سيتم تفعيل النشرة البريدية قريباً بإذن الله.'),
+                      content:
+                          Text('سيتم تفعيل النشرة البريدية قريباً بإذن الله.'),
                       duration: Duration(seconds: 2),
                     ),
                   );
@@ -290,7 +305,8 @@ class AppFooter extends ConsumerWidget {
                   backgroundColor: AppTheme.secondary,
                   foregroundColor: AppTheme.primary,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
                 ),
                 child: Text(
                   'اشترك',

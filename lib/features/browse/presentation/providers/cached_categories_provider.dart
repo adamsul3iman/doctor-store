@@ -51,7 +51,8 @@ class CategoriesNotifier extends StateNotifier<CategoriesState> {
   }
 
   Future<void> loadCategories() async {
-    state = state.copyWith(isLoading: true, hasError: false, errorMessage: null);
+    state =
+        state.copyWith(isLoading: true, hasError: false, errorMessage: null);
 
     try {
       SupabaseClient? supabase;
@@ -64,7 +65,8 @@ class CategoriesNotifier extends StateNotifier<CategoriesState> {
       if (supabase != null) {
         final data = await supabase
             .from('categories')
-            .select('id,name,subtitle,color_value,icon_name,is_active,sort_order')
+            .select(
+                'id,name,subtitle,color_value,icon_name,is_active,sort_order')
             .eq('is_active', true)
             .order('sort_order', ascending: true);
 

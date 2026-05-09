@@ -27,10 +27,10 @@ class _SearchScreenState extends State<SearchScreen> {
   String _currentQuery = '';
   int _currentPage = 0;
   static const int _pageSize = 20;
-  
+
   // ✅ Debounce timer
   Timer? _debounceTimer;
-  
+
   // ✅ LRU Cache for search results
   final _searchCache = _LRUCache<String, List<Product>>(capacity: 10);
 
@@ -48,7 +48,7 @@ class _SearchScreenState extends State<SearchScreen> {
       });
     }
   }
-  
+
   @override
   void dispose() {
     _debounceTimer?.cancel();
@@ -56,17 +56,17 @@ class _SearchScreenState extends State<SearchScreen> {
     _controller.dispose();
     super.dispose();
   }
-  
+
   void _onScroll() {
     if (!_scrollController.hasReachedEnd) return;
     if (_isLoading || !_hasMore) return;
     _loadMore();
   }
-  
+
   void _onSearchChanged(String query) {
     // ✅ Cancel previous timer
     _debounceTimer?.cancel();
-    
+
     // ✅ Set new debounce timer (500ms)
     _debounceTimer = Timer(const Duration(milliseconds: 500), () {
       if (mounted) {
@@ -77,7 +77,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<void> _search(String query, {bool reset = false}) async {
     final trimmed = query.trim();
-    
+
     if (trimmed.isEmpty) {
       setState(() {
         _results.clear();
@@ -86,14 +86,14 @@ class _SearchScreenState extends State<SearchScreen> {
       });
       return;
     }
-    
+
     if (reset) {
       _currentPage = 0;
       _hasMore = true;
       _currentQuery = trimmed;
       _results.clear();
     }
-    
+
     // ✅ Check cache first
     final cacheKey = '${trimmed}_$_currentPage';
     final cached = _searchCache.get(cacheKey);
@@ -104,9 +104,9 @@ class _SearchScreenState extends State<SearchScreen> {
       });
       return;
     }
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       // ✅ Use SmartSearchService with pagination
       final results = await SmartSearchService.instance.smartSearchPaginated(
@@ -114,10 +114,10 @@ class _SearchScreenState extends State<SearchScreen> {
         page: _currentPage,
         pageSize: _pageSize,
       );
-      
+
       // ✅ Cache results
       _searchCache.put(cacheKey, results);
-      
+
       if (mounted) {
         setState(() {
           _results.addAll(results);
@@ -135,7 +135,7 @@ class _SearchScreenState extends State<SearchScreen> {
       }
     }
   }
-  
+
   Future<void> _loadMore() async {
     if (_currentQuery.isEmpty) return;
     _currentPage++;
@@ -169,50 +169,52 @@ class _SearchScreenState extends State<SearchScreen> {
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: _results.isEmpty && _controller.text.isEmpty
-          ? const Center(child: Text("ابدأ بكتابة اسم المنتج للبحث"))
-          : _results.isEmpty && !_isLoading
-            ? const Center(child: Text("لم نجد نتائج تطابق بحثك!"))
-            : LayoutBuilder(
-                builder: (context, constraints) {
-                  final crossAxisCount = ResponsiveLayout.gridCountForWidth(
-                    constraints.maxWidth,
-                    desiredItemWidth: 120,
-                    minCount: 3,
-                    maxCount: 5,
-                  );
-                  final isCompact = crossAxisCount >= 3;
-                  const spacing = 12.0;
-                  final mainAxisExtent = ResponsiveLayout.productCardMainAxisExtent(
-                    constraints.maxWidth,
-                    crossAxisCount: crossAxisCount,
-                    crossAxisSpacing: spacing,
-                    isCompact: isCompact,
-                  );
-
-                  return GridView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(10),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      mainAxisExtent: mainAxisExtent,
-                      crossAxisSpacing: spacing,
-                      mainAxisSpacing: spacing,
-                    ),
-                    itemCount: _results.length + (_hasMore ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index >= _results.length) {
-                        return _isLoading
-                          ? const Center(child: CircularProgressIndicator())
-                          : const SizedBox.shrink();
-                      }
-                      return ProductCard(
-                        product: _results[index],
+            ? const Center(child: Text("ابدأ بكتابة اسم المنتج للبحث"))
+            : _results.isEmpty && !_isLoading
+                ? const Center(child: Text("لم نجد نتائج تطابق بحثك!"))
+                : LayoutBuilder(
+                    builder: (context, constraints) {
+                      final crossAxisCount = ResponsiveLayout.gridCountForWidth(
+                        constraints.maxWidth,
+                        desiredItemWidth: 120,
+                        minCount: 3,
+                        maxCount: 5,
+                      );
+                      final isCompact = crossAxisCount >= 3;
+                      const spacing = 12.0;
+                      final mainAxisExtent =
+                          ResponsiveLayout.productCardMainAxisExtent(
+                        constraints.maxWidth,
+                        crossAxisCount: crossAxisCount,
+                        crossAxisSpacing: spacing,
                         isCompact: isCompact,
                       );
+
+                      return GridView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(10),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          mainAxisExtent: mainAxisExtent,
+                          crossAxisSpacing: spacing,
+                          mainAxisSpacing: spacing,
+                        ),
+                        itemCount: _results.length + (_hasMore ? 1 : 0),
+                        itemBuilder: (context, index) {
+                          if (index >= _results.length) {
+                            return _isLoading
+                                ? const Center(
+                                    child: CircularProgressIndicator())
+                                : const SizedBox.shrink();
+                          }
+                          return ProductCard(
+                            product: _results[index],
+                            isCompact: isCompact,
+                          );
+                        },
+                      );
                     },
-                  );
-                },
-              ),
+                  ),
       ),
     );
   }

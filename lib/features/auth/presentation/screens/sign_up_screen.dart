@@ -138,7 +138,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       final msg = (lower.contains('user already registered') ||
               lower.contains('already exists'))
           ? 'هذا البريد مسجّل بالفعل، جرّب تسجيل الدخول أو استعادة كلمة المرور.'
-          : (e.message.isNotEmpty ? e.message : 'تعذّر إنشاء الحساب، حاول لاحقاً.');
+          : (e.message.isNotEmpty
+              ? e.message
+              : 'تعذّر إنشاء الحساب، حاول لاحقاً.');
 
       _setFormError(msg);
       AppNotifier.showError(context, msg);
@@ -243,7 +245,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
                 ),
                 const SizedBox(height: 18),
-
                 Row(
                   children: [
                     Expanded(
@@ -286,7 +287,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   ],
                 ),
                 const SizedBox(height: 12),
-
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -359,7 +359,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     ),
                   ),
                 ),
-
                 if (_formError != null) ...[
                   const SizedBox(height: 8),
                   Container(
@@ -382,7 +381,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   ),
                 ],
                 const SizedBox(height: 14),
-
                 SizedBox(
                   height: 48,
                   child: ElevatedButton(

@@ -142,9 +142,12 @@ class ProfileScreen extends ConsumerWidget {
                           subtitle: "العودة للتصفح كضيف",
                           iconColor: Colors.orange[700],
                           onTap: () async {
-                            final shouldLogout = await _showLogoutConfirmDialog(context);
+                            final shouldLogout =
+                                await _showLogoutConfirmDialog(context);
                             if (!shouldLogout) return;
-                            await ref.read(userProfileProvider.notifier).logout();
+                            await ref
+                                .read(userProfileProvider.notifier)
+                                .logout();
                             if (context.mounted) context.go('/');
                           },
                         ),
@@ -157,7 +160,8 @@ class ProfileScreen extends ConsumerWidget {
                     Center(
                       child: TextButton.icon(
                         onPressed: () => _showDeleteAccountDialog(context, ref),
-                        icon: Icon(Icons.delete_outline, size: 16, color: Colors.grey[500]),
+                        icon: Icon(Icons.delete_outline,
+                            size: 16, color: Colors.grey[500]),
                         label: Text(
                           "حذف الحساب نهائياً",
                           style: TextStyle(
@@ -167,13 +171,14 @@ class ProfileScreen extends ConsumerWidget {
                           ),
                         ),
                         style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -191,7 +196,8 @@ class ProfileScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.account_circle_outlined, size: 80, color: Colors.grey[400]),
+            Icon(Icons.account_circle_outlined,
+                size: 80, color: Colors.grey[400]),
             const SizedBox(height: 20),
             Text(
               "أنت تتصفح كزائر",
@@ -201,26 +207,30 @@ class ProfileScreen extends ConsumerWidget {
             Text(
               "يمكنك الطلب كضيف بسهولة، لكن إنشاء حساب يساعدك على تتبع طلباتك وحفظ العناوين والمفضلة.",
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.black54, height: 1.5),
+              style:
+                  TextStyle(fontSize: 13, color: Colors.black54, height: 1.5),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                AnalyticsService.instance.trackEvent('profile_guest_go_to_login');
+                AnalyticsService.instance
+                    .trackEvent('profile_guest_go_to_login');
                 // تحويل الزائر إلى صفحة تسجيل الدخول الموحدة /login
                 context.go('/login');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF0A2647),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
               ),
               child: const Text("تسجيل الدخول / إنشاء حساب"),
             ),
             const SizedBox(height: 12),
             TextButton(
               onPressed: () {
-                AnalyticsService.instance.trackEvent('profile_continue_as_guest');
+                AnalyticsService.instance
+                    .trackEvent('profile_continue_as_guest');
                 if (cartItems.isNotEmpty) {
                   context.go('/cart');
                 } else {
@@ -367,7 +377,8 @@ class ProfileScreen extends ConsumerWidget {
                             Flexible(
                               flex: 0,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(999),
@@ -375,7 +386,8 @@ class ProfileScreen extends ConsumerWidget {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(Icons.verified, color: Color(0xFFD4AF37), size: 16),
+                                    const Icon(Icons.verified,
+                                        color: Color(0xFFD4AF37), size: 16),
                                     const SizedBox(width: 4),
                                     Text(
                                       'عميل متجر الدكتور',
@@ -476,7 +488,8 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildFunnelQuickActions(BuildContext context, WidgetRef ref, UserProfile user) {
+  Widget _buildFunnelQuickActions(
+      BuildContext context, WidgetRef ref, UserProfile user) {
     final wishlistIds = ref.watch(wishlistProvider);
     final cartItems = ref.watch(cartProvider);
 
@@ -508,10 +521,13 @@ class ProfileScreen extends ConsumerWidget {
                 'لديك ${wishlistIds.length} منتج في المفضلة',
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
               ),
-              subtitle: const Text('راجع مفضلتك واضف المنتجات للسلة بخطوة واحدة', style: TextStyle(fontSize: 11)),
+              subtitle: const Text(
+                  'راجع مفضلتك واضف المنتجات للسلة بخطوة واحدة',
+                  style: TextStyle(fontSize: 11)),
               trailing: TextButton(
                 onPressed: () {
-                  AnalyticsService.instance.trackEvent('open_wishlist_from_profile');
+                  AnalyticsService.instance
+                      .trackEvent('open_wishlist_from_profile');
                   context.push('/wishlist');
                 },
                 child: const Text('عرض', style: TextStyle(fontSize: 12)),
@@ -521,18 +537,23 @@ class ProfileScreen extends ConsumerWidget {
             ListTile(
               dense: true,
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.shopping_cart, color: Color(0xFF0A2647)),
+              leading:
+                  const Icon(Icons.shopping_cart, color: Color(0xFF0A2647)),
               title: Text(
                 'سلتك جاهزة ب${cartItems.length} منتج',
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
               ),
-              subtitle: const Text('انتقل للسلة وأكمل الطلب عبر واتساب خلال دقيقة', style: TextStyle(fontSize: 11)),
+              subtitle: const Text(
+                  'انتقل للسلة وأكمل الطلب عبر واتساب خلال دقيقة',
+                  style: TextStyle(fontSize: 11)),
               trailing: TextButton(
                 onPressed: () {
-                  AnalyticsService.instance.trackEvent('open_cart_from_profile');
+                  AnalyticsService.instance
+                      .trackEvent('open_cart_from_profile');
                   context.push('/cart');
                 },
-                child: const Text('إكمال الشراء', style: TextStyle(fontSize: 12)),
+                child:
+                    const Text('إكمال الشراء', style: TextStyle(fontSize: 12)),
               ),
             ),
         ],
@@ -551,7 +572,12 @@ class ProfileScreen extends ConsumerWidget {
     String? badgeText,
     Color? iconColor,
   }) {
-    final Color effectiveIconColor = iconColor ?? (isDestructive ? Colors.red : (isHighLighted ? const Color(0xFF0A2647) : const Color(0xFF5A6C7D)));
+    final Color effectiveIconColor = iconColor ??
+        (isDestructive
+            ? Colors.red
+            : (isHighLighted
+                ? const Color(0xFF0A2647)
+                : const Color(0xFF5A6C7D)));
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -564,7 +590,11 @@ class ProfileScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: isDestructive ? Colors.red.withValues(alpha: 0.08) : (isHighLighted ? const Color(0xFF0A2647).withValues(alpha: 0.08) : const Color(0xFFEEF2F5)),
+                  color: isDestructive
+                      ? Colors.red.withValues(alpha: 0.08)
+                      : (isHighLighted
+                          ? const Color(0xFF0A2647).withValues(alpha: 0.08)
+                          : const Color(0xFFEEF2F5)),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: effectiveIconColor, size: 22),
@@ -577,16 +607,16 @@ class ProfileScreen extends ConsumerWidget {
                     Text(
                       title,
                       style: TextStyle(
-                        fontWeight: FontWeight.w600, 
-                        fontSize: 14, 
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
                         color: isDestructive ? Colors.red[700] : Colors.black87,
                       ),
                     ),
                     if (subtitle.isNotEmpty)
                       Text(
-                        subtitle, 
+                        subtitle,
                         style: TextStyle(
-                          fontSize: 12, 
+                          fontSize: 12,
                           color: Colors.grey[500],
                           height: 1.3,
                         ),
@@ -596,7 +626,8 @@ class ProfileScreen extends ConsumerWidget {
               ),
               if (showBadge && badgeText != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFF0A2647),
                     borderRadius: BorderRadius.circular(20),
@@ -604,14 +635,15 @@ class ProfileScreen extends ConsumerWidget {
                   child: Text(
                     badgeText,
                     style: const TextStyle(
-                      color: Colors.white, 
-                      fontSize: 11, 
+                      color: Colors.white,
+                      fontSize: 11,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 )
               else
-                const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                const Icon(Icons.arrow_forward_ios,
+                    size: 14, color: Colors.grey),
             ],
           ),
         ),
@@ -661,9 +693,9 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ],
         border: Border.all(
-          color: backgroundColor == null 
-            ? Colors.grey.withValues(alpha: 0.08) 
-            : Colors.transparent,
+          color: backgroundColor == null
+              ? Colors.grey.withValues(alpha: 0.08)
+              : Colors.transparent,
           width: 1,
         ),
       ),
@@ -724,7 +756,8 @@ class ProfileScreen extends ConsumerWidget {
 
       final supabase = Supabase.instance.client;
       final ext = compressed.extension;
-      final path = '${user.id}/avatar_${DateTime.now().millisecondsSinceEpoch}.$ext';
+      final path =
+          '${user.id}/avatar_${DateTime.now().millisecondsSinceEpoch}.$ext';
 
       await supabase.storage.from('avatars').uploadBinary(
             path,
@@ -754,18 +787,21 @@ class ProfileScreen extends ConsumerWidget {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('حدث خطأ أثناء رفع الصورة، حاول مرة أخرى لاحقاً. (تفاصيل تقنية: $e)'),
+            content: Text(
+                'حدث خطأ أثناء رفع الصورة، حاول مرة أخرى لاحقاً. (تفاصيل تقنية: $e)'),
           ),
         );
       }
     }
   }
 
-  Future<void> _showChangeEmailDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showChangeEmailDialog(
+      BuildContext context, WidgetRef ref) async {
     final user = ref.read(userProfileProvider);
     if (user.isGuest || user.id == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('سجّل دخولك أولاً لتعديل بريدك الإلكتروني')),
+        const SnackBar(
+            content: Text('سجّل دخولك أولاً لتعديل بريدك الإلكتروني')),
       );
       return;
     }
@@ -780,7 +816,8 @@ class ProfileScreen extends ConsumerWidget {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               title: Text(
                 'تعديل البريد الإلكتروني',
                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -816,7 +853,9 @@ class ProfileScreen extends ConsumerWidget {
               ),
               actions: [
                 TextButton(
-                  onPressed: isLoading ? null : () => Navigator.of(dialogContext).pop(),
+                  onPressed: isLoading
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
                   child: const Text('إلغاء'),
                 ),
                 ElevatedButton(
@@ -842,12 +881,15 @@ class ProfileScreen extends ConsumerWidget {
                               UserAttributes(email: newEmail),
                             );
 
-                            await ref.read(userProfileProvider.notifier).refreshProfile();
+                            await ref
+                                .read(userProfileProvider.notifier)
+                                .refreshProfile();
 
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('تم تحديث البريد الإلكتروني بنجاح'),
+                                  content:
+                                      Text('تم تحديث البريد الإلكتروني بنجاح'),
                                 ),
                               );
                             }
@@ -898,7 +940,8 @@ class ProfileScreen extends ConsumerWidget {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               title: Text(
                 'تغيير كلمة المرور',
                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -936,7 +979,9 @@ class ProfileScreen extends ConsumerWidget {
               ),
               actions: [
                 TextButton(
-                  onPressed: isLoading ? null : () => Navigator.of(dialogContext).pop(),
+                  onPressed: isLoading
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
                   child: const Text('إلغاء'),
                 ),
                 ElevatedButton(
@@ -1034,7 +1079,8 @@ class ProfileScreen extends ConsumerWidget {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18)),
               title: Text(
                 'حذف الحساب نهائياً',
                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -1149,7 +1195,8 @@ class ProfileScreen extends ConsumerWidget {
           'تأكيد تسجيل الخروج',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        content: const Text('هل أنت متأكد أنك تريد تسجيل الخروج من متجر الدكتور؟'),
+        content:
+            const Text('هل أنت متأكد أنك تريد تسجيل الخروج من متجر الدكتور؟'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -1159,7 +1206,8 @@ class ProfileScreen extends ConsumerWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () => Navigator.of(dialogContext).pop(true),
             child: const Text('تسجيل الخروج'),

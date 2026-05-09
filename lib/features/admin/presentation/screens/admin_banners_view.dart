@@ -34,7 +34,7 @@ class _AdminBannersViewState extends State<AdminBannersView> {
           .from('banners')
           .select()
           .order('created_at', ascending: false);
-      
+
       if (mounted) {
         setState(() {
           _banners = List<Map<String, dynamic>>.from(data);
@@ -157,7 +157,8 @@ class _AdminBannersViewState extends State<AdminBannersView> {
         onPressed: _showAddBannerDialog,
         backgroundColor: const Color(0xFF0A2647),
         icon: const Icon(Icons.add_photo_alternate, color: Colors.white),
-        label: const Text("إضافة بانر جديد", style: TextStyle(color: Colors.white)),
+        label: const Text("إضافة بانر جديد",
+            style: TextStyle(color: Colors.white)),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -166,9 +167,11 @@ class _AdminBannersViewState extends State<AdminBannersView> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.image_not_supported_outlined, size: 80, color: Colors.grey[300]),
+                      Icon(Icons.image_not_supported_outlined,
+                          size: 80, color: Colors.grey[300]),
                       const SizedBox(height: 10),
-                      const Text("لا توجد بانرات حالياً", style: TextStyle(color: Colors.grey)),
+                      const Text("لا توجد بانرات حالياً",
+                          style: TextStyle(color: Colors.grey)),
                     ],
                   ),
                 )
@@ -178,10 +181,11 @@ class _AdminBannersViewState extends State<AdminBannersView> {
                   itemBuilder: (context, index) {
                     final banner = _banners[index];
                     final isTop = banner['position'] == 'top';
-                    
+
                     return Card(
                       margin: const EdgeInsets.only(bottom: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                       elevation: 2,
                       child: Column(
                         children: [
@@ -189,7 +193,8 @@ class _AdminBannersViewState extends State<AdminBannersView> {
                           Stack(
                             children: [
                               ClipRRect(
-                                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                                borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(12)),
                                 child: SizedBox(
                                   height: 150,
                                   width: double.infinity,
@@ -197,41 +202,53 @@ class _AdminBannersViewState extends State<AdminBannersView> {
                                     url: (banner['image_url'] ?? '').toString(),
                                     variant: ImageVariant.homeBanner,
                                     fit: BoxFit.cover,
-                                    placeholder: Container(color: Colors.grey[200]),
-                                    errorWidget: const Center(child: Icon(Icons.error)),
+                                    placeholder:
+                                        Container(color: Colors.grey[200]),
+                                    errorWidget:
+                                        const Center(child: Icon(Icons.error)),
                                   ),
                                 ),
                               ),
                               // شارة الموقع
                               Positioned(
-                                top: 10, left: 10,
+                                top: 10,
+                                left: 10,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: isTop ? Colors.blue.withValues(alpha: 0.9) : Colors.orange.withValues(alpha: 0.9),
+                                    color: isTop
+                                        ? Colors.blue.withValues(alpha: 0.9)
+                                        : Colors.orange.withValues(alpha: 0.9),
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
                                     isTop ? "واجهة رئيسية" : "فاصل وسطي",
-                                    style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ),
                               // زر الحذف
                               Positioned(
-                                top: 10, right: 10,
+                                top: 10,
+                                right: 10,
                                 child: CircleAvatar(
                                   backgroundColor: Colors.white,
                                   radius: 16,
                                   child: IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red, size: 18),
-                                    onPressed: () => _deleteBanner(banner['id'], banner['image_url']),
+                                    icon: const Icon(Icons.delete,
+                                        color: Colors.red, size: 18),
+                                    onPressed: () => _deleteBanner(
+                                        banner['id'], banner['image_url']),
                                   ),
                                 ),
                               ),
                             ],
                           ),
-                          
+
                           // التفاصيل
                           Padding(
                             padding: const EdgeInsets.all(12.0),
@@ -239,7 +256,8 @@ class _AdminBannersViewState extends State<AdminBannersView> {
                               children: [
                                 Row(
                                   children: [
-                                    const Icon(Icons.title, size: 16, color: Colors.grey),
+                                    const Icon(Icons.title,
+                                        size: 16, color: Colors.grey),
                                     const SizedBox(width: 8),
                                     Text(banner['title'] ?? 'بدون عنوان',
                                         style: const TextStyle(
@@ -249,7 +267,8 @@ class _AdminBannersViewState extends State<AdminBannersView> {
                                 const SizedBox(height: 4),
                                 Row(
                                   children: [
-                                    const Icon(Icons.link, size: 16, color: Colors.grey),
+                                    const Icon(Icons.link,
+                                        size: 16, color: Colors.grey),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
@@ -282,11 +301,11 @@ class _AdminBannersViewState extends State<AdminBannersView> {
                                     const Spacer(),
                                     Switch.adaptive(
                                       value: banner['is_active'] == true,
-                                      onChanged:
-                                          (_updatingBannerId == banner['id']?.toString())
-                                              ? null
-                                              : (value) =>
-                                                  _toggleBannerActive(banner, value),
+                                      onChanged: (_updatingBannerId ==
+                                              banner['id']?.toString())
+                                          ? null
+                                          : (value) => _toggleBannerActive(
+                                              banner, value),
                                       activeThumbColor: Colors.green,
                                     ),
                                     const SizedBox(width: 4),
@@ -320,13 +339,13 @@ class _AddBannerDialog extends StatefulWidget {
 
 class _AddBannerDialogState extends State<_AddBannerDialog> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Controllers
   final _titleCtrl = TextEditingController();
   final _subtitleCtrl = TextEditingController();
   final _btnTextCtrl = TextEditingController(text: 'تسوق الآن');
   final _linkCtrl = TextEditingController(text: '/all_products');
-  
+
   String _position = 'top'; // top, middle
   Color _textColor = Colors.white;
   Uint8List? _imageBytes;
@@ -379,9 +398,10 @@ class _AddBannerDialogState extends State<_AddBannerDialog> {
 
     try {
       // 1. رفع الصورة
-      final fileName = 'banner_${DateTime.now().millisecondsSinceEpoch}.$_imageExtension';
+      final fileName =
+          'banner_${DateTime.now().millisecondsSinceEpoch}.$_imageExtension';
       final path = 'banners/$fileName';
-      
+
       await client.storage.from('banners').uploadBinary(path, _imageBytes!);
       final imageUrl = client.storage.from('banners').getPublicUrl(path);
 
@@ -394,7 +414,8 @@ class _AddBannerDialogState extends State<_AddBannerDialog> {
         'position': _position,
         'image_url': imageUrl,
         // نخزن اللون كقيمة هيكس متوافقة مع القيمة الافتراضية في قاعدة البيانات
-        'text_color': '0x${_textColor.toARGB32().toRadixString(16).padLeft(8, '0')}',
+        'text_color':
+            '0x${_textColor.toARGB32().toRadixString(16).padLeft(8, '0')}',
         'is_active': true,
         'sort_order': 0,
       });
@@ -403,7 +424,6 @@ class _AddBannerDialogState extends State<_AddBannerDialog> {
         Navigator.pop(context);
         AppNotifier.showSuccess(context, "تم إضافة البانر بنجاح");
       }
-
     } catch (e) {
       if (mounted) {
         AppNotifier.showError(context, "تعذر حفظ البانر: $e");
@@ -474,11 +494,9 @@ class _AddBannerDialogState extends State<_AddBannerDialog> {
                   ),
                   items: const [
                     DropdownMenuItem(
-                        value: 'top',
-                        child: Text("الواجهة الرئيسية (كبير)")),
+                        value: 'top', child: Text("الواجهة الرئيسية (كبير)")),
                     DropdownMenuItem(
-                        value: 'middle',
-                        child: Text("فاصل في الوسط (صغير)")),
+                        value: 'middle', child: Text("فاصل في الوسط (صغير)")),
                   ],
                   onChanged: (v) => setState(() => _position = v ?? 'top'),
                 ),
@@ -681,9 +699,8 @@ class _EditBannerDialogState extends State<_EditBannerDialog> {
         await Supabase.instance.client.storage
             .from('banners')
             .uploadBinary(path, _imageBytes!);
-        imageUrl = Supabase.instance.client.storage
-            .from('banners')
-            .getPublicUrl(path);
+        imageUrl =
+            Supabase.instance.client.storage.from('banners').getPublicUrl(path);
       }
 
       await Supabase.instance.client.from('banners').update({
@@ -693,7 +710,8 @@ class _EditBannerDialogState extends State<_EditBannerDialog> {
         'link_target': _linkCtrl.text,
         'position': _position,
         'image_url': imageUrl,
-        'text_color': '0x${_textColor.toARGB32().toRadixString(16).padLeft(8, '0')}',
+        'text_color':
+            '0x${_textColor.toARGB32().toRadixString(16).padLeft(8, '0')}',
         'is_active': _isActive,
       }).eq('id', widget.banner['id']);
 
@@ -754,7 +772,8 @@ class _EditBannerDialogState extends State<_EditBannerDialog> {
                                   url: _existingImageUrl!,
                                   variant: ImageVariant.homeBanner,
                                   fit: BoxFit.cover,
-                                  placeholder: Container(color: Colors.grey[200]),
+                                  placeholder:
+                                      Container(color: Colors.grey[200]),
                                   errorWidget: const Icon(
                                     Icons.broken_image,
                                     color: Colors.grey,
@@ -781,11 +800,9 @@ class _EditBannerDialogState extends State<_EditBannerDialog> {
                   ),
                   items: const [
                     DropdownMenuItem(
-                        value: 'top',
-                        child: Text('الواجهة الرئيسية (كبير)')),
+                        value: 'top', child: Text('الواجهة الرئيسية (كبير)')),
                     DropdownMenuItem(
-                        value: 'middle',
-                        child: Text('فاصل في الوسط (صغير)')),
+                        value: 'middle', child: Text('فاصل في الوسط (صغير)')),
                   ],
                   onChanged: (v) => setState(() => _position = v ?? 'top'),
                 ),

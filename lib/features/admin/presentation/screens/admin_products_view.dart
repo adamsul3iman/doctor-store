@@ -40,7 +40,8 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
   // فلاتر متقدمة
   String? _selectedCategoryId; // null = الكل
   bool? _isActiveFilter; // null = الكل، true = ظاهرة، false = مخفية
-  bool? _isFlashFilter; // null = الكل، true = عروض فلاش فقط، false = غير عروض فلاش
+  bool?
+      _isFlashFilter; // null = الكل، true = عروض فلاش فقط، false = غير عروض فلاش
   String _sortMode = 'created_desc'; // created_desc, price_asc, price_desc
 
   Future<void> _refreshPublicCatalog() async {
@@ -114,9 +115,11 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
       });
     }
   }
+
   // ✅ تم إصلاح الخطأ هنا بعد تحديث الموديل
   Future<void> _toggleFlashDeal(Product product) async {
-    final newValue = !product.isFlashDeal; // لم يعد هناك خطأ لأن الموديل تعرف عليه
+    final newValue =
+        !product.isFlashDeal; // لم يعد هناك خطأ لأن الموديل تعرف عليه
 
     await _repo.setFlashDeal(productId: product.id, isFlashDeal: newValue);
     await _refreshProducts();
@@ -133,7 +136,9 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
       if (!mounted) return;
       AppNotifier.showSuccess(
         context,
-        newValue ? 'تم تفعيل المنتج وظهوره في المتجر.' : 'تم إخفاء المنتج من المتجر (الطلبات القديمة تبقى سليمة).',
+        newValue
+            ? 'تم تفعيل المنتج وظهوره في المتجر.'
+            : 'تم إخفاء المنتج من المتجر (الطلبات القديمة تبقى سليمة).',
       );
     } on PostgrestException catch (e) {
       if (!mounted) return;
@@ -192,7 +197,8 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
     return (policy: policy, inStock: total > 0);
   }
 
-  Widget _statusChip({required String label, required Color bg, required Color fg}) {
+  Widget _statusChip(
+      {required String label, required Color bg, required Color fg}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -236,7 +242,8 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFFF6F00), width: 1),
+                  borderSide:
+                      const BorderSide(color: Color(0xFFFF6F00), width: 1),
                 ),
               ),
             ),
@@ -318,7 +325,6 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
           ],
         ),
         const SizedBox(height: 12),
-
         FutureBuilder<List<AppCategoryConfig>>(
           future: _categoryRepo.getCategories(),
           builder: (context, snapshot) {
@@ -349,7 +355,6 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
           },
         ),
         const SizedBox(height: 12),
-
         DropdownButtonFormField<bool?>(
           initialValue: _isActiveFilter,
           decoration: const InputDecoration(
@@ -367,7 +372,6 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
           },
         ),
         const SizedBox(height: 12),
-
         DropdownButtonFormField<bool?>(
           initialValue: _isFlashFilter,
           decoration: const InputDecoration(
@@ -385,7 +389,6 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
           },
         ),
         const SizedBox(height: 12),
-
         DropdownButtonFormField<String>(
           initialValue: _sortMode,
           decoration: const InputDecoration(
@@ -393,9 +396,12 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
             prefixIcon: Icon(Icons.sort),
           ),
           items: const [
-            DropdownMenuItem<String>(value: 'created_desc', child: Text('الأحدث أولاً')),
-            DropdownMenuItem<String>(value: 'price_asc', child: Text('السعر: من الأقل للأعلى')),
-            DropdownMenuItem<String>(value: 'price_desc', child: Text('السعر: من الأعلى للأقل')),
+            DropdownMenuItem<String>(
+                value: 'created_desc', child: Text('الأحدث أولاً')),
+            DropdownMenuItem<String>(
+                value: 'price_asc', child: Text('السعر: من الأقل للأعلى')),
+            DropdownMenuItem<String>(
+                value: 'price_desc', child: Text('السعر: من الأعلى للأقل')),
           ],
           onChanged: (value) {
             if (value == null) return;
@@ -404,7 +410,6 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
           },
         ),
         const SizedBox(height: 12),
-
         OutlinedButton.icon(
           onPressed: () {
             setState(() {
@@ -521,7 +526,6 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
                     ),
                   ),
                   const SizedBox(height: 20),
-
                   ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(10),
@@ -533,7 +537,8 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
                       child: const Icon(Icons.shopping_bag, color: Colors.blue),
                     ),
                     title: const Text("منتج قياسي"),
-                    subtitle: const Text("منتج بسعر واحد، مع خيارات ألوان ومقاسات."),
+                    subtitle:
+                        const Text("منتج بسعر واحد، مع خيارات ألوان ومقاسات."),
                     onTap: () async {
                       Navigator.pop(context);
                       // إنشاء منتج جديد (بدون id)
@@ -544,9 +549,7 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
                       }
                     },
                   ),
-
                   const Divider(height: 20),
-
                   ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(10),
@@ -555,7 +558,8 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
                         color: Colors.orange.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.local_offer, color: Colors.orange),
+                      child:
+                          const Icon(Icons.local_offer, color: Colors.orange),
                     ),
                     title: const Text("عرض كميات (Bundle)"),
                     subtitle: const Text("مثال: مخدة بـ 10، واثنتين بـ 15."),
@@ -572,9 +576,7 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
                       }
                     },
                   ),
-
                   const Divider(height: 20),
-
                   ListTile(
                     leading: Container(
                       padding: const EdgeInsets.all(10),
@@ -600,7 +602,6 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
                       }
                     },
                   ),
-
                   const SizedBox(height: 8),
                 ],
               ),
@@ -631,15 +632,18 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
                               child: _isLoadingPage
                                   ? const CircularProgressIndicator()
                                   : Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        const Text('لا توجد منتجات مطابقة للبحث/الفلاتر'),
+                                        const Text(
+                                            'لا توجد منتجات مطابقة للبحث/الفلاتر'),
                                         if (_loadError != null) ...[
                                           const SizedBox(height: 8),
                                           Text(
                                             'حدث خطأ أثناء التحميل: $_loadError',
                                             textAlign: TextAlign.center,
-                                            style: const TextStyle(color: Colors.red),
+                                            style: const TextStyle(
+                                                color: Colors.red),
                                           ),
                                           const SizedBox(height: 8),
                                           OutlinedButton.icon(
@@ -658,14 +662,17 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
                                 child: Column(
                                   children: [
                                     Padding(
-                                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                      padding: const EdgeInsets.fromLTRB(
+                                          16, 0, 16, 16),
                                       child: Card(
                                         elevation: 1,
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius:
+                                              BorderRadius.circular(16),
                                         ),
                                         child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius:
+                                              BorderRadius.circular(16),
                                           child: SingleChildScrollView(
                                             scrollDirection: Axis.horizontal,
                                             child: ConstrainedBox(
@@ -673,75 +680,127 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
                                                 minWidth: isDesktop
                                                     ? constraints.maxWidth -
                                                         32 -
-                                                        (_showFiltersDesktop ? 320 : 0)
+                                                        (_showFiltersDesktop
+                                                            ? 320
+                                                            : 0)
                                                     : constraints.maxWidth - 32,
                                               ),
                                               child: SingleChildScrollView(
                                                 child: DataTable(
-                                                  headingRowColor: WidgetStatePropertyAll(
-                                                    const Color(0xFF0A2647).withValues(alpha: 0.06),
+                                                  headingRowColor:
+                                                      WidgetStatePropertyAll(
+                                                    const Color(0xFF0A2647)
+                                                        .withValues(
+                                                            alpha: 0.06),
                                                   ),
                                                   dataRowMinHeight: 64,
                                                   dataRowMaxHeight: 76,
                                                   columns: const [
-                                                    DataColumn(label: Text('الصورة')),
-                                                    DataColumn(label: Text('الاسم')),
-                                                    DataColumn(label: Text('القسم')),
-                                                    DataColumn(label: Text('السعر')),
-                                                    DataColumn(label: Text('المخزون')),
-                                                    DataColumn(label: Text('الحالة')),
-                                                    DataColumn(label: Text('إجراءات')),
+                                                    DataColumn(
+                                                        label: Text('الصورة')),
+                                                    DataColumn(
+                                                        label: Text('الاسم')),
+                                                    DataColumn(
+                                                        label: Text('القسم')),
+                                                    DataColumn(
+                                                        label: Text('السعر')),
+                                                    DataColumn(
+                                                        label: Text('المخزون')),
+                                                    DataColumn(
+                                                        label: Text('الحالة')),
+                                                    DataColumn(
+                                                        label: Text('إجراءات')),
                                                   ],
-                                                  rows: _products.map((product) {
-                                                    final inv = _resolveInventory(product);
-                                                    final totalStock = _computeTotalStock(product);
-                                                    final isActive = product.isActive;
-                                                    final isOutOfStock = inv.policy == 'track_qty'
-                                                        ? (totalStock != null && totalStock <= 0)
-                                                        : (inv.inStock == false);
+                                                  rows:
+                                                      _products.map((product) {
+                                                    final inv =
+                                                        _resolveInventory(
+                                                            product);
+                                                    final totalStock =
+                                                        _computeTotalStock(
+                                                            product);
+                                                    final isActive =
+                                                        product.isActive;
+                                                    final isOutOfStock = inv
+                                                                .policy ==
+                                                            'track_qty'
+                                                        ? (totalStock != null &&
+                                                            totalStock <= 0)
+                                                        : (inv.inStock ==
+                                                            false);
 
                                                     Widget status;
                                                     if (!isActive) {
                                                       status = _statusChip(
                                                         label: 'مخفي',
-                                                        bg: Colors.grey.withValues(alpha: 0.12),
-                                                        fg: Colors.grey.shade700,
+                                                        bg: Colors.grey
+                                                            .withValues(
+                                                                alpha: 0.12),
+                                                        fg: Colors
+                                                            .grey.shade700,
                                                       );
                                                     } else if (isOutOfStock) {
                                                       status = _statusChip(
                                                         label: 'نفد المخزون',
-                                                        bg: Colors.red.withValues(alpha: 0.10),
+                                                        bg: Colors.red
+                                                            .withValues(
+                                                                alpha: 0.10),
                                                         fg: Colors.red.shade700,
                                                       );
                                                     } else {
                                                       status = _statusChip(
                                                         label: 'نشط',
-                                                        bg: Colors.green.withValues(alpha: 0.10),
-                                                        fg: Colors.green.shade700,
+                                                        bg: Colors.green
+                                                            .withValues(
+                                                                alpha: 0.10),
+                                                        fg: Colors
+                                                            .green.shade700,
                                                       );
                                                     }
 
                                                     Widget stockCell;
-                                                    if (inv.policy == 'always_in_stock') {
+                                                    if (inv.policy ==
+                                                        'always_in_stock') {
                                                       stockCell = _statusChip(
                                                         label: 'متوفر دائماً',
-                                                        bg: Colors.green.withValues(alpha: 0.10),
-                                                        fg: Colors.green.shade800,
+                                                        bg: Colors.green
+                                                            .withValues(
+                                                                alpha: 0.10),
+                                                        fg: Colors
+                                                            .green.shade800,
                                                       );
-                                                    } else if (inv.policy == 'status_based') {
+                                                    } else if (inv.policy ==
+                                                        'status_based') {
                                                       stockCell = _statusChip(
-                                                        label: (inv.inStock ?? true) ? 'متوفر' : 'غير متوفر',
-                                                        bg: (inv.inStock ?? true)
-                                                            ? Colors.green.withValues(alpha: 0.10)
-                                                            : Colors.red.withValues(alpha: 0.10),
-                                                        fg: (inv.inStock ?? true)
-                                                            ? Colors.green.shade800
-                                                            : Colors.red.shade800,
+                                                        label: (inv.inStock ??
+                                                                true)
+                                                            ? 'متوفر'
+                                                            : 'غير متوفر',
+                                                        bg: (inv.inStock ??
+                                                                true)
+                                                            ? Colors.green
+                                                                .withValues(
+                                                                    alpha: 0.10)
+                                                            : Colors.red
+                                                                .withValues(
+                                                                    alpha:
+                                                                        0.10),
+                                                        fg: (inv.inStock ??
+                                                                true)
+                                                            ? Colors
+                                                                .green.shade800
+                                                            : Colors
+                                                                .red.shade800,
                                                       );
                                                     } else {
                                                       stockCell = Text(
-                                                        totalStock?.toString() ?? '-',
-                                                        style: const TextStyle(fontWeight: FontWeight.w600),
+                                                        totalStock
+                                                                ?.toString() ??
+                                                            '-',
+                                                        style: const TextStyle(
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w600),
                                                       );
                                                     }
 
@@ -749,31 +808,49 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
                                                       cells: [
                                                         DataCell(
                                                           ClipRRect(
-                                                            borderRadius: BorderRadius.circular(10),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        10),
                                                             child: SizedBox(
                                                               width: 46,
                                                               height: 46,
-                                                              child: AppNetworkImage(
-                                                                url: product.imageUrl,
-                                                                variant: ImageVariant.thumbnail,
-                                                                fit: BoxFit.cover,
+                                                              child:
+                                                                  AppNetworkImage(
+                                                                url: product
+                                                                    .imageUrl,
+                                                                variant:
+                                                                    ImageVariant
+                                                                        .thumbnail,
+                                                                fit: BoxFit
+                                                                    .cover,
                                                               ),
                                                             ),
                                                           ),
                                                         ),
                                                         DataCell(
                                                           ConstrainedBox(
-                                                            constraints: const BoxConstraints(maxWidth: 280),
+                                                            constraints:
+                                                                const BoxConstraints(
+                                                                    maxWidth:
+                                                                        280),
                                                             child: Text(
                                                               product.title,
                                                               maxLines: 2,
-                                                              overflow: TextOverflow.ellipsis,
-                                                              style: const TextStyle(fontWeight: FontWeight.w700),
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                              style: const TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w700),
                                                             ),
                                                           ),
                                                         ),
-                                                        DataCell(Text(product.categoryArabic)),
-                                                        DataCell(Text('${product.price.toStringAsFixed(2)} د.أ')),
+                                                        DataCell(Text(product
+                                                            .categoryArabic)),
+                                                        DataCell(Text(
+                                                            '${product.price.toStringAsFixed(2)} د.أ')),
                                                         DataCell(stockCell),
                                                         DataCell(status),
                                                         DataCell(
@@ -781,46 +858,80 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
                                                             children: [
                                                               IconButton(
                                                                 tooltip: 'فلاش',
-                                                                onPressed: () => _toggleFlashDeal(product),
+                                                                onPressed: () =>
+                                                                    _toggleFlashDeal(
+                                                                        product),
                                                                 icon: Icon(
-                                                                  FontAwesomeIcons.bolt,
+                                                                  FontAwesomeIcons
+                                                                      .bolt,
                                                                   size: 18,
-                                                                  color: product.isFlashDeal
-                                                                      ? Colors.amber
-                                                                      : Colors.grey.withValues(alpha: 0.5),
+                                                                  color: product
+                                                                          .isFlashDeal
+                                                                      ? Colors
+                                                                          .amber
+                                                                      : Colors
+                                                                          .grey
+                                                                          .withValues(
+                                                                              alpha: 0.5),
                                                                 ),
                                                               ),
                                                               IconButton(
-                                                                tooltip: isActive ? 'إخفاء' : 'إظهار',
-                                                                onPressed: () => _toggleActive(product),
+                                                                tooltip: isActive
+                                                                    ? 'إخفاء'
+                                                                    : 'إظهار',
+                                                                onPressed: () =>
+                                                                    _toggleActive(
+                                                                        product),
                                                                 icon: Icon(
-                                                                  isActive ? Icons.visibility : Icons.visibility_off,
-                                                                  color: isActive ? Colors.green : Colors.grey,
+                                                                  isActive
+                                                                      ? Icons
+                                                                          .visibility
+                                                                      : Icons
+                                                                          .visibility_off,
+                                                                  color: isActive
+                                                                      ? Colors
+                                                                          .green
+                                                                      : Colors
+                                                                          .grey,
                                                                 ),
                                                               ),
                                                               IconButton(
-                                                                tooltip: 'تعديل',
-                                                                onPressed: () async {
-                                                                  final saved = await context.push(
+                                                                tooltip:
+                                                                    'تعديل',
+                                                                onPressed:
+                                                                    () async {
+                                                                  final saved =
+                                                                      await context
+                                                                          .push(
                                                                     '/admin/edit?id=${product.id}',
-                                                                    extra: product,
+                                                                    extra:
+                                                                        product,
                                                                   );
-                                                                  if (saved == true) {
+                                                                  if (saved ==
+                                                                      true) {
                                                                     await _refreshProducts();
                                                                     await _refreshPublicCatalog();
                                                                   }
                                                                 },
-                                                                icon: const Icon(
-                                                                  Icons.edit_outlined,
-                                                                  color: Color(0xFF0A2647),
+                                                                icon:
+                                                                    const Icon(
+                                                                  Icons
+                                                                      .edit_outlined,
+                                                                  color: Color(
+                                                                      0xFF0A2647),
                                                                 ),
                                                               ),
                                                               IconButton(
                                                                 tooltip: 'حذف',
-                                                                onPressed: () => _deleteProduct(product),
-                                                                icon: const Icon(
-                                                                  Icons.delete_outline,
-                                                                  color: Colors.red,
+                                                                onPressed: () =>
+                                                                    _deleteProduct(
+                                                                        product),
+                                                                icon:
+                                                                    const Icon(
+                                                                  Icons
+                                                                      .delete_outline,
+                                                                  color: Colors
+                                                                      .red,
                                                                 ),
                                                               ),
                                                             ],
@@ -843,7 +954,8 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
                                       )
                                     else if (_loadError != null)
                                       Padding(
-                                        padding: const EdgeInsets.only(bottom: 16),
+                                        padding:
+                                            const EdgeInsets.only(bottom: 16),
                                         child: OutlinedButton.icon(
                                           onPressed: _loadNextPage,
                                           icon: const Icon(Icons.refresh),
@@ -852,7 +964,8 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
                                       )
                                     else if (_hasMore)
                                       Padding(
-                                        padding: const EdgeInsets.only(bottom: 16),
+                                        padding:
+                                            const EdgeInsets.only(bottom: 16),
                                         child: OutlinedButton.icon(
                                           onPressed: _loadNextPage,
                                           icon: const Icon(Icons.expand_more),
@@ -866,7 +979,6 @@ class _AdminProductsViewState extends ConsumerState<AdminProductsView> {
                               ),
                             ),
                     ),
-
                     if (isDesktop)
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 220),

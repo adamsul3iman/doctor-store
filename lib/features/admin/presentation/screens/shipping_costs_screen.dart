@@ -11,13 +11,13 @@ class ShippingCostsScreen extends StatefulWidget {
 
 class _ShippingCostsScreenState extends State<ShippingCostsScreen> {
   final _supabase = Supabase.instance.client;
-  
+
   bool _isLoading = true;
   List<Map<String, dynamic>> _shippingCosts = [];
-  
+
   // خريطة لتخزين الأسعار حسب المحافظة والحجم
   final Map<String, Map<String, double>> _costsMap = {};
-  
+
   // قائمة المحافظات
   final List<Map<String, String>> _zones = [
     {'id': 'amman', 'name': 'عمان'},
@@ -33,7 +33,7 @@ class _ShippingCostsScreenState extends State<ShippingCostsScreen> {
     {'id': 'aqaba', 'name': 'العقبة'},
     {'id': 'mafraq', 'name': 'المفرق'},
   ];
-  
+
   // أحجام الشحن
   final List<Map<String, String>> _sizes = [
     {'value': 'small', 'label': 'صغير', 'icon': 'S'},
@@ -50,28 +50,26 @@ class _ShippingCostsScreenState extends State<ShippingCostsScreen> {
 
   Future<void> _loadShippingCosts() async {
     setState(() => _isLoading = true);
-    
+
     try {
-      final data = await _supabase
-          .from('shipping_costs')
-          .select()
-          .order('zone_name');
-      
+      final data =
+          await _supabase.from('shipping_costs').select().order('zone_name');
+
       _shippingCosts = List<Map<String, dynamic>>.from(data as List);
-      
+
       // بناء خريطة للوصول السريع
       _costsMap.clear();
       for (final item in _shippingCosts) {
         final zoneId = item['zone_id'] as String;
         final size = item['shipping_size'] as String;
         final cost = (item['cost'] as num).toDouble();
-        
+
         if (!_costsMap.containsKey(zoneId)) {
           _costsMap[zoneId] = {};
         }
         _costsMap[zoneId]![size] = cost;
       }
-      
+
       setState(() => _isLoading = false);
     } catch (e) {
       setState(() => _isLoading = false);
@@ -83,24 +81,23 @@ class _ShippingCostsScreenState extends State<ShippingCostsScreen> {
     }
   }
 
-  Future<void> _updateCost(String zoneId, String zoneName, String size, double cost) async {
+  Future<void> _updateCost(
+      String zoneId, String zoneName, String size, double cost) async {
     try {
-      await _supabase
-          .from('shipping_costs')
-          .upsert({
-            'zone_id': zoneId,
-            'zone_name': zoneName,
-            'shipping_size': size,
-            'cost': cost,
-            'updated_at': DateTime.now().toIso8601String(),
-          }, onConflict: 'zone_id,shipping_size');
-      
+      await _supabase.from('shipping_costs').upsert({
+        'zone_id': zoneId,
+        'zone_name': zoneName,
+        'shipping_size': size,
+        'cost': cost,
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'zone_id,shipping_size');
+
       // تحديث الخريطة المحلية
       if (!_costsMap.containsKey(zoneId)) {
         _costsMap[zoneId] = {};
       }
       _costsMap[zoneId]![size] = cost;
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -118,10 +115,12 @@ class _ShippingCostsScreenState extends State<ShippingCostsScreen> {
     }
   }
 
-  void _showEditDialog(String zoneId, String zoneName, String size, String sizeLabel) {
+  void _showEditDialog(
+      String zoneId, String zoneName, String size, String sizeLabel) {
     final currentCost = _costsMap[zoneId]?[size] ?? 0.0;
-    final controller = TextEditingController(text: currentCost.toStringAsFixed(2));
-    
+    final controller =
+        TextEditingController(text: currentCost.toStringAsFixed(2));
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -130,8 +129,10 @@ class _ShippingCostsScreenState extends State<ShippingCostsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('المحافظة: $zoneName', style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text('الحجم: $sizeLabel', style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text('المحافظة: $zoneName',
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text('الحجم: $sizeLabel',
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
@@ -159,7 +160,7 @@ class _ShippingCostsScreenState extends State<ShippingCostsScreen> {
                 );
                 return;
               }
-              
+
               _updateCost(zoneId, zoneName, size, cost);
               Navigator.pop(context);
             },
@@ -231,9 +232,9 @@ class _ShippingCostsScreenState extends State<ShippingCostsScreen> {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // جدول الأسعار
                   Card(
                     elevation: 2,
@@ -257,7 +258,8 @@ class _ShippingCostsScreenState extends State<ShippingCostsScreen> {
                                     const SizedBox(width: 4),
                                     Text(
                                       size['label']!,
-                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold),
                                     ),
                                   ],
                                 ),
@@ -266,20 +268,22 @@ class _ShippingCostsScreenState extends State<ShippingCostsScreen> {
                         rows: _zones.map((zone) {
                           final zoneId = zone['id']!;
                           final zoneName = zone['name']!;
-                          
+
                           return DataRow(
                             cells: [
                               DataCell(
                                 Text(
                                   zoneName,
-                                  style: const TextStyle(fontWeight: FontWeight.w600),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600),
                                 ),
                               ),
                               ..._sizes.map((size) {
                                 final sizeValue = size['value']!;
                                 final sizeLabel = size['label']!;
-                                final cost = _costsMap[zoneId]?[sizeValue] ?? 0.0;
-                                
+                                final cost =
+                                    _costsMap[zoneId]?[sizeValue] ?? 0.0;
+
                                 return DataCell(
                                   InkWell(
                                     onTap: () => _showEditDialog(
@@ -296,7 +300,8 @@ class _ShippingCostsScreenState extends State<ShippingCostsScreen> {
                                       decoration: BoxDecoration(
                                         color: Colors.green[50],
                                         borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: Colors.green[200]!),
+                                        border: Border.all(
+                                            color: Colors.green[200]!),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
@@ -326,9 +331,9 @@ class _ShippingCostsScreenState extends State<ShippingCostsScreen> {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // أمثلة توضيحية
                   Card(
                     color: Colors.orange[50],
@@ -339,7 +344,8 @@ class _ShippingCostsScreenState extends State<ShippingCostsScreen> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.lightbulb_outline, color: Colors.orange[700]),
+                              Icon(Icons.lightbulb_outline,
+                                  color: Colors.orange[700]),
                               const SizedBox(width: 8),
                               Text(
                                 'أمثلة على الأحجام',
@@ -352,10 +358,14 @@ class _ShippingCostsScreenState extends State<ShippingCostsScreen> {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          _buildSizeExample('S', 'صغير', 'وسائد، مناشف، شراشف، مفارش صغيرة'),
-                          _buildSizeExample('M', 'متوسط', 'لحاف، بطانية، ستائر صغيرة، مخدات كبيرة'),
-                          _buildSizeExample('L', 'كبير', 'طاولة سفرة، مرتبة، ستائر كبيرة، سجاد متوسط'),
-                          _buildSizeExample('XL', 'كبير جداً', 'غرفة نوم كاملة، طقم صالون، سجاد كبير'),
+                          _buildSizeExample(
+                              'S', 'صغير', 'وسائد، مناشف، شراشف، مفارش صغيرة'),
+                          _buildSizeExample('M', 'متوسط',
+                              'لحاف، بطانية، ستائر صغيرة، مخدات كبيرة'),
+                          _buildSizeExample('L', 'كبير',
+                              'طاولة سفرة، مرتبة، ستائر كبيرة، سجاد متوسط'),
+                          _buildSizeExample('XL', 'كبير جداً',
+                              'غرفة نوم كاملة، طقم صالون، سجاد كبير'),
                         ],
                       ),
                     ),

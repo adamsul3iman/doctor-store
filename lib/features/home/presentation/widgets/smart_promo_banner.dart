@@ -17,7 +17,9 @@ class SmartHeader extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.1))), // خط فاصل خفيف
+        border: Border(
+            bottom: BorderSide(
+                color: Colors.grey.withValues(alpha: 0.1))), // خط فاصل خفيف
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -44,32 +46,45 @@ class SmartHeader extends ConsumerWidget {
                 children: [
                   // الأيقونة أو الصورة
                   Container(
-                    width: 36, height: 36,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
-                      color: user.isGuest ? const Color(0xFF0A2647) : const Color(0xFFD4AF37), // لون مختلف للمسجل
+                      color: user.isGuest
+                          ? const Color(0xFF0A2647)
+                          : const Color(0xFFD4AF37), // لون مختلف للمسجل
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 2),
                       boxShadow: [
-                        BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4),
+                        BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 4),
                       ],
                     ),
                     child: Center(
                       child: user.isGuest
-                          ? const Icon(Icons.person_outline, color: Colors.white, size: 20)
+                          ? const Icon(Icons.person_outline,
+                              color: Colors.white, size: 20)
                           : Text(
-                              user.name.isNotEmpty ? user.name[0].toUpperCase() : "U",
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                              user.name.isNotEmpty
+                                  ? user.name[0].toUpperCase()
+                                  : "U",
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16),
                             ),
                     ),
                   ),
                   const SizedBox(width: 10),
-                  
+
                   // النصوص الترحيبية
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user.isGuest ? "أهلاً بك زائرنا" : "مرحباً، ${user.name.split(' ')[0]}", // نأخذ الاسم الأول فقط
+                        user.isGuest
+                            ? "أهلاً بك زائرنا"
+                            : "مرحباً، ${user.name.split(' ')[0]}", // نأخذ الاسم الأول فقط
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -92,7 +107,8 @@ class SmartHeader extends ConsumerWidget {
 
           // ================= الجزء الخاص بالمفضلة (الإضافي) =================
           InkWell(
-            onTap: () => context.push('/wishlist'), // تأكد من وجود route للمفضلة
+            onTap: () =>
+                context.push('/wishlist'), // تأكد من وجود route للمفضلة
             borderRadius: BorderRadius.circular(20),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -112,7 +128,8 @@ class SmartHeader extends ConsumerWidget {
                     const SizedBox(width: 6),
                     Text(
                       "$wishlistCount",
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 12),
                     ),
                   ]
                 ],

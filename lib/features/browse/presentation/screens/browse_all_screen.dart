@@ -148,9 +148,11 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
       return EmptyStateWidget(
         icon: Icons.wifi_off,
         title: 'خطأ في الاتصال',
-        subtitle: state.errorMessage ?? 'تأكد من اتصالك بالإنترنت وحاول مجدداً.',
+        subtitle:
+            state.errorMessage ?? 'تأكد من اتصالك بالإنترنت وحاول مجدداً.',
         buttonText: 'إعادة المحاولة',
-        onButtonPressed: () => ref.read(cachedCategoriesProvider.notifier).retry(),
+        onButtonPressed: () =>
+            ref.read(cachedCategoriesProvider.notifier).retry(),
       );
     }
 
@@ -177,7 +179,8 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      state.errorMessage ?? 'لا يوجد اتصال بالإنترنت. يتم عرض البيانات المخزنة مؤقتاً.',
+                      state.errorMessage ??
+                          'لا يوجد اتصال بالإنترنت. يتم عرض البيانات المخزنة مؤقتاً.',
                       style: TextStyle(
                         color: Colors.orange[800],
                         fontSize: 13,
@@ -189,95 +192,95 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
               ),
             ),
           ),
-            // هيدر ترحيبي
-            SliverToBoxAdapter(
-              child: Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF0A2647), Color(0xFF144272)],
-                    begin: Alignment.topRight,
-                    end: Alignment.bottomLeft,
+        // هيدر ترحيبي
+        SliverToBoxAdapter(
+          child: Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0A2647), Color(0xFF144272)],
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  child: const Icon(
+                    Icons.category_outlined,
+                    color: Colors.white,
+                    size: 28,
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'اكتشف منتجاتنا',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.category_outlined,
-                        color: Colors.white,
-                        size: 28,
+                      const SizedBox(height: 4),
+                      Text(
+                        'تصفح ${categories.length} قسم متنوع',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.white70,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'اكتشف منتجاتنا',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'تصفح ${categories.length} قسم متنوع',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
+          ),
+        ),
 
-            // شبكة الأقسام
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverLayoutBuilder(
-                builder: (context, constraints) {
-                  final crossAxisCount = ResponsiveLayout.gridCountForWidth(
-                    constraints.crossAxisExtent,
-                    desiredItemWidth: 200,
-                    minCount: 2,
-                    maxCount: 5,
-                  );
+        // شبكة الأقسام
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          sliver: SliverLayoutBuilder(
+            builder: (context, constraints) {
+              final crossAxisCount = ResponsiveLayout.gridCountForWidth(
+                constraints.crossAxisExtent,
+                desiredItemWidth: 200,
+                minCount: 2,
+                maxCount: 5,
+              );
 
-                  return SliverGrid(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      childAspectRatio: 1.1,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final category = categories[index];
-                        return _buildCategoryCard(category);
-                      },
-                      childCount: categories.length,
-                    ),
-                  );
-                },
-              ),
-            ),
+              return SliverGrid(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  childAspectRatio: 1.1,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final category = categories[index];
+                    return _buildCategoryCard(category);
+                  },
+                  childCount: categories.length,
+                ),
+              );
+            },
+          ),
+        ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 20)),
-          ],
+        const SliverToBoxAdapter(child: SizedBox(height: 20)),
+      ],
     );
   }
 
@@ -348,9 +351,11 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
       return EmptyStateWidget(
         icon: Icons.wifi_off,
         title: 'خطأ في الاتصال',
-        subtitle: state.errorMessage ?? 'تأكد من اتصالك بالإنترنت وحاول مجدداً.',
+        subtitle:
+            state.errorMessage ?? 'تأكد من اتصالك بالإنترنت وحاول مجدداً.',
         buttonText: 'إعادة المحاولة',
-        onButtonPressed: () => ref.read(cachedProductsProvider.notifier).retry(),
+        onButtonPressed: () =>
+            ref.read(cachedProductsProvider.notifier).retry(),
       );
     }
 
@@ -359,124 +364,124 @@ class _BrowseAllScreenState extends ConsumerState<BrowseAllScreen>
       return const Center(child: Text('لا توجد منتجات'));
     }
 
-        // ترتيب المنتجات حسب الاختيار
-        final sortedProducts = _sortProducts(products.toList());
+    // ترتيب المنتجات حسب الاختيار
+    final sortedProducts = _sortProducts(products.toList());
 
-        return CustomScrollView(
-          slivers: [
-            if (state.isOffline)
-              SliverToBoxAdapter(
-                child: Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.orange[50],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.orange[200]!),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.wifi_off, color: Colors.orange[700], size: 20),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          state.errorMessage ?? 'لا يوجد اتصال بالإنترنت. يتم عرض المنتجات المخزنة مؤقتاً.',
-                          style: TextStyle(
-                            color: Colors.orange[800],
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+    return CustomScrollView(
+      slivers: [
+        if (state.isOffline)
+          SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange[200]!),
               ),
-            // شريط الفلترة والترتيب
-            SliverToBoxAdapter(
-              child: Container(
-                margin: const EdgeInsets.all(16),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.sort, size: 20, color: Color(0xFF0A2647)),
-                    const SizedBox(width: 8),
-                    Text(
-                      'الترتيب:',
+              child: Row(
+                children: [
+                  Icon(Icons.wifi_off, color: Colors.orange[700], size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      state.errorMessage ??
+                          'لا يوجد اتصال بالإنترنت. يتم عرض المنتجات المخزنة مؤقتاً.',
                       style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF0A2647),
+                        color: Colors.orange[800],
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            _buildSortChip('عشوائي', 'random'),
-                            _buildSortChip('الأحدث', 'new'),
-                            _buildSortChip('الأكثر مبيعاً', 'popular'),
-                            _buildSortChip('السعر (منخفض)', 'price_low'),
-                            _buildSortChip('السعر (مرتفع)', 'price_high'),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-
-            // عداد المنتجات
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  'عرض ${sortedProducts.length} منتج',
+          ),
+        // شريط الفلترة والترتيب
+        SliverToBoxAdapter(
+          child: Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.sort, size: 20, color: Color(0xFF0A2647)),
+                const SizedBox(width: 8),
+                Text(
+                  'الترتيب:',
                   style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF0A2647),
                   ),
                 ),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 12)),
-
-            // قائمة المنتجات (عمودية - فوق بعض)
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _buildProductListCard(sortedProducts[index]),
-                    );
-                  },
-                  childCount: sortedProducts.length,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildSortChip('عشوائي', 'random'),
+                        _buildSortChip('الأحدث', 'new'),
+                        _buildSortChip('الأكثر مبيعاً', 'popular'),
+                        _buildSortChip('السعر (منخفض)', 'price_low'),
+                        _buildSortChip('السعر (مرتفع)', 'price_high'),
+                      ],
+                    ),
+                  ),
                 ),
+              ],
+            ),
+          ),
+        ),
+
+        // عداد المنتجات
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'عرض ${sortedProducts.length} منتج',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w600,
               ),
             ),
+          ),
+        ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 80)),
-          ],
-        );
+        const SliverToBoxAdapter(child: SizedBox(height: 12)),
+
+        // قائمة المنتجات (عمودية - فوق بعض)
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildProductListCard(sortedProducts[index]),
+                );
+              },
+              childCount: sortedProducts.length,
+            ),
+          ),
+        ),
+
+        const SliverToBoxAdapter(child: SizedBox(height: 80)),
+      ],
+    );
   }
 
   /// زر فلتر الترتيب

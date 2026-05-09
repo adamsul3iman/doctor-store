@@ -109,182 +109,199 @@ class _AdminCouponsViewState extends State<AdminCouponsView> {
     final valueCtrl = TextEditingController();
     String type = 'percent';
     final limitCtrl = TextEditingController(text: '100');
-    
+
     // متغير لحفظ التاريخ المختار
     DateTime? selectedDate;
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder( // ✅ نستخدم StatefulBuilder لتحديث الواجهة داخل النافذة
-        builder: (context, setStateDialog) {
-          return AlertDialog(
-            title: const Text("إضافة كوبون جديد"),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 1. حقل الكود
-                  TextField(
-                    controller: codeCtrl, 
+      builder: (context) => StatefulBuilder(
+          // ✅ نستخدم StatefulBuilder لتحديث الواجهة داخل النافذة
+          builder: (context, setStateDialog) {
+        return AlertDialog(
+          title: const Text("إضافة كوبون جديد"),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 1. حقل الكود
+                TextField(
+                    controller: codeCtrl,
                     decoration: const InputDecoration(
-                      labelText: "الكود (مثال: SALE2025)", 
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.qr_code)
-                    )
-                  ),
-                  const SizedBox(height: 10),
-                  
-                  // 2. نوع الخصم
-                  DropdownButtonFormField<String>(
-                    initialValue: type,
-                    items: const [
-                      DropdownMenuItem(value: 'percent', child: Text("نسبة مئوية (%)")),
-                      DropdownMenuItem(value: 'fixed', child: Text("مبلغ ثابت (د.أ)")),
-                    ],
-                    onChanged: (val) => setStateDialog(() => type = val!),
-                    decoration: const InputDecoration(border: OutlineInputBorder(), labelText: "نوع الخصم"),
-                  ),
-                  const SizedBox(height: 10),
-                  
-                  // 3. القيمة والحد الأقصى
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: valueCtrl, 
-                          keyboardType: TextInputType.number, 
-                          decoration: const InputDecoration(labelText: "القيمة", border: OutlineInputBorder())
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: TextField(
-                          controller: limitCtrl, 
-                          keyboardType: TextInputType.number, 
-                          decoration: const InputDecoration(labelText: "العدد المسموح", border: OutlineInputBorder())
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 15),
+                        labelText: "الكود (مثال: SALE2025)",
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.qr_code))),
+                const SizedBox(height: 10),
 
-                  // ✅ 4. منتقي التاريخ (الميزة الجديدة)
-                  ListTile(
-                    title: Text(
-                      selectedDate == null 
-                          ? "اختر تاريخ الانتهاء (اختياري)" 
-                          : "ينتهي في: ${selectedDate!.year}/${selectedDate!.month}/${selectedDate!.day}",
-                      style: TextStyle(
-                        color: selectedDate == null ? Colors.grey : const Color(0xFF0A2647),
-                        fontWeight: FontWeight.bold
-                      ),
+                // 2. نوع الخصم
+                DropdownButtonFormField<String>(
+                  initialValue: type,
+                  items: const [
+                    DropdownMenuItem(
+                        value: 'percent', child: Text("نسبة مئوية (%)")),
+                    DropdownMenuItem(
+                        value: 'fixed', child: Text("مبلغ ثابت (د.أ)")),
+                  ],
+                  onChanged: (val) => setStateDialog(() => type = val!),
+                  decoration: const InputDecoration(
+                      border: OutlineInputBorder(), labelText: "نوع الخصم"),
+                ),
+                const SizedBox(height: 10),
+
+                // 3. القيمة والحد الأقصى
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                          controller: valueCtrl,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                              labelText: "القيمة",
+                              border: OutlineInputBorder())),
                     ),
-                    leading: const Icon(Icons.calendar_today, color: Color(0xFF0A2647)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8), 
-                      side: const BorderSide(color: Colors.grey)
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                          controller: limitCtrl,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                              labelText: "العدد المسموح",
+                              border: OutlineInputBorder())),
                     ),
-                    onTap: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now().add(const Duration(days: 1)),
-                        firstDate: DateTime.now(),
-                        lastDate: DateTime(2030),
-                      );
-                      if (picked != null) {
-                        setStateDialog(() => selectedDate = picked);
-                      }
-                    },
-                    trailing: selectedDate != null 
+                  ],
+                ),
+                const SizedBox(height: 15),
+
+                // ✅ 4. منتقي التاريخ (الميزة الجديدة)
+                ListTile(
+                  title: Text(
+                    selectedDate == null
+                        ? "اختر تاريخ الانتهاء (اختياري)"
+                        : "ينتهي في: ${selectedDate!.year}/${selectedDate!.month}/${selectedDate!.day}",
+                    style: TextStyle(
+                        color: selectedDate == null
+                            ? Colors.grey
+                            : const Color(0xFF0A2647),
+                        fontWeight: FontWeight.bold),
+                  ),
+                  leading: const Icon(Icons.calendar_today,
+                      color: Color(0xFF0A2647)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: const BorderSide(color: Colors.grey)),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now().add(const Duration(days: 1)),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime(2030),
+                    );
+                    if (picked != null) {
+                      setStateDialog(() => selectedDate = picked);
+                    }
+                  },
+                  trailing: selectedDate != null
                       ? IconButton(
                           icon: const Icon(Icons.clear, color: Colors.red),
-                          onPressed: () => setStateDialog(() => selectedDate = null),
-                        ) 
+                          onPressed: () =>
+                              setStateDialog(() => selectedDate = null),
+                        )
                       : null,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text("إلغاء")),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0A2647), foregroundColor: Colors.white),
-                onPressed: () async {
-                  final rawCode = codeCtrl.text.trim();
-                  final rawValue = valueCtrl.text.trim();
-                  final rawLimit = limitCtrl.text.trim();
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("إلغاء")),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0A2647),
+                  foregroundColor: Colors.white),
+              onPressed: () async {
+                final rawCode = codeCtrl.text.trim();
+                final rawValue = valueCtrl.text.trim();
+                final rawLimit = limitCtrl.text.trim();
 
-                  if (rawCode.isEmpty || rawValue.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('يرجى إدخال الكود وقيمة الخصم.')),
-                    );
-                    return;
+                if (rawCode.isEmpty || rawValue.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('يرجى إدخال الكود وقيمة الخصم.')),
+                  );
+                  return;
+                }
+
+                // يفضَّل أن يكون الكود إنجليزياً بدون مسافات (slug بسيط)
+                final slugRegex = RegExp(r'^[A-Za-z0-9_-]+$');
+                if (!slugRegex.hasMatch(rawCode)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                          'الكود يجب أن يكون بالإنجليزية (A-Z, 0-9, - , _) بدون مسافات.'),
+                    ),
+                  );
+                  return;
+                }
+
+                final value = double.tryParse(rawValue);
+                if (value == null || value <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text(
+                            'يرجى إدخال قيمة خصم صحيحة (رقماً أكبر من صفر).')),
+                  );
+                  return;
+                }
+
+                final usageLimit =
+                    int.tryParse(rawLimit.isEmpty ? '0' : rawLimit);
+                if (usageLimit == null || usageLimit <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text(
+                            'يرجى إدخال عدد استخدامات صحيح (رقماً أكبر من صفر).')),
+                  );
+                  return;
+                }
+
+                try {
+                  await _supabase.from('coupons').insert({
+                    'code': rawCode.toUpperCase(),
+                    'discount_type': type,
+                    'value': value,
+                    'usage_limit': usageLimit,
+                    'expiration_date':
+                        selectedDate?.toIso8601String(), // ✅ إرسال التاريخ
+                    'is_active': true,
+                  });
+
+                  if (!context.mounted) return;
+                  Navigator.pop(context);
+                  await _fetchCoupons();
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('تم إضافة الكوبون بنجاح')),
+                  );
+                } catch (e) {
+                  if (!context.mounted) return;
+                  final errorText = e.toString();
+                  var message = 'فشل حفظ الكوبون: $e';
+                  if (errorText.contains('coupons_code_key') ||
+                      errorText.contains('duplicate key value')) {
+                    message =
+                        'هناك كوبون آخر بنفس الكود، يرجى اختيار كود مختلف.';
                   }
-
-                  // يفضَّل أن يكون الكود إنجليزياً بدون مسافات (slug بسيط)
-                  final slugRegex = RegExp(r'^[A-Za-z0-9_-]+$');
-                  if (!slugRegex.hasMatch(rawCode)) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('الكود يجب أن يكون بالإنجليزية (A-Z, 0-9, - , _) بدون مسافات.'),
-                      ),
-                    );
-                    return;
-                  }
-
-                  final value = double.tryParse(rawValue);
-                  if (value == null || value <= 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('يرجى إدخال قيمة خصم صحيحة (رقماً أكبر من صفر).')),
-                    );
-                    return;
-                  }
-
-                  final usageLimit = int.tryParse(rawLimit.isEmpty ? '0' : rawLimit);
-                  if (usageLimit == null || usageLimit <= 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('يرجى إدخال عدد استخدامات صحيح (رقماً أكبر من صفر).')),
-                    );
-                    return;
-                  }
-
-                  try {
-                    await _supabase.from('coupons').insert({
-                      'code': rawCode.toUpperCase(),
-                      'discount_type': type,
-                      'value': value,
-                      'usage_limit': usageLimit,
-                      'expiration_date': selectedDate?.toIso8601String(), // ✅ إرسال التاريخ
-                      'is_active': true,
-                    });
-
-                    if (!context.mounted) return;
-                    Navigator.pop(context);
-                    await _fetchCoupons();
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('تم إضافة الكوبون بنجاح')),
-                    );
-                  } catch (e) {
-                    if (!context.mounted) return;
-                    final errorText = e.toString();
-                    var message = 'فشل حفظ الكوبون: $e';
-                    if (errorText.contains('coupons_code_key') ||
-                        errorText.contains('duplicate key value')) {
-                      message =
-                          'هناك كوبون آخر بنفس الكود، يرجى اختيار كود مختلف.';
-                    }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(message)),
-                    );
-                  }
-                },
-                child: const Text("حفظ الكوبون"),
-              ),
-            ],
-          );
-        }
-      ),
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(message)),
+                  );
+                }
+              },
+              child: const Text("حفظ الكوبون"),
+            ),
+          ],
+        );
+      }),
     );
   }
 
@@ -341,7 +358,8 @@ class _AdminCouponsViewState extends State<AdminCouponsView> {
                                               (id) => visibleIds.contains(id),
                                             );
                                           } else {
-                                            _selectedCouponIds.addAll(visibleIds);
+                                            _selectedCouponIds
+                                                .addAll(visibleIds);
                                           }
                                         });
                                       },
@@ -359,7 +377,8 @@ class _AdminCouponsViewState extends State<AdminCouponsView> {
                                   backgroundColor: Colors.red,
                                   foregroundColor: Colors.white,
                                 ),
-                                icon: const Icon(Icons.delete_forever, size: 18),
+                                icon:
+                                    const Icon(Icons.delete_forever, size: 18),
                                 label: const Text('حذف المحدد'),
                               ),
                             ],
@@ -387,8 +406,7 @@ class _AdminCouponsViewState extends State<AdminCouponsView> {
 
                                 return Card(
                                   elevation: 2,
-                                  margin:
-                                      const EdgeInsets.only(bottom: 12),
+                                  margin: const EdgeInsets.only(bottom: 12),
                                   color: (coupon['is_active'] && !isExpired)
                                       ? Colors.white
                                       : Colors.grey[100],
@@ -413,14 +431,14 @@ class _AdminCouponsViewState extends State<AdminCouponsView> {
                                                 },
                                         ),
                                         CircleAvatar(
-                                          backgroundColor: (coupon[
-                                                      'is_active'] &&
-                                                  !isExpired)
-                                              ? (coupon['discount_type'] ==
-                                                      'percent'
-                                                  ? Colors.orange
-                                                  : Colors.green)
-                                              : Colors.grey,
+                                          backgroundColor:
+                                              (coupon['is_active'] &&
+                                                      !isExpired)
+                                                  ? (coupon['discount_type'] ==
+                                                          'percent'
+                                                      ? Colors.orange
+                                                      : Colors.green)
+                                                  : Colors.grey,
                                           child: Text(
                                               coupon['discount_type'] ==
                                                       'percent'
@@ -428,8 +446,7 @@ class _AdminCouponsViewState extends State<AdminCouponsView> {
                                                   : '\$',
                                               style: const TextStyle(
                                                   color: Colors.white,
-                                                  fontWeight:
-                                                      FontWeight.bold)),
+                                                  fontWeight: FontWeight.bold)),
                                         ),
                                       ],
                                     ),
@@ -441,17 +458,14 @@ class _AdminCouponsViewState extends State<AdminCouponsView> {
                                                 fontSize: 16)),
                                         if (isExpired)
                                           Container(
-                                            margin: const EdgeInsets.only(
-                                                right: 8),
-                                            padding: const EdgeInsets
-                                                .symmetric(
-                                                horizontal: 6,
-                                                vertical: 2),
+                                            margin:
+                                                const EdgeInsets.only(right: 8),
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 6, vertical: 2),
                                             decoration: BoxDecoration(
                                                 color: Colors.red[100],
                                                 borderRadius:
-                                                    BorderRadius.circular(
-                                                        4)),
+                                                    BorderRadius.circular(4)),
                                             child: const Text("منتهي",
                                                 style: TextStyle(
                                                     color: Colors.red,
@@ -472,8 +486,7 @@ class _AdminCouponsViewState extends State<AdminCouponsView> {
                                                 fontSize: 11,
                                                 color: isExpired
                                                     ? Colors.red
-                                                    : Colors
-                                                        .grey[600]),
+                                                    : Colors.grey[600]),
                                           ),
                                       ],
                                     ),
@@ -482,9 +495,7 @@ class _AdminCouponsViewState extends State<AdminCouponsView> {
                                         activeThumbColor:
                                             const Color(0xFF0A2647),
                                         onChanged: (val) => _toggleStatus(
-                                            coupon['id'],
-                                            coupon[
-                                                'is_active'])),
+                                            coupon['id'], coupon['is_active'])),
                                     onLongPress: () =>
                                         _deleteCoupon(coupon['id']),
                                   ),
@@ -498,8 +509,7 @@ class _AdminCouponsViewState extends State<AdminCouponsView> {
         onPressed: _showAddDialog,
         backgroundColor: const Color(0xFF0A2647),
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text("كوبون جديد",
-            style: TextStyle(color: Colors.white)),
+        label: const Text("كوبون جديد", style: TextStyle(color: Colors.white)),
       ),
     );
   }

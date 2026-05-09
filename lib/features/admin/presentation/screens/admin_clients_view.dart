@@ -77,7 +77,8 @@ class _AdminClientsViewState extends State<AdminClientsView> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text("تأكيد الحذف"),
-        content: Text("هل أنت متأكد من حذف العميل ${client['full_name'] ?? client['id']}؟"),
+        content: Text(
+            "هل أنت متأكد من حذف العميل ${client['full_name'] ?? client['id']}؟"),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -104,8 +105,7 @@ class _AdminClientsViewState extends State<AdminClientsView> {
 
   Widget _buildClientAvatar(Map<String, dynamic> client, int index) {
     final avatarUrl = client['avatar_url'] as String?;
-    final displayName = (client['full_name'] ?? '')
-        .toString();
+    final displayName = (client['full_name'] ?? '').toString();
 
     final baseAvatar = CircleAvatar(
       backgroundColor: Colors.blue.withValues(alpha: 0.1),
@@ -147,9 +147,12 @@ class _AdminClientsViewState extends State<AdminClientsView> {
   }
 
   Future<void> _editClient(Map<String, dynamic> client) async {
-    final nameCtrl = TextEditingController(text: (client['full_name'] ?? '').toString());
-    final phoneCtrl = TextEditingController(text: (client['phone'] ?? '').toString());
-    final avatarCtrl = TextEditingController(text: (client['avatar_url'] ?? '').toString());
+    final nameCtrl =
+        TextEditingController(text: (client['full_name'] ?? '').toString());
+    final phoneCtrl =
+        TextEditingController(text: (client['phone'] ?? '').toString());
+    final avatarCtrl =
+        TextEditingController(text: (client['avatar_url'] ?? '').toString());
 
     final result = await showDialog<bool>(
       context: context,
@@ -159,15 +162,26 @@ class _AdminClientsViewState extends State<AdminClientsView> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'الاسم الكامل')),
-              TextField(controller: phoneCtrl, decoration: const InputDecoration(labelText: 'رقم الجوال')),
-              TextField(controller: avatarCtrl, decoration: const InputDecoration(labelText: 'رابط الصورة (avatar_url)')),
+              TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(labelText: 'الاسم الكامل')),
+              TextField(
+                  controller: phoneCtrl,
+                  decoration: const InputDecoration(labelText: 'رقم الجوال')),
+              TextField(
+                  controller: avatarCtrl,
+                  decoration: const InputDecoration(
+                      labelText: 'رابط الصورة (avatar_url)')),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("إلغاء")),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("حفظ")),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text("إلغاء")),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text("حفظ")),
         ],
       ),
     );
@@ -236,7 +250,8 @@ class _AdminClientsViewState extends State<AdminClientsView> {
             if (name.isNotEmpty)
               Text("الاسم: $name", style: const TextStyle(fontSize: 14)),
             if (userId.isNotEmpty)
-              Text("المعرّف: $userId", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              Text("المعرّف: $userId",
+                  style: const TextStyle(fontSize: 12, color: Colors.grey)),
             if (phone != null && phone.isNotEmpty)
               Text("الجوال: $phone", style: const TextStyle(fontSize: 14)),
             if (updatedAt != null)
@@ -264,7 +279,8 @@ class _AdminClientsViewState extends State<AdminClientsView> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
-    if (_clients.isEmpty) return const Center(child: Text("لا يوجد عملاء مسجلين بعد"));
+    if (_clients.isEmpty)
+      return const Center(child: Text("لا يوجد عملاء مسجلين بعد"));
 
     return Scaffold(
       floatingActionButton: FloatingActionButton.extended(
@@ -293,7 +309,7 @@ class _AdminClientsViewState extends State<AdminClientsView> {
               date = DateTime.parse(dateRaw).toLocal();
             } catch (_) {}
           }
-          
+
           final name = (client['full_name'] ?? '').toString().trim();
           final phone = client['phone']?.toString();
           final userId = client['id']?.toString() ?? '';
@@ -316,8 +332,7 @@ class _AdminClientsViewState extends State<AdminClientsView> {
                   if (phone != null && phone.isNotEmpty)
                     Text(
                       "الجوال: $phone",
-                      style:
-                          const TextStyle(fontSize: 12, color: Colors.grey),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   if (date != null)
                     Text(

@@ -10,56 +10,54 @@ class AdminDashboardService {
       // 1. إجمالي المبيعات (هذا الشهر)
       final now = DateTime.now();
       final startOfMonth = DateTime(now.year, now.month, 1);
-      
+
       final salesResult = await _client
           .from('orders')
           .select('total_amount')
           .gte('created_at', startOfMonth.toIso8601String())
           .not('status', 'eq', 'cancelled');
-      
-      final totalSales = (salesResult as List)
-          .fold<double>(0, (sum, order) => sum + ((order['total_amount'] as num?)?.toDouble() ?? 0));
+
+      final totalSales = (salesResult as List).fold<double>(
+          0,
+          (sum, order) =>
+              sum + ((order['total_amount'] as num?)?.toDouble() ?? 0));
 
       // 2. عدد الطلبات الجديدة (pending/new)
-      final ordersResult = await _client
-          .from('orders')
-          .select('id')
-          .eq('status', 'new');
-      
+      final ordersResult =
+          await _client.from('orders').select('id').eq('status', 'new');
+
       final newOrdersCount = (ordersResult as List).length;
 
       // 3. عدد المنتجات النشطة
-      final productsResult = await _client
-          .from('products')
-          .select('id')
-          .eq('is_active', true);
-      
+      final productsResult =
+          await _client.from('products').select('id').eq('is_active', true);
+
       final activeProductsCount = (productsResult as List).length;
 
       // 4. عدد العملاء المسجلين (من جدول profiles)
-      final clientsResult = await _client
-          .from('profiles')
-          .select('id')
-          .count();
-      
+      final clientsResult = await _client.from('profiles').select('id').count();
+
       final clientsCount = clientsResult.count;
 
       // حساب نسبة التغيير (مقارنة بالشهر السابق)
       final lastMonth = DateTime(now.year, now.month - 1, 1);
       final endOfLastMonth = DateTime(now.year, now.month, 0, 23, 59, 59);
-      
+
       final lastMonthSales = await _client
           .from('orders')
           .select('total_amount')
           .gte('created_at', lastMonth.toIso8601String())
           .lte('created_at', endOfLastMonth.toIso8601String())
           .not('status', 'eq', 'cancelled');
-      
-      final lastMonthTotal = (lastMonthSales as List)
-          .fold<double>(0, (sum, order) => sum + ((order['total_amount'] as num?)?.toDouble() ?? 0));
 
-      final salesTrend = lastMonthTotal > 0 
-          ? ((totalSales - lastMonthTotal) / lastMonthTotal * 100).toStringAsFixed(1)
+      final lastMonthTotal = (lastMonthSales as List).fold<double>(
+          0,
+          (sum, order) =>
+              sum + ((order['total_amount'] as num?)?.toDouble() ?? 0));
+
+      final salesTrend = lastMonthTotal > 0
+          ? ((totalSales - lastMonthTotal) / lastMonthTotal * 100)
+              .toStringAsFixed(1)
           : '0.0';
 
       return DashboardStats(
@@ -93,8 +91,10 @@ class AdminDashboardService {
             .lte('created_at', endOfDay.toIso8601String())
             .not('status', 'eq', 'cancelled');
 
-        final dayTotal = (result as List)
-            .fold<double>(0, (sum, order) => sum + ((order['total_amount'] as num?)?.toDouble() ?? 0));
+        final dayTotal = (result as List).fold<double>(
+            0,
+            (sum, order) =>
+                sum + ((order['total_amount'] as num?)?.toDouble() ?? 0));
 
         salesData.add(SalesData(date: startOfDay, amount: dayTotal));
       }
@@ -122,7 +122,8 @@ class AdminDashboardService {
         activities.add(RecentActivity(
           type: ActivityType.order,
           title: 'طلب جديد #${order['id']}',
-          subtitle: '${order['customer_name']} - ${(order['total_amount'] as num).toStringAsFixed(2)} د.أ',
+          subtitle:
+              '${order['customer_name']} - ${(order['total_amount'] as num).toStringAsFixed(2)} د.أ',
           time: DateTime.parse(order['created_at']),
         ));
       }
@@ -174,18 +175,18 @@ class AdminDashboardService {
 
       // تجميع البيانات حسب product_id
       final Map<String, TopProductData> productsMap = {};
-      
+
       for (final item in result as List) {
         final productId = item['product_id'] as String?;
         if (productId == null) continue;
-        
+
         final quantity = (item['quantity'] as num?)?.toInt() ?? 0;
         final productData = item['products'] as Map<String, dynamic>?;
-        
+
         if (productData != null) {
           final price = (productData['price'] as num?)?.toDouble() ?? 0;
           final name = productData['title'] as String? ?? 'منتج غير معروف';
-          
+
           if (productsMap.containsKey(productId)) {
             productsMap[productId]!.totalQuantity += quantity;
             productsMap[productId]!.totalRevenue += (quantity * price);
@@ -223,29 +224,30 @@ class AdminDashboardService {
     try {
       final now = DateTime.now();
       final startOfMonth = DateTime(now.year, now.month, 1);
-      
+
       // 1. جلب جميع الطلبات النشطة هذا الشهر
       final ordersResult = await _client
           .from('orders')
           .select('id, total_amount, customer_phone, created_at')
           .gte('created_at', startOfMonth.toIso8601String())
           .not('status', 'eq', 'cancelled');
-      
+
       final orders = ordersResult as List;
       final totalSales = orders.fold<double>(
-        0, 
-        (sum, order) => sum + ((order['total_amount'] as num?)?.toDouble() ?? 0)
-      );
-      
+          0,
+          (sum, order) =>
+              sum + ((order['total_amount'] as num?)?.toDouble() ?? 0));
+
       // 2. متوسط قيمة الطلب
-      final avgOrderValue = orders.isNotEmpty ? totalSales / orders.length : 0.0;
-      
+      final avgOrderValue =
+          orders.isNotEmpty ? totalSales / orders.length : 0.0;
+
       // 3. عدد العملاء الجدد (عملاء لديهم طلب واحد فقط)
       final uniquePhones = orders
           .map((order) => order['customer_phone'])
           .where((phone) => phone != null)
           .toSet();
-      
+
       int newCustomersCount = 0;
       for (final phone in uniquePhones) {
         final customerOrders = await _client
@@ -253,31 +255,31 @@ class AdminDashboardService {
             .select('id')
             .eq('customer_phone', phone)
             .count();
-        
+
         if (customerOrders.count == 1) {
           newCustomersCount++;
         }
       }
-      
+
       // 4. عدد المنتجات النشطة
       final productsResult = await _client
           .from('products')
           .select('id')
           .eq('is_active', true)
           .count();
-      
+
       final activeProductsCount = productsResult.count;
-      
+
       // 5. معدل التحويل (الطلبات / المنتجات النشطة)
       final conversionRate = activeProductsCount > 0
           ? (orders.length / activeProductsCount) * 100
           : 0.0;
-      
+
       // 6. معدل الإشغال (نسبة المنتجات النشطة)
       // ملاحظة: نعتبر جميع المنتجات النشطة متوفرة
       // لأن المخزون مخزن في variants (JSONB) ويحتاج معالجة معقدة
       final occupancyRate = activeProductsCount > 0 ? 100.0 : 0.0;
-      
+
       return QuickAnalytics(
         avgOrderValue: avgOrderValue,
         conversionRate: conversionRate,

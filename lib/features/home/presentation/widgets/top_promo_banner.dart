@@ -38,20 +38,22 @@ class _TopPromoBannerState extends State<TopPromoBanner> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isVisible) return const SizedBox.shrink(); // لا ترسم شيئاً إذا كان مخفياً
+    if (!_isVisible)
+      return const SizedBox.shrink(); // لا ترسم شيئاً إذا كان مخفياً
 
     return Container(
       width: double.infinity,
       color: const Color(0xFF0A2647), // لون كحلي مميز
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: SafeArea( // لضمان عدم تغطية النوتش في الموبايل
+      child: SafeArea(
+        // لضمان عدم تغطية النوتش في الموبايل
         bottom: false,
         child: Row(
           children: [
             // أيقونة هدية أو تنبيه
             const Icon(Icons.card_giftcard, color: Color(0xFFD4AF37), size: 20),
             const SizedBox(width: 10),
-            
+
             // النص
             Expanded(
               child: Column(
@@ -60,7 +62,10 @@ class _TopPromoBannerState extends State<TopPromoBanner> {
                 children: [
                   Text(
                     "انضم لعائلة الدكتور واحصل على الميزات!",
-                    style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold),
                   ),
                   Text(
                     "سجل بريدك لحفظ المفضلة ومتابعة الطلبات",
@@ -74,15 +79,21 @@ class _TopPromoBannerState extends State<TopPromoBanner> {
             TextButton(
               onPressed: () {
                 // فتح النافذة فقط عند طلب العميل
-                showDialog(context: context, builder: (_) => const WelcomeDialog());
+                showDialog(
+                    context: context, builder: (_) => const WelcomeDialog());
               },
               style: TextButton.styleFrom(
                 backgroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: Text("سجل الآن", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF0A2647))),
+              child: Text("سجل الآن",
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF0A2647))),
             ),
 
             const SizedBox(width: 8),

@@ -39,9 +39,7 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
   void _toggleSelectAll(List<Order> orders) {
     setState(() {
       // نطبق على القائمة بعد التصفية (بالاسم/الهاتف)
-      final ids = orders
-          .map((o) => o.id)
-          .toList();
+      final ids = orders.map((o) => o.id).toList();
       final allSelected =
           ids.isNotEmpty && ids.every((id) => _selectedOrderIds.contains(id));
       if (allSelected) {
@@ -60,7 +58,8 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('تأكيد الحذف'),
-        content: Text('هل تريد حذف $count طلباً؟ لا يمكن التراجع عن هذه العملية.'),
+        content:
+            Text('هل تريد حذف $count طلباً؟ لا يمكن التراجع عن هذه العملية.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -105,14 +104,14 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
   List<Order> _getFilteredOrders(List<Order> allOrders) {
     // إنشاء مفتاح فريد للفلاتر الحالية
     final filterKey = '$_statusFilter|$_dateFilter|$_searchQuery';
-    
+
     // إذا لم تتغير الفلاتر، أعد النتائج المخزنة
     if (filterKey == _lastFilterKey && _cachedFilteredOrders != null) {
       return _cachedFilteredOrders!;
     }
 
     final now = DateTime.now();
-    
+
     final filtered = allOrders.where((order) {
       // 1) فلتر الحالة
       final status = order.status.toDbString();
@@ -127,7 +126,9 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
         final diff = now.difference(date);
         switch (_dateFilter) {
           case 'today':
-            if (now.year != date.year || now.month != date.month || now.day != date.day) {
+            if (now.year != date.year ||
+                now.month != date.month ||
+                now.day != date.day) {
               return false;
             }
             break;
@@ -156,7 +157,7 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
     // تخزين النتائج
     _cachedFilteredOrders = filtered;
     _lastFilterKey = filterKey;
-    
+
     return filtered;
   }
 
@@ -251,12 +252,9 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
             );
           }
 
-          final visibleIds = filteredOrders
-              .map((o) => o.id)
-              .toList();
-          final allVisibleSelected =
-              visibleIds.isNotEmpty &&
-                  visibleIds.every((id) => _selectedOrderIds.contains(id));
+          final visibleIds = filteredOrders.map((o) => o.id).toList();
+          final allVisibleSelected = visibleIds.isNotEmpty &&
+              visibleIds.every((id) => _selectedOrderIds.contains(id));
 
           return Column(
             children: [
@@ -292,12 +290,12 @@ class _AdminOrdersViewState extends State<AdminOrdersView> {
                   itemCount: filteredOrders.length,
                   itemBuilder: (context, index) {
                     final order = filteredOrders[index];
-                    final isSelected =
-                        _selectedOrderIds.contains(order.id);
+                    final isSelected = _selectedOrderIds.contains(order.id);
                     return _OrderCard(
                       order: order,
                       isSelected: isSelected,
-                      onSelectedChanged: (value) => _toggleSelect(order.id, value ?? false),
+                      onSelectedChanged: (value) =>
+                          _toggleSelect(order.id, value ?? false),
                     );
                   },
                 ),
@@ -337,7 +335,7 @@ class _OrderCardState extends State<_OrderCard> {
   Future<void> _fetchItems() async {
     if (_items.isNotEmpty) return;
     setState(() => _loadingItems = true);
-    
+
     try {
       final data = await _repo.getOrderItems(widget.order.id);
 
@@ -354,10 +352,11 @@ class _OrderCardState extends State<_OrderCard> {
   }
 
   Future<void> _updateStatus(OrderStatus status) async {
-    debugPrint('UI: Updating order ${widget.order.id} to status: ${status.toDbString()}');
-    
+    debugPrint(
+        'UI: Updating order ${widget.order.id} to status: ${status.toDbString()}');
+
     setState(() => _updatingStatuses.add(status));
-    
+
     try {
       await _repo.updateOrderStatus(widget.order.id, status);
       debugPrint('UI: Order status updated successfully');
@@ -391,7 +390,7 @@ class _OrderCardState extends State<_OrderCard> {
   Widget build(BuildContext context) {
     final status = widget.order.status.toDbString();
     final date = widget.order.createdAt.toLocal();
-    
+
     // تنسيق الألوان حسب الحالة
     Color statusColor = Color(widget.order.status.colorValue);
     String statusText = widget.order.status.displayName;
@@ -401,7 +400,9 @@ class _OrderCardState extends State<_OrderCard> {
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: status == 'new' ? const BorderSide(color: Colors.blue, width: 1.5) : BorderSide.none,
+        side: status == 'new'
+            ? const BorderSide(color: Colors.blue, width: 1.5)
+            : BorderSide.none,
       ),
       child: Column(
         children: [
@@ -425,12 +426,20 @@ class _OrderCardState extends State<_OrderCard> {
             ),
             title: Row(
               children: [
-                Text(widget.order.customerName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(widget.order.customerName,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                  child: Text(statusText, style: TextStyle(color: statusColor, fontSize: 12, fontWeight: FontWeight.bold)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8)),
+                  child: Text(statusText,
+                      style: TextStyle(
+                          color: statusColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
@@ -440,7 +449,6 @@ class _OrderCardState extends State<_OrderCard> {
             ),
             trailing: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
           ),
-          
           if (_expanded) ...[
             const Divider(height: 1),
             // تفاصيل الاتصال
@@ -457,10 +465,12 @@ class _OrderCardState extends State<_OrderCard> {
                 ],
               ),
             ),
-            
+
             // المنتجات
             if (_loadingItems)
-              const Padding(padding: EdgeInsets.all(20), child: Center(child: CircularProgressIndicator()))
+              const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(child: CircularProgressIndicator()))
             else
               ..._items.map((item) {
                 final details = [
@@ -470,27 +480,27 @@ class _OrderCardState extends State<_OrderCard> {
                     'اللون: ${item.selectedColor}',
                 ];
                 return ListTile(
-                leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: SizedBox(
-                    width: 40,
-                    height: 40,
-                    child: AppNetworkImage(
-                      url: item.imageUrl ?? '',
-                      variant: ImageVariant.thumbnail,
-                      fit: BoxFit.cover,
-                      placeholder: Container(color: Colors.grey[200]),
-                      errorWidget: const Icon(Icons.image),
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: AppNetworkImage(
+                        url: item.imageUrl ?? '',
+                        variant: ImageVariant.thumbnail,
+                        fit: BoxFit.cover,
+                        placeholder: Container(color: Colors.grey[200]),
+                        errorWidget: const Icon(Icons.image),
+                      ),
                     ),
                   ),
-                ),
-                title: Text(item.productTitle),
-                subtitle: Text([
-                  "${item.quantity}x",
-                  if (details.isNotEmpty) details.join(' | '),
-                ].join('  |  ')),
-                trailing: Text("${item.price.toStringAsFixed(0)} د.أ"),
-              );
+                  title: Text(item.productTitle),
+                  subtitle: Text([
+                    "${item.quantity}x",
+                    if (details.isNotEmpty) details.join(' | '),
+                  ].join('  |  ')),
+                  trailing: Text("${item.price.toStringAsFixed(0)} د.أ"),
+                );
               }),
 
             // أزرار التحكم
@@ -502,18 +512,27 @@ class _OrderCardState extends State<_OrderCard> {
                   if (status != 'completed')
                     Builder(builder: (context) {
                       final orderId = widget.order.id;
-                      final isUpdating = _updatingStatuses.contains(OrderStatus.completed);
+                      final isUpdating =
+                          _updatingStatuses.contains(OrderStatus.completed);
                       return ElevatedButton.icon(
-                        onPressed: isUpdating ? null : () {
-                          debugPrint('COMPLETE BUTTON CLICKED: order=$orderId, currentStatus=$status');
-                          _updateStatus(OrderStatus.completed);
-                        },
-                        icon: isUpdating 
-                          ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                          : const Icon(Icons.check, size: 18),
-                        label: Text(isUpdating ? "جاري التحديث..." : "إتمام الطلب"),
+                        onPressed: isUpdating
+                            ? null
+                            : () {
+                                debugPrint(
+                                    'COMPLETE BUTTON CLICKED: order=$orderId, currentStatus=$status');
+                                _updateStatus(OrderStatus.completed);
+                              },
+                        icon: isUpdating
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white))
+                            : const Icon(Icons.check, size: 18),
+                        label: Text(
+                            isUpdating ? "جاري التحديث..." : "إتمام الطلب"),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green, 
+                          backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
                           elevation: 2,
                         ),
@@ -523,17 +542,23 @@ class _OrderCardState extends State<_OrderCard> {
                   if (status != 'cancelled')
                     Builder(builder: (context) {
                       final orderId = widget.order.id;
-                      final isUpdating = _updatingStatuses.contains(OrderStatus.cancelled);
+                      final isUpdating =
+                          _updatingStatuses.contains(OrderStatus.cancelled);
                       return TextButton(
-                        onPressed: isUpdating ? null : () {
-                          debugPrint('CANCEL BUTTON CLICKED: order=$orderId, currentStatus=$status');
-                          _updateStatus(OrderStatus.cancelled);
-                        },
+                        onPressed: isUpdating
+                            ? null
+                            : () {
+                                debugPrint(
+                                    'CANCEL BUTTON CLICKED: order=$orderId, currentStatus=$status');
+                                _updateStatus(OrderStatus.cancelled);
+                              },
                         style: TextButton.styleFrom(
-                          foregroundColor: isUpdating ? Colors.grey : Colors.red,
+                          foregroundColor:
+                              isUpdating ? Colors.grey : Colors.red,
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                         ),
-                        child: Text(isUpdating ? "جاري الإلغاء..." : "إلغاء الطلب"),
+                        child: Text(
+                            isUpdating ? "جاري الإلغاء..." : "إلغاء الطلب"),
                       );
                     }),
                 ],
@@ -692,6 +717,10 @@ class _InfoRow extends StatelessWidget {
   const _InfoRow(this.icon, this.text);
   @override
   Widget build(BuildContext context) {
-    return Row(children: [Icon(icon, size: 16, color: Colors.grey), const SizedBox(width: 8), SelectableText(text)]);
+    return Row(children: [
+      Icon(icon, size: 16, color: Colors.grey),
+      const SizedBox(width: 8),
+      SelectableText(text)
+    ]);
   }
 }

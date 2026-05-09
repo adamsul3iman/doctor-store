@@ -18,7 +18,7 @@ class CategoryRepository {
         .from('categories')
         .select('id,name,is_active,sort_order')
         .order('sort_order', ascending: true);
-    
+
     return data
         .whereType<Map<String, dynamic>>()
         .map(AppCategoryConfig.fromMap)

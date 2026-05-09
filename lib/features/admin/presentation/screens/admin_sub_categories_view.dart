@@ -263,7 +263,8 @@ class _AdminSubCategoriesViewState extends State<AdminSubCategoriesView> {
                           // تحقق من أن الكود (لو تمت كتابته) بصيغة slug إنجليزية
                           final rawCode = codeCtrl.text.trim();
                           final slugRegex = RegExp(r'^[a-z0-9_-]+$');
-                          if (rawCode.isNotEmpty && !slugRegex.hasMatch(rawCode)) {
+                          if (rawCode.isNotEmpty &&
+                              !slugRegex.hasMatch(rawCode)) {
                             AppNotifier.showError(
                               ctx,
                               'الكود (Slug) يجب أن يكون بالإنجليزية (a-z, 0-9, - , _) بدون مسافات.',
